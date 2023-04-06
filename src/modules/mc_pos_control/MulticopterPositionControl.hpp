@@ -64,6 +64,7 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_local_position_setpoint.h>
+#include <uORB/topics/integral_part_velocitycontrol.h>
 
 using namespace time_literals;
 
@@ -172,7 +173,9 @@ private:
 		(ParamFloat<px4::params::MPC_MAN_Y_TAU>)    _param_mpc_man_y_tau,
 
 		(ParamFloat<px4::params::MPC_XY_VEL_ALL>)   _param_mpc_xy_vel_all,
-		(ParamFloat<px4::params::MPC_Z_VEL_ALL>)    _param_mpc_z_vel_all
+		(ParamFloat<px4::params::MPC_Z_VEL_ALL>)    _param_mpc_z_vel_all,
+
+        (ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	);
 
 	control::BlockDerivative _vel_x_deriv; /**< velocity derivative in x */
@@ -235,4 +238,14 @@ private:
 	 * Reset setpoints to NAN
 	 */
 	void reset_setpoint_to_nan(vehicle_local_position_setpoint_s &setpoint);
+
+    // My props
+    // For publishing integral part
+    uORB::Publication<integral_part_velocitycontrol_s> _integral_part_pub{ORB_ID(integral_part_velocitycontrol)};
+
+    // For subscription to integral part
+    uORB::Subscription _integral_part_sub{ORB_ID(integral_part_velocitycontrol)};
+
+    uint64_t _time_last_integral_part_received{0};
+    bool _first_integral_part_received{false};
 };

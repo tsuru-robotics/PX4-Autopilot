@@ -268,6 +268,14 @@ MavlinkReceiver::handle_message(mavlink_message_t *msg)
 		handle_message_statustext(msg);
 		break;
 
+    case MAVLINK_MSG_ID_RATE_INT_CONTROL:
+        handle_message_rate_int_control(msg);
+        break;
+
+    case MAVLINK_MSG_ID_VEL_INT_CONTROL:
+        handle_message_vel_int_control(msg);
+        break;
+
 #if !defined(CONSTRAINED_FLASH)
 
 	case MAVLINK_MSG_ID_NAMED_VALUE_FLOAT:
@@ -476,6 +484,8 @@ void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const 
 	bool send_ack = true;
 	uint8_t result = vehicle_command_ack_s::VEHICLE_RESULT_ACCEPTED;
 	uint8_t progress = 0; // TODO: should be 255, 0 for backwards compatibility
+
+    PX4_INFO("Received msg COMMAND with command %d at %lu", (int)vehicle_command.command, (unsigned long)vehicle_command.timestamp);
 
 	if (!target_ok) {
 		// Reject alien commands only if there is no forwarding or we've never seen target component before
@@ -720,12 +730,15 @@ void MavlinkReceiver::handle_message_command_both(mavlink_message_t *msg, const 
 
 		if (!send_ack) {
 			_cmd_pub.publish(vehicle_command);
+            PX4_INFO("COMMAND %d time=%lu published at %lu", (int)vehicle_command.command, (unsigned long)vehicle_command.timestamp, (unsigned long)hrt_absolute_time());
 		}
 	}
 
 	if (send_ack) {
 		acknowledge(msg->sysid, msg->compid, cmd_mavlink.command, result, progress);
 	}
+
+    PX4_INFO("send_ack=%d at %lu", send_ack, (unsigned long)hrt_absolute_time());
 }
 
 uint8_t MavlinkReceiver::handle_request_message_command(uint16_t message_id, float param2, float param3, float param4,
@@ -2776,6 +2789,37 @@ MavlinkReceiver::handle_message_hil_state_quaternion(mavlink_message_t *msg)
 	}
 }
 
+void
+MavlinkReceiver::handle_message_rate_int_control(mavlink_message_t *msg)
+{
+    mavlink_rate_int_control_t rate_int_msg;
+    mavlink_msg_rate_int_control_decode(msg, &rate_int_msg);
+
+    integral_part_ratecontrol_s rate_topic{};
+
+    rate_topic.timestamp = hrt_absolute_time();
+    rate_topic.x = rate_int_msg.x;
+    rate_topic.y = rate_int_msg.y;
+    rate_topic.z = rate_int_msg.z;
+    _integral_part_ratecontrol_pub.publish(rate_topic);
+}
+
+void
+MavlinkReceiver::handle_message_vel_int_control(mavlink_message_t *msg)
+{
+    mavlink_vel_int_control_t vel_int_msg;
+    mavlink_msg_vel_int_control_decode(msg, &vel_int_msg);
+
+//    PX4_INFO("Received mavlink_vel_int_control_t with x=%f y=%f z=%f!", (double)vel_int_msg.x, (double)vel_int_msg.y, (double)vel_int_msg.z);
+
+    integral_part_velocitycontrol_s vel_topic{};
+
+    vel_topic.timestamp = hrt_absolute_time();
+    vel_topic.x = vel_int_msg.x;
+    vel_topic.y = vel_int_msg.y;
+    vel_topic.z = vel_int_msg.z;
+    _integral_part_velocitycontrol_pub.publish(vel_topic);
+}
 #if !defined(CONSTRAINED_FLASH)
 void
 MavlinkReceiver::handle_message_named_value_float(mavlink_message_t *msg)

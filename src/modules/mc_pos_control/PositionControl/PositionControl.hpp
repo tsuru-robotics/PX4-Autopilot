@@ -178,6 +178,12 @@ public:
 	 */
 	void getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_setpoint) const;
 
+    // My methods
+    void getInt(float &x, float &y, float &z) const;
+    void setInt(const float x, const float y, const float z);
+    void enableIntegration() { _enable_integration = true; }
+    void disableIntegration() { _enable_integration = false; }
+    bool isIntegrationEnabled() { return _enable_integration; }
 private:
 	bool _inputValid();
 
@@ -216,4 +222,7 @@ private:
 	matrix::Vector3f _thr_sp; /**< desired thrust */
 	float _yaw_sp{}; /**< desired heading */
 	float _yawspeed_sp{}; /** desired yaw-speed */
+
+    // My props
+    bool _enable_integration{false};
 };

@@ -69,6 +69,15 @@ bool MulticopterPositionControl::init()
 		return false;
 	}
 
+    if (_param_mav_sys_id.get() == 1) {
+        // Enable integration
+        _control.enableIntegration();
+    } else {
+        _control.disableIntegration();
+    }
+
+    _first_integral_part_received = false;
+    _time_last_integral_part_received = 0;
 	_time_stamp_last_loop = hrt_absolute_time();
 	ScheduleNow();
 
@@ -468,6 +477,37 @@ void MulticopterPositionControl::Run()
 
 			_control.setState(states);
 
+            if (_param_mav_sys_id.get() == 2) {
+                // Receive integral part from FMU 1
+                integral_part_velocitycontrol_s int_part_topic_in{};
+                if (_integral_part_sub.update(&int_part_topic_in)) {
+//                    PX4_INFO("Received VEL RATE topic with x=%f, y=%f, z=%f",
+//                             (double) int_part_topic_in.x, (double) int_part_topic_in.y, (double) int_part_topic_in.z);
+                    // Set integral part
+                    _control.setInt(int_part_topic_in.x, int_part_topic_in.y, int_part_topic_in.z);
+
+                    // Save time
+                    _time_last_integral_part_received = hrt_absolute_time();
+                    //
+                    if (!_first_integral_part_received) {
+                        _first_integral_part_received = true;
+                    }
+
+                    // Disable integration
+                    if (_control.isIntegrationEnabled()) {
+                        _control.disableIntegration();
+                        PX4_INFO("Velocity integration is disabled!");
+                    }
+
+                } else if (_first_integral_part_received && !_control.isIntegrationEnabled()) {
+                    uint64_t time_offline = hrt_absolute_time() - _time_last_integral_part_received;
+                    if (time_offline > 1000000) { // 1 sec
+                        _control.enableIntegration();
+                        PX4_INFO("Velocity integration is enabled, time_offline(millisec)=%lu!",
+                                 (unsigned long) time_offline);
+                    }
+                }
+            }
 			// Run position control
 			if (_control.update(dt)) {
 				_failsafe_land_hysteresis.set_state_and_update(false, time_stamp_now);
@@ -502,6 +542,13 @@ void MulticopterPositionControl::Run()
 			local_pos_sp.timestamp = hrt_absolute_time();
 			_local_pos_sp_pub.publish(local_pos_sp);
 
+            if (_param_mav_sys_id.get() == 1) {
+                // Publish integral part
+                integral_part_velocitycontrol_s int_part_topic_out{};
+                _control.getInt(int_part_topic_out.x, int_part_topic_out.y, int_part_topic_out.z);
+                int_part_topic_out.timestamp = hrt_absolute_time();
+                _integral_part_pub.publish(int_part_topic_out);
+            }
 			// Publish attitude setpoint output
 			vehicle_attitude_setpoint_s attitude_setpoint{};
 			_control.getAttitudeSetpoint(attitude_setpoint);

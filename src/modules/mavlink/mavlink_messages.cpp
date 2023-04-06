@@ -117,6 +117,8 @@
 #include "streams/VFR_HUD.hpp"
 #include "streams/VIBRATION.hpp"
 #include "streams/WIND_COV.hpp"
+#include "streams/RATE_INT_CONTROL.hpp"
+#include "streams/VEL_INT_CONTROL.hpp"
 
 #if !defined(CONSTRAINED_FLASH)
 # include "streams/ADSB_VEHICLE.hpp"
@@ -559,8 +561,14 @@ static const StreamListItem streams_list[] = {
 	create_stream_list_item<MavlinkStreamEfiStatus>(),
 #endif // EFI_STATUS_HPP
 #if defined(GPS_RTCM_DATA_HPP)
-	create_stream_list_item<MavlinkStreamGPSRTCMData>()
+	create_stream_list_item<MavlinkStreamGPSRTCMData>(),
 #endif // GPS_RTCM_DATA_HPP
+#if defined(VEL_INT_CONTROL_HPP)
+    create_stream_list_item<MavlinkStreamVelIntControl>(),
+#endif // VEL_INT_CONTROL_HPP
+#if defined(RATE_INT_CONTROL_HPP)
+        create_stream_list_item<MavlinkStreamRateIntControl>()
+#endif // RATE_INT_CONTROL_HPP
 };
 
 const char *get_stream_name(const uint16_t msg_id)

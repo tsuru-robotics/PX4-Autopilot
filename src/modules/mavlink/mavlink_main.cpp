@@ -1525,6 +1525,8 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("VFR_HUD", 4.0f);
 		configure_stream_local("VIBRATION", 0.1f);
 		configure_stream_local("WIND_COV", 0.5f);
+        configure_stream_local("RATE_INT_CONTROL", 2.0f);
+        configure_stream_local("VEL_INT_CONTROL", 2.0f);
 
 #if !defined(CONSTRAINED_FLASH)
 		configure_stream_local("DEBUG", 1.0f);
@@ -1736,6 +1738,8 @@ Mavlink::configure_streams_to_default(const char *configure_single_stream)
 		configure_stream_local("VFR_HUD", 20.0f);
 		configure_stream_local("VIBRATION", 2.5f);
 		configure_stream_local("WIND_COV", 10.0f);
+        configure_stream_local("RATE_INT_CONTROL", 2.0f);
+        configure_stream_local("VEL_INT_CONTROL", 2.0f);
 
 #if !defined(CONSTRAINED_FLASH)
 		configure_stream_local("DEBUG", 50.0f);
@@ -3285,7 +3289,7 @@ $ mavlink stream -u 14556 -s HIGHRES_IMU -r 50
 #if defined(CONFIG_NET) || defined(__PX4_POSIX)
 	PRINT_MODULE_USAGE_PARAM_FLAG('p', "Enable Broadcast", true);
 	PRINT_MODULE_USAGE_PARAM_INT('u', 14556, 0, 65536, "Select UDP Network Port (local)", true);
-	PRINT_MODULE_USAGE_PARAM_INT('o', 14550, 0, 65536, "Select UDP Network Port (remote)", true);
+	PRINT_MODULE_USAGE_PARAM_INT('o', 14560, 0, 65536, "Select UDP Network Port (remote)", true);
 	PRINT_MODULE_USAGE_PARAM_STRING('t', "127.0.0.1", nullptr, "Partner IP (broadcasting can be enabled via -p flag)", true);
 #endif
 	PRINT_MODULE_USAGE_PARAM_STRING('m', "normal", "custom|camera|onboard|osd|magic|config|iridium|minimal|extvision|extvisionmin|gimbal",

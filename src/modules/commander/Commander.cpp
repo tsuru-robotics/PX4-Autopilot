@@ -1033,6 +1033,8 @@ Commander::handle_command(const vehicle_command_s &cmd)
 						set_home_position();
 					}
 				}
+
+                PX4_INFO("cmd_result %d at %lu", cmd_result, (unsigned long)hrt_absolute_time());
 			}
 		}
 		break;

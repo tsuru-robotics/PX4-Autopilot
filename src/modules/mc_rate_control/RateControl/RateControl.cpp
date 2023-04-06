@@ -64,7 +64,8 @@ Vector3f RateControl::update(const Vector3f &rate, const Vector3f &rate_sp, cons
 	const Vector3f torque = _gain_p.emult(rate_error) + _rate_int - _gain_d.emult(angular_accel) + _gain_ff.emult(rate_sp);
 
 	// update integral only if we are not landed
-	if (!landed) {
+    // and integration is enabled
+    if (!landed && _enable_integration) {
 		updateIntegral(rate_error, dt);
 	}
 
@@ -108,4 +109,9 @@ void RateControl::getRateControlStatus(rate_ctrl_status_s &rate_ctrl_status)
 	rate_ctrl_status.rollspeed_integ = _rate_int(0);
 	rate_ctrl_status.pitchspeed_integ = _rate_int(1);
 	rate_ctrl_status.yawspeed_integ = _rate_int(2);
+}
+
+void RateControl::setInt(const float x, const float y, const float z)
+{
+    _rate_int = Vector3f(x, y, z);
 }

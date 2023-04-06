@@ -100,6 +100,11 @@ public:
 	 */
 	void getRateControlStatus(rate_ctrl_status_s &rate_ctrl_status);
 
+    // My methods
+    void setInt(const float x, const float y, const float z);
+    void enableIntegration() { _enable_integration = true; }
+    void disableIntegration() { _enable_integration = false; }
+    bool isIntegrationEnabled() { return _enable_integration; }
 private:
 	void updateIntegral(matrix::Vector3f &rate_error, const float dt);
 
@@ -116,4 +121,7 @@ private:
 	// Feedback from control allocation
 	matrix::Vector<bool, 3> _control_allocator_saturation_negative;
 	matrix::Vector<bool, 3> _control_allocator_saturation_positive;
+
+    // My props
+    bool _enable_integration{false};
 };

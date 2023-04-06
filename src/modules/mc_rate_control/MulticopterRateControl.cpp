@@ -68,6 +68,15 @@ MulticopterRateControl::init()
 		return false;
 	}
 
+    if (_param_mav_sys_id.get() == 1) {
+        // Enable integration
+        _rate_control.enableIntegration();
+    } else {
+        _rate_control.disableIntegration();
+    }
+
+    _first_integral_part_received = false;
+    _time_last_integral_part_received = 0;
 	return true;
 }
 
@@ -238,7 +247,37 @@ MulticopterRateControl::Run()
 				_rate_control.setSaturationStatus(saturation_positive, saturation_negative);
 			}
 
-			// run rate controller
+            if (_param_mav_sys_id.get() == 2) {
+                // Receive integral part from FMU 1
+                integral_part_ratecontrol_s int_part_topic_in{};
+                if (_integral_part_sub.update(&int_part_topic_in)) {
+//                    PX4_INFO("Received INT RATE topic with x=%f, y=%f, z=%f",
+//                             (double) int_part_topic_in.x, (double) int_part_topic_in.y, (double) int_part_topic_in.z);
+                    // Set integral part
+                    _rate_control.setInt(int_part_topic_in.x, int_part_topic_in.y, int_part_topic_in.z);
+
+                    // Save time
+                    _time_last_integral_part_received = hrt_absolute_time();
+                    //
+                    if (!_first_integral_part_received) {
+                        _first_integral_part_received = true;
+                    }
+
+                    // Disable integration
+                    if (_rate_control.isIntegrationEnabled()) {
+                        _rate_control.disableIntegration();
+                        PX4_INFO("Rate integration is disabled!");
+                    }
+
+                }else if (_first_integral_part_received && !_rate_control.isIntegrationEnabled()) {
+                    uint64_t time_offline = hrt_absolute_time() - _time_last_integral_part_received;
+                    if (time_offline > 1000000) { // 1 sec
+                        _rate_control.enableIntegration();
+                        PX4_INFO("Rate integration is enabled, time_offline(millisec)=%lu!", (unsigned long)time_offline);
+                    }
+                }
+            }
+            // run rate controller
 			const Vector3f att_control = _rate_control.update(rates, _rates_sp, angular_accel, dt, _maybe_landed || _landed);
 
 			// publish rate controller status
@@ -247,6 +286,15 @@ MulticopterRateControl::Run()
 			rate_ctrl_status.timestamp = hrt_absolute_time();
 			_controller_status_pub.publish(rate_ctrl_status);
 
+            if (_param_mav_sys_id.get() == 1) {
+                // Publish integral part
+                integral_part_ratecontrol_s int_part_topic_out{};
+                int_part_topic_out.x = rate_ctrl_status.rollspeed_integ;
+                int_part_topic_out.y = rate_ctrl_status.pitchspeed_integ;
+                int_part_topic_out.z = rate_ctrl_status.yawspeed_integ;
+                int_part_topic_out.timestamp = rate_ctrl_status.timestamp;
+                _integral_part_pub.publish(int_part_topic_out);
+            }
 			// publish actuator controls
 			actuator_controls_s actuators{};
 			actuators.control[actuator_controls_s::INDEX_ROLL] = PX4_ISFINITE(att_control(0)) ? att_control(0) : 0.0f;

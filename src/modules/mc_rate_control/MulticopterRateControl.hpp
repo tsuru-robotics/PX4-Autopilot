@@ -63,6 +63,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_thrust_setpoint.h>
 #include <uORB/topics/vehicle_torque_setpoint.h>
+#include <uORB/topics/integral_part_ratecontrol.h>
 
 using namespace time_literals;
 
@@ -177,9 +178,20 @@ private:
 
 		(ParamBool<px4::params::MC_BAT_SCALE_EN>) _param_mc_bat_scale_en,
 
-		(ParamInt<px4::params::CBRK_RATE_CTRL>) _param_cbrk_rate_ctrl
+		(ParamInt<px4::params::CBRK_RATE_CTRL>) _param_cbrk_rate_ctrl,
+
+        (ParamInt<px4::params::MAV_SYS_ID>) _param_mav_sys_id
 	)
 
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
 
+    // My props
+    // For publishing integral part
+    uORB::Publication<integral_part_ratecontrol_s> _integral_part_pub{ORB_ID(integral_part_ratecontrol)};
+
+    // For subscription to integral part
+    uORB::Subscription _integral_part_sub{ORB_ID(integral_part_ratecontrol)};
+
+    uint64_t _time_last_integral_part_received{0};
+    bool _first_integral_part_received{false};
 };

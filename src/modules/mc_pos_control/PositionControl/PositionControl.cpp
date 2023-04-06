@@ -187,11 +187,14 @@ void PositionControl::_velocityControl(const float dt)
 
 	// Make sure integral doesn't get NAN
 	ControlMath::setZeroIfNanVector3f(vel_error);
-	// Update integral part of velocity control
-	_vel_int += vel_error.emult(_gain_vel_i) * dt;
 
-	// limit thrust integral
-	_vel_int(2) = math::min(fabsf(_vel_int(2)), CONSTANTS_ONE_G) * sign(_vel_int(2));
+    if (_enable_integration) {
+        // Update integral part of velocity control
+        _vel_int += vel_error.emult(_gain_vel_i) * dt;
+
+        // limit thrust integral
+        _vel_int(2) = math::min(fabsf(_vel_int(2)), CONSTANTS_ONE_G) * sign(_vel_int(2));
+    }
 }
 
 void PositionControl::_accelerationControl()
@@ -253,4 +256,16 @@ void PositionControl::getAttitudeSetpoint(vehicle_attitude_setpoint_s &attitude_
 {
 	ControlMath::thrustToAttitude(_thr_sp, _yaw_sp, attitude_setpoint);
 	attitude_setpoint.yaw_sp_move_rate = _yawspeed_sp;
+}
+
+void PositionControl::getInt(float &x, float &y, float &z) const
+{
+    x = _vel_int(0);
+    y = _vel_int(1);
+    z = _vel_int(2);
+}
+
+void PositionControl::setInt(const float x, const float y, const float z)
+{
+    _vel_int = Vector3f(x, y, z);
 }
