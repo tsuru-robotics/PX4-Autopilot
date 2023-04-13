@@ -82,6 +82,8 @@ UavcanNode::UavcanNode(uavcan::ICanDriver &can_driver, uavcan::ISystemClock &sys
 	ModuleParams(nullptr),
 	_node(can_driver, system_clock, _pool_allocator),
 	_beep_controller(_node),
+    _fmu_sync_sender(_node),
+    _fmu_sync_receiver(_node),
 	_esc_controller(_node),
 	_servo_controller(_node),
 	_hardpoint_controller(_node),
@@ -513,6 +515,19 @@ UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 	if (ret < 0) {
 		return ret;
 	}
+
+    /* Start FMU sync controller*/
+    if (node_id == 1) {
+        ret = _fmu_sync_sender.init();
+        PX4_INFO("Init FMU sync SENDER done with ret=%d!", ret);
+    } else {
+        ret = _fmu_sync_receiver.init();
+        PX4_INFO("Init FMU sync RECEIVER done with ret=%d!", ret);
+    }
+
+    if (ret < 0) {
+        return ret;
+    }
 
 	// Actuators
 	ret = _esc_controller.init();

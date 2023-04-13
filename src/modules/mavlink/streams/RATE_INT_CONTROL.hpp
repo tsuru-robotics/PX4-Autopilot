@@ -70,7 +70,7 @@ private:
             msg.z = int_rate_part.z;
 
             mavlink_msg_rate_int_control_send_struct(_mavlink->get_channel(), &msg);
-            //PX4_INFO("Sending mavlink_rate_int_control_t with x=%f y=%f z=%f!", (double)msg.x, (double)msg.y, (double)msg.z);
+            // PX4_INFO("Sending mavlink_rate_int_control_t with x=%f y=%f z=%f!", (double)msg.x, (double)msg.y, (double)msg.z);
             res = true;
         }
 

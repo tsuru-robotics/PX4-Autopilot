@@ -138,6 +138,9 @@ px4_add_module(
 	SRCS
 		beep.cpp
 		beep.hpp
+		fmu_sync_sender.cpp
+		fmu_sync_sender.hpp
+		fmu_sync_receiver.hpp
 		rgbled.cpp
 		rgbled.hpp
 		safety_state.cpp

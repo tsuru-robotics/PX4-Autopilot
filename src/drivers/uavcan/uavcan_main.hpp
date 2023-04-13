@@ -57,6 +57,8 @@
 #include "sensors/sensor_bridge.hpp"
 #include "uavcan_driver.hpp"
 #include "uavcan_servers.hpp"
+#include "fmu_sync_sender.hpp"
+#include "fmu_sync_receiver.hpp"
 
 #include <lib/drivers/device/Device.hpp>
 #include <lib/mixer_module/mixer_module.hpp>
@@ -227,7 +229,9 @@ private:
 	uavcan::Node<>			_node;				///< library instance
 	pthread_mutex_t			_node_mutex;
 
-	UavcanBeepController		_beep_controller;
+	UavcanBeepController	_beep_controller;
+    UavcanFmuSyncSender		_fmu_sync_sender;
+    UavcanFmuSyncReceiver	_fmu_sync_receiver;
 	UavcanEscController		_esc_controller;
 	UavcanServoController		_servo_controller;
 	UavcanMixingInterfaceESC 	_mixing_interface_esc{_node_mutex, _esc_controller};

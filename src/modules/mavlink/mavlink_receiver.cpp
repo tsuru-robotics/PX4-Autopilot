@@ -2795,6 +2795,9 @@ MavlinkReceiver::handle_message_rate_int_control(mavlink_message_t *msg)
     mavlink_rate_int_control_t rate_int_msg;
     mavlink_msg_rate_int_control_decode(msg, &rate_int_msg);
 
+    //PX4_INFO("Received mavlink_rate_int_control_t with x=%f y=%f z=%f!",
+    //         (double)rate_int_msg.x, (double)rate_int_msg.y, (double)rate_int_msg.z);
+
     integral_part_ratecontrol_s rate_topic{};
 
     rate_topic.timestamp = hrt_absolute_time();
@@ -2810,7 +2813,8 @@ MavlinkReceiver::handle_message_vel_int_control(mavlink_message_t *msg)
     mavlink_vel_int_control_t vel_int_msg;
     mavlink_msg_vel_int_control_decode(msg, &vel_int_msg);
 
-//    PX4_INFO("Received mavlink_vel_int_control_t with x=%f y=%f z=%f!", (double)vel_int_msg.x, (double)vel_int_msg.y, (double)vel_int_msg.z);
+    //PX4_INFO("Received mavlink_vel_int_control_t with x=%f y=%f z=%f!",
+    //         (double)vel_int_msg.x, (double)vel_int_msg.y, (double)vel_int_msg.z);
 
     integral_part_velocitycontrol_s vel_topic{};
 
