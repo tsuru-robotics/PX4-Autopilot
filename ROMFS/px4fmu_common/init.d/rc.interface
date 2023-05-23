@@ -275,6 +275,23 @@ then
 	fi
 fi
 
+if [ $OUTPUT_MODE = hil ]
+then
+    if uavcan start
+    then
+        set OUTPUT_ESC /dev/uavcan/esc
+        if mixer append ${OUTPUT_ESC} ${MIXER_FILE}
+        then
+            echo "INFO  [init] Mixer: ${MIXER_FILE} appended on ${OUTPUT_ESC}"
+        else
+            echo "ERROR  [init] Failed appending mixer: ${MIXER_FILE} on ${OUTPUT_ESC}"
+        fi
+        unset OUTPUT_ESC
+    else
+        echo "ERROR  [init] Failed starting uavcan"
+    fi
+fi
+
 unset OUTPUT_CMD
 unset MIXER_AUX_FILE
 unset MIXER_EXTRA_FILE

@@ -34,5 +34,5 @@ param set-default CA_ROTOR3_PX -0.15
 param set-default CA_ROTOR3_PY 0.15
 param set-default CA_ROTOR3_KM -0.05
 
-param set-default SDLOG_PROFILE 33
-param set UAVCAN_ENABLE 1
+param set SDLOG_PROFILE 33
+param set UAVCAN_ENABLE 3
