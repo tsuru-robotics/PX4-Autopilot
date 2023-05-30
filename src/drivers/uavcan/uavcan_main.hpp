@@ -53,7 +53,7 @@
 #include "beep.hpp"
 #include "logmessage.hpp"
 #include "rgbled.hpp"
-#include "safety_state.hpp"
+#include "arming_status.hpp"
 #include "sensors/sensor_bridge.hpp"
 #include "uavcan_driver.hpp"
 #include "uavcan_servers.hpp"
@@ -237,7 +237,7 @@ private:
 	UavcanMixingInterfaceESC 	_mixing_interface_esc{_node_mutex, _esc_controller};
 	UavcanMixingInterfaceServo 	_mixing_interface_servo{_node_mutex, _servo_controller};
 	UavcanHardpointController	_hardpoint_controller;
-	UavcanSafetyState         	_safety_state_controller;
+	UavcanArmingStatus         	_arming_status_controller;
 	UavcanLogMessage                _log_message_controller;
 	UavcanRGBController             _rgbled_controller;
 

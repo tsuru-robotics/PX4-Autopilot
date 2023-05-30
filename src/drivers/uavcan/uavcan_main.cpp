@@ -87,7 +87,7 @@ UavcanNode::UavcanNode(uavcan::ICanDriver &can_driver, uavcan::ISystemClock &sys
 	_esc_controller(_node),
 	_servo_controller(_node),
 	_hardpoint_controller(_node),
-	_safety_state_controller(_node),
+	_arming_status_controller(_node),
 	_log_message_controller(_node),
 	_rgbled_controller(_node),
 	_time_sync_master(_node),
@@ -543,7 +543,7 @@ UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 		return ret;
 	}
 
-	ret = _safety_state_controller.init();
+	ret = _arming_status_controller.init();
 
 	if (ret < 0) {
 		return ret;

@@ -143,8 +143,8 @@ px4_add_module(
 		fmu_sync_receiver.hpp
 		rgbled.cpp
 		rgbled.hpp
-		safety_state.cpp
-		safety_state.hpp
+		arming_status.cpp
+		arming_status.hpp
 
 		# Main
 		uavcan_main.cpp

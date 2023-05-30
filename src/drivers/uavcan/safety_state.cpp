@@ -66,7 +66,7 @@ void UavcanSafetyState::periodic_update(const uavcan::TimerEvent &)
 	if (_actuator_armed_sub.update(&actuator_armed)) {
 		ardupilot::indication::SafetyState cmd;
 
-		if ((actuator_armed.armed || actuator_armed.prearmed) && !actuator_armed.lockdown) {
+		if (actuator_armed.armed || actuator_armed.prearmed) {
 			cmd.status = cmd.STATUS_SAFETY_OFF;
 
 		} else {
