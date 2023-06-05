@@ -24,11 +24,16 @@ mavlink stream -r 10 -s OPTICAL_FLOW_RAD -u $udp_gcs_port_local
 
 # API/Offboard link
 mavlink start -x -u $udp_offboard_port_local -r 4000000 -f -m onboard -o $udp_offboard_port_remote
-mavlink stream -r 5 -s VEL_INT_CONTROL -u $udp_offboard_port_local
-mavlink stream -r 5 -s RATE_INT_CONTROL -u $udp_offboard_port_local
 
 # Onboard link to camera
 mavlink start -x -u $udp_onboard_payload_port_local -r 4000 -f -m onboard -o $udp_onboard_payload_port_remote
 
 # Onboard link to gimbal
 mavlink start -x -u $udp_onboard_gimbal_port_local -r 400000 -m gimbal -o $udp_onboard_gimbal_port_remote
+
+# Sync link (for PX4 instances synchronization)
+udp_custom_port_local=$((15200+px4_instance))
+udp_custom_port_remote=$((15300+px4_instance))
+mavlink start -x -u $udp_custom_port_local -r 4000000 -f -m custom -o $udp_custom_port_remote
+mavlink stream -r 4 -s VEL_INT_CONTROL -u $udp_custom_port_local
+mavlink stream -r 4 -s RATE_INT_CONTROL -u $udp_custom_port_local
