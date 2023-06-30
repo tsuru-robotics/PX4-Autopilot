@@ -179,6 +179,12 @@ param set-default SDLOG_MODE 1
 # enable default, estimator replay and vision/avoidance logging profiles
 param set-default SDLOG_PROFILE 163
 param set-default EKF2_GPS_CTRL 3
+param set-default EKF2_EV_CTRL 3
+param set-default EKF2_EV_DELAY 100
+param set-default EKF2_EV_NOISE_MD 1
+param set-default EKF2_EVP_NOISE 0.1
+param set-default EKF2_EVP_GATE 3
+param set-default EKF2_HGT_REF 0
 
 param set-default SDLOG_DIRS_MAX 7
 
