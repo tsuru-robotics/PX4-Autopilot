@@ -178,7 +178,13 @@ param set-default -s MC_AT_EN 1
 param set-default SDLOG_MODE 1
 # enable default, estimator replay and vision/avoidance logging profiles
 param set-default SDLOG_PROFILE 163
-param set-default EKF2_GPS_CTRL 3
+
+# VisNav fusion as a secondary GPS
+param set-default EKF2_GPS_CTRL 7 # Enable GPS fusion: Lon/lat, Altitude, 3D velocity
+param set-default SENS_GPS_PRIME 0 # Select GPS as first GPS instance when available
+param set-default SENS_GPS_MASK 0 # Disable blending and always used first GPS instance
+
+# VisNav fusion as External Vision system
 param set-default EKF2_EV_CTRL 3
 param set-default EKF2_EV_DELAY 100
 param set-default EKF2_EV_NOISE_MD 1

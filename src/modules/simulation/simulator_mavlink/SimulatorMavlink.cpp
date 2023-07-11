@@ -423,10 +423,17 @@ void SimulatorMavlink::handle_message_hil_gps(const mavlink_message_t *msg)
 		gps.jamming_state = 0;
 		gps.spoofing_state = 0;
 
-		gps.vel_m_s = (float)(hil_gps.vel) / 100.0f; // cm/s -> m/s
-		gps.vel_n_m_s = (float)(hil_gps.vn) / 100.0f; // cm/s -> m/s
-		gps.vel_e_m_s = (float)(hil_gps.ve) / 100.0f; // cm/s -> m/s
-		gps.vel_d_m_s = (float)(hil_gps.vd) / 100.0f; // cm/s -> m/s
+        if (hil_gps.vel == 65535) {
+            gps.vel_m_s =   NAN;
+            gps.vel_n_m_s = NAN;
+            gps.vel_e_m_s = NAN;
+            gps.vel_d_m_s = NAN;
+        } else {
+            gps.vel_m_s = (float)(hil_gps.vel) / 100.0f; // cm/s -> m/s
+            gps.vel_n_m_s = (float)(hil_gps.vn) / 100.0f; // cm/s -> m/s
+            gps.vel_e_m_s = (float)(hil_gps.ve) / 100.0f; // cm/s -> m/s
+            gps.vel_d_m_s = (float)(hil_gps.vd) / 100.0f; // cm/s -> m/s
+        }
 		gps.cog_rad = ((hil_gps.cog == 65535) ? NAN : matrix::wrap_2pi(math::radians(hil_gps.cog * 1e-2f))); // cdeg -> rad
 		gps.vel_ned_valid = true;
 
@@ -439,6 +446,8 @@ void SimulatorMavlink::handle_message_hil_gps(const mavlink_message_t *msg)
 		gps.heading_offset = NAN;
 
 		gps.timestamp = hrt_absolute_time();
+
+        gps.device_id = hil_gps.id;
 
 		// New publishers will be created based on the HIL_GPS ID's being different or not
 		for (size_t i = 0; i < sizeof(_gps_ids) / sizeof(_gps_ids[0]); i++) {
@@ -456,7 +465,7 @@ void SimulatorMavlink::handle_message_hil_gps(const mavlink_message_t *msg)
 				device_id.devid_s.bus = 0;
 				device_id.devid_s.address = i;
 				device_id.devid_s.devtype = DRV_GPS_DEVTYPE_SIM;
-				gps.device_id = device_id.devid;
+				//gps.device_id = device_id.devid;
 
 				_sensor_gps_pubs[i]->publish(gps);
 				break;
