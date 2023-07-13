@@ -511,11 +511,11 @@ UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 
 	fill_node_info();
 
-	ret = _beep_controller.init();
-
-	if (ret < 0) {
-		return ret;
-	}
+//	ret = _beep_controller.init();
+//
+//	if (ret < 0) {
+//		return ret;
+//	}
 
     /* Start FMU sync controller*/
     if (node_id == 1) {
@@ -555,11 +555,11 @@ UavcanNode::init(uavcan::NodeID node_id, UAVCAN_DRIVER::BusEvent &bus_events)
 		return ret;
 	}
 
-	ret = _rgbled_controller.init();
-
-	if (ret < 0) {
-		return ret;
-	}
+//	ret = _rgbled_controller.init();
+//
+//	if (ret < 0) {
+//		return ret;
+//	}
 
 	/* Start node info retriever to fetch node info from new nodes */
 	ret = _node_info_retriever.start();
