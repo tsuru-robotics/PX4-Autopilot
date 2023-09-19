@@ -468,43 +468,45 @@ void
 FixedwingPositionControl::tecs_status_publish(float alt_sp, float equivalent_airspeed_sp,
 		float true_airspeed_derivative_raw, float throttle_trim)
 {
-	tecs_status_s t{};
+	tecs_status_s tecs_status{};
 
 	const TECS::DebugOutput &debug_output{_tecs.getStatus()};
 
 	switch (_tecs.tecs_mode()) {
 	case TECS::ECL_TECS_MODE_NORMAL:
-		t.mode = tecs_status_s::TECS_MODE_NORMAL;
+		tecs_status.mode = tecs_status_s::TECS_MODE_NORMAL;
 		break;
 
 	case TECS::ECL_TECS_MODE_UNDERSPEED:
-		t.mode = tecs_status_s::TECS_MODE_UNDERSPEED;
+		tecs_status.mode = tecs_status_s::TECS_MODE_UNDERSPEED;
 		break;
 	}
 
-	t.altitude_sp = alt_sp;
-	t.altitude_sp_filtered = debug_output.altitude_sp_ref;
-	t.height_rate_setpoint = debug_output.control.altitude_rate_control;
-	t.height_rate = -_local_pos.vz;
-	t.equivalent_airspeed_sp = equivalent_airspeed_sp;
-	t.true_airspeed_sp = _eas2tas * equivalent_airspeed_sp;
-	t.true_airspeed_filtered = debug_output.true_airspeed_filtered;
-	t.true_airspeed_derivative_sp = debug_output.control.true_airspeed_derivative_control;
-	t.true_airspeed_derivative = debug_output.true_airspeed_derivative;
-	t.true_airspeed_derivative_raw = true_airspeed_derivative_raw;
-	t.total_energy_rate = debug_output.control.total_energy_rate_estimate;
-	t.total_energy_balance_rate = debug_output.control.energy_balance_rate_estimate;
-	t.total_energy_rate_sp = debug_output.control.total_energy_rate_sp;
-	t.total_energy_balance_rate_sp = debug_output.control.energy_balance_rate_sp;
-	t.throttle_integ = debug_output.control.throttle_integrator;
-	t.pitch_integ = debug_output.control.pitch_integrator;
-	t.throttle_sp = _tecs.get_throttle_setpoint();
-	t.pitch_sp_rad = _tecs.get_pitch_setpoint();
-	t.throttle_trim = throttle_trim;
+	tecs_status.altitude_sp = alt_sp;
+	tecs_status.altitude_reference = debug_output.altitude_reference;
+	tecs_status.height_rate_reference = debug_output.height_rate_reference;
+	tecs_status.height_rate_direct = debug_output.height_rate_direct;
+	tecs_status.height_rate_setpoint = debug_output.control.altitude_rate_control;
+	tecs_status.height_rate = -_local_pos.vz;
+	tecs_status.equivalent_airspeed_sp = equivalent_airspeed_sp;
+	tecs_status.true_airspeed_sp = _eas2tas * equivalent_airspeed_sp;
+	tecs_status.true_airspeed_filtered = debug_output.true_airspeed_filtered;
+	tecs_status.true_airspeed_derivative_sp = debug_output.control.true_airspeed_derivative_control;
+	tecs_status.true_airspeed_derivative = debug_output.true_airspeed_derivative;
+	tecs_status.true_airspeed_derivative_raw = true_airspeed_derivative_raw;
+	tecs_status.total_energy_rate = debug_output.control.total_energy_rate_estimate;
+	tecs_status.total_energy_balance_rate = debug_output.control.energy_balance_rate_estimate;
+	tecs_status.total_energy_rate_sp = debug_output.control.total_energy_rate_sp;
+	tecs_status.total_energy_balance_rate_sp = debug_output.control.energy_balance_rate_sp;
+	tecs_status.throttle_integ = debug_output.control.throttle_integrator;
+	tecs_status.pitch_integ = debug_output.control.pitch_integrator;
+	tecs_status.throttle_sp = _tecs.get_throttle_setpoint();
+	tecs_status.pitch_sp_rad = _tecs.get_pitch_setpoint();
+	tecs_status.throttle_trim = throttle_trim;
 
-	t.timestamp = hrt_absolute_time();
+	tecs_status.timestamp = hrt_absolute_time();
 
-	_tecs_status_pub.publish(t);
+	_tecs_status_pub.publish(tecs_status);
 }
 
 void
@@ -1464,7 +1466,7 @@ FixedwingPositionControl::control_auto_takeoff(const hrt_abstime &now, const flo
 			tecs_update_pitch_throttle(control_interval,
 						   altitude_setpoint_amsl,
 						   target_airspeed,
-						   radians(_param_fw_p_lim_min.get()),
+						   radians(_takeoff_pitch_min.get()),
 						   radians(_param_fw_p_lim_max.get()),
 						   _param_fw_thr_min.get(),
 						   max_takeoff_throttle,
@@ -2458,9 +2460,28 @@ FixedwingPositionControl::reset_landing_state()
 	}
 }
 
-float FixedwingPositionControl::compensateTrimThrottleForDensityAndWeight(float throttle_trim, float throttle_min,
-		float throttle_max)
+float FixedwingPositionControl::calculateTrimThrottle(float throttle_min,
+		float throttle_max, float airspeed_sp)
 {
+	float throttle_trim =
+		_param_fw_thr_trim.get(); // throttle required for level flight at trim airspeed, at sea level (standard atmosphere)
+
+	// Drag modelling (parasite drag): calculate mapping airspeed-->throttle, assuming a linear relation with different gradients
+	// above and below trim. This is tunable thorugh FW_THR_ASPD_MIN and FW_THR_ASPD_MAX.
+	const float slope_below_trim = (_param_fw_thr_trim.get() - _param_fw_thr_aspd_min.get()) /
+				       (_param_fw_airspd_trim.get() - _param_fw_airspd_min.get());
+	const float slope_above_trim = (_param_fw_thr_aspd_max.get() - _param_fw_thr_trim.get()) /
+				       (_param_fw_airspd_max.get() - _param_fw_airspd_trim.get());
+
+	if (PX4_ISFINITE(airspeed_sp) && PX4_ISFINITE(slope_below_trim) && _param_fw_thr_aspd_min.get() > FLT_EPSILON
+	    && airspeed_sp < _param_fw_airspd_trim.get()) {
+		throttle_trim = _param_fw_thr_trim.get() - slope_below_trim * (_param_fw_airspd_trim.get() - airspeed_sp);
+
+	} else if (PX4_ISFINITE(airspeed_sp) && PX4_ISFINITE(slope_above_trim) && _param_fw_thr_aspd_max.get() > FLT_EPSILON
+		   && airspeed_sp > _param_fw_airspd_trim.get()) {
+		throttle_trim = _param_fw_thr_trim.get() + slope_above_trim * (airspeed_sp - _param_fw_airspd_trim.get());
+	}
+
 	float weight_ratio = 1.0f;
 
 	if (_param_weight_base.get() > FLT_EPSILON && _param_weight_gross.get() > FLT_EPSILON) {
@@ -2550,8 +2571,8 @@ FixedwingPositionControl::tecs_update_pitch_throttle(const float control_interva
 	}
 
 	/* update TECS vehicle state estimates */
-	const float throttle_trim_comp = compensateTrimThrottleForDensityAndWeight(_param_fw_thr_trim.get(), throttle_min,
-					 throttle_max);
+	const float throttle_trim_adjusted = calculateTrimThrottle(throttle_min,
+					     throttle_max, airspeed_sp);
 
 	// HOTFIX: the airspeed rate estimate using acceleration in body-forward direction has shown to lead to high biases
 	// when flying tight turns. It's in this case much safer to just set the estimated airspeed rate to 0.
@@ -2565,7 +2586,8 @@ FixedwingPositionControl::tecs_update_pitch_throttle(const float control_interva
 		     _eas2tas,
 		     throttle_min,
 		     throttle_max,
-		     throttle_trim_comp,
+		     _param_fw_thr_trim.get(),
+		     throttle_trim_adjusted,
 		     pitch_min_rad - radians(_param_fw_psp_off.get()),
 		     pitch_max_rad - radians(_param_fw_psp_off.get()),
 		     desired_max_climbrate,
@@ -2574,7 +2596,7 @@ FixedwingPositionControl::tecs_update_pitch_throttle(const float control_interva
 		     -_local_pos.vz,
 		     hgt_rate_sp);
 
-	tecs_status_publish(alt_sp, airspeed_sp, airspeed_rate_estimate, throttle_trim_comp);
+	tecs_status_publish(alt_sp, airspeed_sp, airspeed_rate_estimate, throttle_trim_adjusted);
 }
 
 float
@@ -2825,31 +2847,36 @@ void FixedwingPositionControl::navigateWaypoints(const Vector2f &waypoint_A, con
 	// BUT no arbitrary max approach angle, approach entirely determined by generated
 	// bearing vectors
 
-	Vector2f vector_A_to_B = waypoint_B - waypoint_A;
-	Vector2f vector_A_to_vehicle = vehicle_pos - waypoint_A;
+	const Vector2f vector_A_to_B = waypoint_B - waypoint_A;
+	const Vector2f vector_B_to_A = -vector_A_to_B;
+	const Vector2f vector_A_to_vehicle = vehicle_pos - waypoint_A;
+	const Vector2f vector_B_to_vehicle = vehicle_pos - waypoint_B;
+	Vector2f desired_path = vector_A_to_B; // this is the default path tangent, but is overridden below
 
 	if (vector_A_to_B.norm() < FLT_EPSILON) {
 		// the waypoints are on top of each other and should be considered as a
 		// single waypoint, fly directly to it
 		if (vector_A_to_vehicle.norm() > FLT_EPSILON) {
-			vector_A_to_B = -vector_A_to_vehicle;
+			desired_path = -vector_A_to_vehicle;
 
 		} else {
 			// Fly to a point and on it. Stay to the current control. Do not update the npfg library to get last output.
 			return;
 		}
 
-
 	} else if ((vector_A_to_B.dot(vector_A_to_vehicle) < -FLT_EPSILON)) {
 		// we are in front of waypoint A, fly directly to it until we are within switch distance.
-
 		if (vector_A_to_vehicle.norm() > _npfg.switchDistance(500.0f)) {
-			vector_A_to_B = -vector_A_to_vehicle;
+			desired_path = -vector_A_to_vehicle;
 		}
+
+	} else if (vector_B_to_A.dot(vector_B_to_vehicle) < -FLT_EPSILON) {
+		// we are behind waypoint B, fly directly to it
+		desired_path = -vector_B_to_vehicle;
 	}
 
 	// track the line segment
-	Vector2f unit_path_tangent{vector_A_to_B.normalized()};
+	Vector2f unit_path_tangent{desired_path.normalized()};
 	_target_bearing = atan2f(unit_path_tangent(1), unit_path_tangent(0));
 	_closest_point_on_path = waypoint_A + vector_A_to_vehicle.dot(unit_path_tangent) * unit_path_tangent;
 	_npfg.guideToPath(vehicle_pos, ground_vel, wind_vel, unit_path_tangent, waypoint_A, 0.0f);
@@ -2961,11 +2988,11 @@ int FixedwingPositionControl::print_usage(const char *reason)
 	PRINT_MODULE_DESCRIPTION(
 		R"DESCR_STR(
 ### Description
-fw_path_navigation is the fixed wing path navigation.
+fw_pos_control is the fixed-wing position controller.
 
 )DESCR_STR");
 
-	PRINT_MODULE_USAGE_NAME("fw_path_navigation", "controller");
+	PRINT_MODULE_USAGE_NAME("fw_pos_control", "controller");
 	PRINT_MODULE_USAGE_COMMAND("start");
 	PRINT_MODULE_USAGE_ARG("vtol", "VTOL mode", true);
 	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
@@ -2973,7 +3000,7 @@ fw_path_navigation is the fixed wing path navigation.
 	return 0;
 }
 
-extern "C" __EXPORT int fw_path_navigation_main(int argc, char *argv[])
+extern "C" __EXPORT int fw_pos_control_main(int argc, char *argv[])
 {
 	return FixedwingPositionControl::main(argc, argv);
 }

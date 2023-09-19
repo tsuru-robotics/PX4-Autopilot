@@ -1,6 +1,6 @@
 #####
 #
-# This file maps all the topics that are to be used on the micro DDS client.
+# This file maps all the topics that are to be used on the uXRCE-DDS client.
 #
 #####
 publications:
@@ -10,6 +10,9 @@ publications:
 
   - topic: /fmu/out/failsafe_flags
     type: px4_msgs::msg::FailsafeFlags
+
+  - topic: /fmu/out/position_setpoint_triplet
+    type: px4_msgs::msg::PositionSetpointTriplet
 
   - topic: /fmu/out/sensor_combined
     type: px4_msgs::msg::SensorCombined

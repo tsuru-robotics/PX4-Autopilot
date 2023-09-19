@@ -540,7 +540,7 @@ PARAM_DEFINE_FLOAT(FW_T_THR_DAMP, 0.1f);
  * @increment 0.05
  * @group FW TECS
  */
-PARAM_DEFINE_FLOAT(FW_T_I_GAIN_THR, 0.3f);
+PARAM_DEFINE_FLOAT(FW_T_I_GAIN_THR, 0.05f);
 
 /**
  * Integrator gain pitch
@@ -603,7 +603,7 @@ PARAM_DEFINE_FLOAT(FW_T_SPD_STD, 0.2f);
  * @increment 0.1
  * @group FW TECS
  */
-PARAM_DEFINE_FLOAT(FW_T_SPD_DEV_STD, 0.05f);
+PARAM_DEFINE_FLOAT(FW_T_SPD_DEV_STD, 0.2f);
 
 /**
  * Process noise standard deviation for the airspeed rate in the airspeed filter.
@@ -1063,3 +1063,33 @@ PARAM_DEFINE_FLOAT(FW_SPOILERS_LND, 0.f);
  * @group FW Attitude Control
  */
 PARAM_DEFINE_FLOAT(FW_SPOILERS_DESC, 0.f);
+
+/**
+ * Throttle at min airspeed
+ *
+ * Required throttle for level flight at minimum airspeed FW_AIRSPD_MIN (sea level, standard atmosphere)
+ *
+ * Set to 0 to disable mapping of airspeed to trim throttle below FW_AIRSPD_TRIM.
+ *
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group FW TECS
+ */
+PARAM_DEFINE_FLOAT(FW_THR_ASPD_MIN, 0.f);
+
+/**
+ * Throttle at max airspeed
+ *
+ * Required throttle for level flight at maximum airspeed FW_AIRSPD_MAX (sea level, standard atmosphere)
+ *
+ * Set to 0 to disable mapping of airspeed to trim throttle.
+ *
+ * @min 0
+ * @max 1
+ * @decimal 2
+ * @increment 0.01
+ * @group FW TECS
+ */
+PARAM_DEFINE_FLOAT(FW_THR_ASPD_MAX, 0.f);
