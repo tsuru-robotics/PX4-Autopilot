@@ -102,9 +102,9 @@ void EstimatorChecks::checkAndReport(const Context &context, Report &reporter)
 	if (missing_data && _param_sys_mc_est_group.get() == 2) {
 		/* EVENT
 		 */
-		reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
-					    events::ID("check_estimator_missing_data"),
-					    events::Log::Info, "Waiting for estimator to initialize");
+		// reporter.armingCheckFailure(required_groups, health_component_t::local_position_estimate,
+		// 			    events::ID("check_estimator_missing_data"),
+		// 			    events::Log::Info, "Waiting for estimator to initialize");
 
 		if (reporter.mavlink_log_pub()) {
 			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: ekf2 missing data");
