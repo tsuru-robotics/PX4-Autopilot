@@ -167,9 +167,3 @@ param set-default COM_DISARM_LAND 2
 param set-default COM_DISARM_PRFLT 15.0
 param set-default MAV_2_MODE 1
 param set-default COM_ARM_EKF_YAW 0.7 # TODO
-
-# HIL
-param set-default HIL_ACT_FUNC1 101
-param set-default HIL_ACT_FUNC2 102
-param set-default HIL_ACT_FUNC3 103
-param set-default HIL_ACT_FUNC4 104

@@ -1,0 +1,15 @@
+#!/bin/sh
+#
+# @name SITL Kaiken
+#
+# @type Simulation
+# @class Copter
+#
+# @maintainer Vladimir Savelyev <vms@flyfire.io>
+#
+
+. ${R}etc/init.d/airframes/4999_kaiken
+
+
+param set-default CAL_MAG0_ROT 0
+param set-default SENS_BOARD_ROT 0
