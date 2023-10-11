@@ -67,6 +67,10 @@ private:
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _land_detected_sub{ORB_ID(vehicle_land_detected)};
 
+    #if defined(ENABLE_LOCKSTEP_SCHEDULER)
+	    uORB::Subscription _sensor_gps_sub{ORB_ID(sensor_gps), 0};
+	#endif
+
 	bool send() override
 	{
 		vehicle_global_position_s global_pos;
@@ -74,10 +78,17 @@ private:
 		if (_global_pos_sub.update(&global_pos)) {
 			mavlink_utm_global_position_t msg{};
 
-			// Compute Unix epoch and set time field
-			timespec tv;
-			px4_clock_gettime(CLOCK_REALTIME, &tv);
-			uint64_t unix_epoch = (uint64_t)tv.tv_sec * 1000000 + tv.tv_nsec / 1000;
+            #if defined(ENABLE_LOCKSTEP_SCHEDULER)
+                sensor_gps_s gps;
+                while (!_sensor_gps_sub.update(&gps)) {}
+                uint64_t unix_epoch = gps.time_utc_usec;
+
+            #else // defined(ENABLE_LOCKSTEP_SCHEDULER)
+                // Compute Unix epoch and set time field
+                timespec tv;
+                px4_clock_gettime(CLOCK_REALTIME, &tv);
+                uint64_t unix_epoch = (uint64_t)tv.tv_sec * 1000000 + tv.tv_nsec / 1000;
+            #endif // defined(ENABLE_LOCKSTEP_SCHEDULER)
 
 			// If the time is before 2001-01-01, it's probably the default 2000
 			if (unix_epoch > 978307200000000) {
