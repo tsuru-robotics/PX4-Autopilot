@@ -60,6 +60,7 @@ param set-default EKF2_GPS_P_NOISE 0.3
 param set-default EKF2_GPS_V_NOISE 0.3
 param set-default EKF2_HGT_MODE 1
 param set-default GPS_UBX_DYNMODEL 7
+param set-default GPS_1_CONFIG 201
 
 # RC
 param set-default COM_FLTMODE1 8
