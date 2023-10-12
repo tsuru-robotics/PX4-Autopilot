@@ -45,9 +45,6 @@ param set-default CAL_MAG0_ID 527625
 param set-default CAL_MAG0_PRIO 100
 param set-default CAL_MAG1_ID 0
 param set-default CAL_MAG1_PRIO 0
-param set-default CAL_MAG2_ID 0
-param set-default CAL_MAG2_PRIO 0
-param set-default DRV_IST8310_X 0
 param set-default CAL_MAG_ROT_AUTO 0
 param set-default CAL_MAG_SIDES 63
 param set-default SENS_BOARD_ROT 6
