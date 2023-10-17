@@ -52,6 +52,11 @@ QMC5883L::~QMC5883L()
 	perf_free(_reset_perf);
 	perf_free(_bad_register_perf);
 	perf_free(_bad_transfer_perf);
+	perf_free(_overflow_perf);
+	perf_free(_data_not_changed);
+	perf_free(_data_not_ready);
+	perf_free(_data_skip);
+	perf_free(_status_bad_transfer_perf);
 }
 
 int QMC5883L::init()
@@ -81,6 +86,11 @@ void QMC5883L::print_status()
 	perf_print_counter(_reset_perf);
 	perf_print_counter(_bad_register_perf);
 	perf_print_counter(_bad_transfer_perf);
+	perf_print_counter(_overflow_perf);
+	perf_print_counter(_data_not_changed);
+	perf_print_counter(_data_not_ready);
+	perf_print_counter(_data_skip);
+	perf_print_counter(_status_bad_transfer_perf);
 }
 
 int QMC5883L::probe()
@@ -137,8 +147,8 @@ void QMC5883L::RunImpl()
 				ScheduleDelayed(100_ms);
 
 			} else {
-				PX4_DEBUG("Reset not complete, check again in 10 ms");
-				ScheduleDelayed(10_ms);
+				PX4_DEBUG("Reset not complete, check again in 100 ms");
+				ScheduleDelayed(100_ms);
 			}
 		}
 
@@ -173,45 +183,73 @@ void QMC5883L::RunImpl()
 				uint8_t Y_MSB;
 				uint8_t Z_LSB;
 				uint8_t Z_MSB;
-				uint8_t STATUS;
+				// uint8_t STATUS;
 			} buffer{};
 
 			bool success = false;
-			uint8_t cmd = static_cast<uint8_t>(Register::X_LSB);
+			uint8_t status_data;
+			bool data_ready = false;
+			bool overflow = false;
+			bool data_skip = false;
 
-			if (transfer(&cmd, 1, (uint8_t *)&buffer, sizeof(buffer)) == PX4_OK) {
-				// process data if successful transfer, no overflow
-				if ((buffer.STATUS & STATUS_BIT::OVL) == 0) {
-					int16_t x = combine(buffer.X_MSB, buffer.X_LSB);
-					int16_t y = combine(buffer.Y_MSB, buffer.Y_LSB);
-					int16_t z = combine(buffer.Z_MSB, buffer.Z_LSB);
+			uint8_t status_cmd = static_cast<uint8_t>(Register::STATUS);
 
-					if (x != _prev_data[0] || y != _prev_data[1] || z != _prev_data[2]) {
-						_prev_data[0] = x;
-						_prev_data[1] = y;
-						_prev_data[2] = z;
+			if (transfer(&status_cmd, 1, &status_data, 1) == PX4_OK) {
+				data_ready = (status_data & STATUS_BIT::DRDY);
+				overflow = (status_data & STATUS_BIT::OVL);
+				data_skip = (status_data & STATUS_BIT::DOR);
+			} else {
+				perf_count(_status_bad_transfer_perf);
+			}
 
+			if (data_skip) {
+				perf_count(_data_skip);
+			}
+
+			if (data_skip) {
+				uint8_t cmd = static_cast<uint8_t>(Register::X_LSB);
+				if (transfer(&cmd, 1, (uint8_t *)&buffer, sizeof(buffer)) == PX4_OK) {
+
+					const int16_t x = combine(buffer.X_MSB, buffer.X_LSB);
+					const int16_t y = combine(buffer.Y_MSB, buffer.Y_LSB);
+					const int16_t z = combine(buffer.Z_MSB, buffer.Z_LSB);
+
+					const bool data_changed = ((x != _prev_data[0] || y != _prev_data[1] || z != _prev_data[2]));
+					_prev_data[0] = x;
+					_prev_data[1] = y;
+					_prev_data[2] = z;
+
+					if (!data_changed) {
+						perf_count(_data_not_changed);
+					}
+
+					if (!data_ready) {
+						perf_count(_data_not_ready);
+					}
+
+					// publish data if successful transfer of new data, no overflow
+					if (!overflow) {
 						// Sensor orientation
 						//  Forward X := +X
 						//  Right   Y := -Y
 						//  Down    Z := -Z
-						y = (y == INT16_MIN) ? INT16_MAX : -y; // -y
-						z = (z == INT16_MIN) ? INT16_MAX : -z; // -z
-
-						_px4_mag.update(now, x, y, z);
+						_px4_mag.update(now, x, math::negate(y), math::negate(z));
 
 						success = true;
 
 						if (_failure_count > 0) {
 							_failure_count--;
 						}
+					} else {
+						if (overflow) {
+							perf_count(_overflow_perf);
+						}
 					}
+
+				} else {
+					perf_count(_bad_transfer_perf);
 				}
-
-			} else {
-				perf_count(_bad_transfer_perf);
 			}
-
 			if (!success) {
 				_failure_count++;
 
