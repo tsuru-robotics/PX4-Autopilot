@@ -20,3 +20,4 @@ param set-default HIL_ACT_FUNC4 104
 
 param set-default CAL_MAG0_ROT 0
 param set-default SENS_BOARD_ROT 0
+param set-default BAT1_SOURCE 0
