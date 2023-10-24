@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013-2015 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2023 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,90 +31,62 @@
  *
  ****************************************************************************/
 
-/**
- * @file lis3mdl_i2c.cpp
- *
- * I2C interface for LIS3MDL
- */
+#include "IIM42653.hpp"
 
-#include <px4_platform_common/px4_config.h>
+#include <px4_platform_common/getopt.h>
+#include <px4_platform_common/module.h>
 
-#include <assert.h>
-#include <errno.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <drivers/device/i2c.h>
-
-#include "board_config.h"
-#include "lis3mdl.h"
-
-class LIS3MDL_I2C : public device::I2C
+void IIM42653::print_usage()
 {
-public:
-	LIS3MDL_I2C(const I2CSPIDriverConfig &config);
-	virtual ~LIS3MDL_I2C() = default;
-
-	virtual int     read(unsigned address, void *data, unsigned count);
-	virtual int     write(unsigned address, void *data, unsigned count);
-
-protected:
-	virtual int     probe();
-
-};
-
-device::Device *
-LIS3MDL_I2C_interface(const I2CSPIDriverConfig &config);
-
-device::Device *
-LIS3MDL_I2C_interface(const I2CSPIDriverConfig &config)
-{
-	return new LIS3MDL_I2C(config);
+	PRINT_MODULE_USAGE_NAME("iim42653", "driver");
+	PRINT_MODULE_USAGE_SUBCATEGORY("imu");
+	PRINT_MODULE_USAGE_COMMAND("start");
+	PRINT_MODULE_USAGE_PARAMS_I2C_SPI_DRIVER(false, true);
+	PRINT_MODULE_USAGE_PARAM_INT('R', 0, 0, 35, "Rotation", true);
+	PRINT_MODULE_USAGE_PARAM_INT('C', 0, 0, 35000, "Input clock frequency (Hz)", true);
+	PRINT_MODULE_USAGE_DEFAULT_COMMANDS();
 }
 
-LIS3MDL_I2C::LIS3MDL_I2C(const I2CSPIDriverConfig &config) :
-	I2C(config)
+extern "C" int iim42653_main(int argc, char *argv[])
 {
-}
+	int ch;
+	using ThisDriver = IIM42653;
+	BusCLIArguments cli{false, true};
+	cli.default_spi_frequency = SPI_SPEED;
 
-int LIS3MDL_I2C::probe()
-{
-	uint8_t data = 0;
+	while ((ch = cli.getOpt(argc, argv, "C:R:")) != EOF) {
+		switch (ch) {
+		case 'C':
+			cli.custom1 = atoi(cli.optArg());
+			break;
 
-	if (read(ADDR_WHO_AM_I, &data, 1)) {
-		DEVICE_DEBUG("read_reg fail");
-		return -EIO;
+		case 'R':
+			cli.rotation = (enum Rotation)atoi(cli.optArg());
+			break;
+		}
 	}
 
-	if (data != ID_WHO_AM_I) {
-		DEVICE_DEBUG("LIS3MDL bad ID: %02x", data);
-		return -EIO;
+	const char *verb = cli.optArg();
+
+	if (!verb) {
+		ThisDriver::print_usage();
+		return -1;
 	}
 
-	_retries = 1;
+	BusInstanceIterator iterator(MODULE_NAME, cli, DRV_IMU_DEVTYPE_IIM42653);
 
-	return OK;
-}
-
-int LIS3MDL_I2C::read(unsigned address, void *data, unsigned count)
-{
-	uint8_t cmd = address;
-	return transfer(&cmd, 1, (uint8_t *)data, count);
-}
-
-int LIS3MDL_I2C::write(unsigned address, void *data, unsigned count)
-{
-	uint8_t buf[32];
-
-	if (sizeof(buf) < (count + 1)) {
-		return -EIO;
+	if (!strcmp(verb, "start")) {
+		return ThisDriver::module_start(cli, iterator);
 	}
 
-	buf[0] = address;
-	memcpy(&buf[1], data, count);
+	if (!strcmp(verb, "stop")) {
+		return ThisDriver::module_stop(iterator);
+	}
 
-	return transfer(&buf[0], count + 1, nullptr, 0);
+	if (!strcmp(verb, "status")) {
+		return ThisDriver::module_status(iterator);
+	}
+
+	ThisDriver::print_usage();
+	return -1;
 }

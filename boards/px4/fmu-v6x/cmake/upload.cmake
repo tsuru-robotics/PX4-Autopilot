@@ -1,6 +1,6 @@
 ############################################################################
 #
-#   Copyright (c) 2016, 2018 PX4 Development Team. All rights reserved.
+#   Copyright (c) 2023 PX4 Development Team. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -30,52 +30,20 @@
 # POSSIBILITY OF SUCH DAMAGE.
 #
 ############################################################################
-if("${PX4_BOARD_LABEL}" STREQUAL  "canbootloader")
 
-	add_library(drivers_board
-		can_boot.c
-		led.cpp
-		clockconfig.c
-		periphclocks.c
-		timer_config.cpp
-		hw_rev_ver_canhubk3.c
-	)
 
-	target_link_libraries(drivers_board
-		PRIVATE
-			nuttx_arch
-			nuttx_drivers
-			canbootloader
-			arch_io_pins
-			arch_led_pwm
-	)
-	target_include_directories(drivers_board PRIVATE ${PX4_SOURCE_DIR}/platforms/nuttx/src/canbootloader)
+set(PX4_FW_NAME ${PX4_BINARY_DIR}/${PX4_BOARD_VENDOR}_${PX4_BOARD_MODEL}_${PX4_BOARD_LABEL}.px4)
 
-else()
+add_custom_target(upload_skynode_usb
+	COMMAND ${PX4_SOURCE_DIR}/Tools/auterion/upload_skynode.sh --file=${PX4_FW_NAME}
+	DEPENDS ${PX4_FW_NAME}
+	COMMENT "Uploading PX4"
+	USES_TERMINAL
+)
 
-	add_library(drivers_board
-		s32k3xx_autoleds.c
-		s32k3xx_boot.c
-		s32k3xx_bringup.c
-		s32k3xx_buttons.c
-		s32k3xx_clockconfig.c
-		i2c.cpp
-		init.c
-		mtd.cpp
-		s32k3xx_periphclocks.c
-		spi.cpp
-		timer_config.cpp
-		s32k3xx_userleds.c
-		hw_rev_ver_canhubk3.c
-		manifest.c
-	)
-
-	target_link_libraries(drivers_board
-		PRIVATE
-			nuttx_arch # sdio
-			nuttx_drivers # sdio
-			drivers__led # drv_led_start
-			px4_layer
-			arch_io_pins
-		)
-endif()
+add_custom_target(upload_skynode_wifi
+	COMMAND ${PX4_SOURCE_DIR}/Tools/auterion/upload_skynode.sh --file=${PX4_FW_NAME} --wifi
+	DEPENDS ${PX4_FW_NAME}
+	COMMENT "Uploading PX4"
+	USES_TERMINAL
+)
