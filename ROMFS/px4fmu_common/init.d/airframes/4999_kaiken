@@ -151,7 +151,7 @@ param set-default LNDMC_TRIG_TIME 1
 param set-default SDLOG_DIRS_MAX 0
 param set-default SDLOG_MISSION 3
 param set-default SDLOG_MODE 0
-param set-default SDLOG_PROFILE 97
+param set-default SDLOG_PROFILE 61
 param set-default SDLOG_UTC_OFFSET 0
 
 # Other
@@ -164,4 +164,4 @@ param set-default COM_ARM_WO_GPS 1
 param set-default COM_DISARM_LAND 2
 param set-default COM_DISARM_PRFLT 15.0
 param set-default MAV_2_MODE 1
-param set-default COM_ARM_EKF_YAW 0.7 # TODO
+param set-default COM_ARM_EKF_YAW 0.5 # deafult PX4 value
