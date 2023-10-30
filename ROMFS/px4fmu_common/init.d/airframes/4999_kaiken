@@ -168,3 +168,4 @@ param set-default COM_ARM_EKF_YAW 0.5 # deafult PX4 value
 
 # Mavlink
 param set-default MAV_2_MODE 1
+param set-default SER_WIFI_BAUD 460800
