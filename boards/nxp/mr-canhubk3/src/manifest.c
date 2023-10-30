@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2013-2015 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2023 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,89 +32,48 @@
  ****************************************************************************/
 
 /**
- * @file lis3mdl_i2c.cpp
+ * @file manifest.c
  *
- * I2C interface for LIS3MDL
+ * This module supplies the interface to the manifest of hardware that is
+ * optional and dependent on the HW REV and HW VER IDs
+ *
+ * The manifest allows the system to know whether a hardware option
+ * say for example the PX4IO is an no-pop option vs it is broken.
+ *
  */
 
+/****************************************************************************
+ * Included Files
+ ****************************************************************************/
+
 #include <px4_platform_common/px4_config.h>
-
-#include <assert.h>
-#include <errno.h>
-#include <stdint.h>
 #include <stdbool.h>
-#include <string.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <syslog.h>
 
-#include <drivers/device/i2c.h>
+#include "systemlib/px4_macros.h"
+#include "px4_log.h"
 
-#include "board_config.h"
-#include "lis3mdl.h"
+/****************************************************************************
+ * Pre-Processor Definitions
+ ****************************************************************************/
 
-class LIS3MDL_I2C : public device::I2C
+
+/************************************************************************************
+ * Name: board_query_manifest
+ *
+ * Description:
+ *   Optional returns manifest item.
+ *
+ * Input Parameters:
+ *   manifest_id - the ID for the manifest item to retrieve
+ *
+ * Returned Value:
+ *   0 - item is not in manifest => assume legacy operations
+ *   pointer to a manifest item
+ *
+ ************************************************************************************/
+
+__EXPORT px4_hw_mft_item board_query_manifest(px4_hw_mft_item_id_t id)
 {
-public:
-	LIS3MDL_I2C(const I2CSPIDriverConfig &config);
-	virtual ~LIS3MDL_I2C() = default;
-
-	virtual int     read(unsigned address, void *data, unsigned count);
-	virtual int     write(unsigned address, void *data, unsigned count);
-
-protected:
-	virtual int     probe();
-
-};
-
-device::Device *
-LIS3MDL_I2C_interface(const I2CSPIDriverConfig &config);
-
-device::Device *
-LIS3MDL_I2C_interface(const I2CSPIDriverConfig &config)
-{
-	return new LIS3MDL_I2C(config);
-}
-
-LIS3MDL_I2C::LIS3MDL_I2C(const I2CSPIDriverConfig &config) :
-	I2C(config)
-{
-}
-
-int LIS3MDL_I2C::probe()
-{
-	uint8_t data = 0;
-
-	if (read(ADDR_WHO_AM_I, &data, 1)) {
-		DEVICE_DEBUG("read_reg fail");
-		return -EIO;
-	}
-
-	if (data != ID_WHO_AM_I) {
-		DEVICE_DEBUG("LIS3MDL bad ID: %02x", data);
-		return -EIO;
-	}
-
-	_retries = 1;
-
-	return OK;
-}
-
-int LIS3MDL_I2C::read(unsigned address, void *data, unsigned count)
-{
-	uint8_t cmd = address;
-	return transfer(&cmd, 1, (uint8_t *)data, count);
-}
-
-int LIS3MDL_I2C::write(unsigned address, void *data, unsigned count)
-{
-	uint8_t buf[32];
-
-	if (sizeof(buf) < (count + 1)) {
-		return -EIO;
-	}
-
-	buf[0] = address;
-	memcpy(&buf[1], data, count);
-
-	return transfer(&buf[0], count + 1, nullptr, 0);
+	return px4_hw_mft_unsupported;
 }
