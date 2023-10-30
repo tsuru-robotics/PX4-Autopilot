@@ -2379,6 +2379,23 @@ MavlinkReceiver::handle_message_hil_gps(mavlink_message_t *msg)
 
 	gps.timestamp = hrt_absolute_time();
 
+	// Time sync
+	static constexpr int SET_CLOCK_DRIFT_TIME_S{5};	///< RTC drift time when time synchronization is needed (in seconds)
+	timespec rtc_system_time;
+	px4_clock_gettime(CLOCK_REALTIME, &rtc_system_time);
+	timespec rtc_gps_time;
+	rtc_gps_time.tv_sec  = time_t(double(gps.time_utc_usec)/1000000.);
+	rtc_gps_time.tv_nsec = time_t(double(gps.time_utc_usec)*1000.);
+	int drift_time = abs(rtc_system_time.tv_sec - rtc_gps_time.tv_sec);
+	PX4_INFO("SYNC! real=%d gps=%d, dt=%d", int(rtc_system_time.tv_sec), int(rtc_gps_time.tv_sec), drift_time);
+	if (drift_time >= SET_CLOCK_DRIFT_TIME_S) {
+		// as of 2021 setting the time on Nuttx temporarily pauses interrupts
+		// so only set the time if it is very wrong.
+		// TODO: clock slewing of the RTC for small time differences
+		px4_clock_settime(CLOCK_REALTIME, &rtc_gps_time);
+		PX4_INFO("SYNC! DT FMU-GPS=%d", drift_time);
+	}
+
 	_sensor_gps_pub.publish(gps);
 }
 
