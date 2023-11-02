@@ -165,6 +165,7 @@ param set-default COM_ARM_WO_GPS 1
 param set-default COM_DISARM_LAND 2
 param set-default COM_DISARM_PRFLT 15.0
 param set-default COM_ARM_EKF_YAW 0.5 # deafult PX4 value
+param set-default COM_RCL_EXCEPT 4
 
 # Mavlink
 param set-default MAV_2_MODE 1
