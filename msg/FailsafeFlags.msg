@@ -44,6 +44,7 @@ bool battery_unhealthy                # Battery unhealthy
 
 # Other
 bool primary_geofence_breached        # Primary Geofence breached
+bool secondary_geofence_breached      # Secondary Geofence breached
 bool mission_failure                  # Mission failure
 bool vtol_fixed_wing_system_failure   # vehicle in fixed-wing system failure failsafe mode (after quad-chute)
 bool wind_limit_exceeded              # Wind limit exceeded

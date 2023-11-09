@@ -42,6 +42,7 @@ void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 	}
 
 	reporter.failsafeFlags().primary_geofence_breached = geofence_result.primary_geofence_breached;
+	reporter.failsafeFlags().secondary_geofence_breached = geofence_result.secondary_geofence_breached;
 
 	if (geofence_result.primary_geofence_action != 0 && reporter.failsafeFlags().primary_geofence_breached) {
 		/* EVENT
@@ -51,12 +52,29 @@ void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 		 * </profile>
 		 */
 		reporter.armingCheckFailure<events::px4::enums::geofence_violation_reason_t>(NavModes::All, health_component_t::system,
-				events::ID("check_gf_violation"),
-				events::Log::Error, "Geofence violation: {1}",
+				events::ID("check_pr_gf_violation"),
+				events::Log::Error, "Primary Geofence violation: {1}",
 				(events::px4::enums::geofence_violation_reason_t)geofence_result.geofence_violation_reason);
 
 		if (reporter.mavlink_log_pub()) {
-			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Geofence violation");
+			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Primary Geofence violation");
+		}
+	}
+
+	if (geofence_result.secondary_geofence_action != 0 && reporter.failsafeFlags().secondary_geofence_breached) {
+		/* EVENT
+		 * @description
+		 * <profile name="dev">
+		 * This check can be configured via <param>GF2_ACTION</param> parameter.
+		 * </profile>
+		 */
+		reporter.armingCheckFailure<events::px4::enums::geofence_violation_reason_t>(NavModes::All, health_component_t::system,
+				events::ID("check_sec_gf_violation"),
+				events::Log::Error, "Secondary Geofence violation: {1}",
+				(events::px4::enums::geofence_violation_reason_t)geofence_result.geofence_violation_reason);
+
+		if (reporter.mavlink_log_pub()) {
+			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Secondary Geofence violation");
 		}
 	}
 

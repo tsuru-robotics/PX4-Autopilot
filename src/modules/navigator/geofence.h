@@ -111,6 +111,8 @@ public:
 
 	virtual bool isInsidePolygonOrCircle(double lat, double lon, float altitude);
 
+	bool isInsideFence(double lat, double lon, float altitude, int fence_index);
+
 	int clearDm();
 
 	bool valid();
@@ -140,6 +142,7 @@ public:
 
 	int getSource() { return _param_gf_source.get(); }
 	int getGeofenceAction() { return _param_gf_action.get(); }
+	int getSecondaryGeofenceAction() { return _param_gf2_action.get(); }
 
 	float getMaxHorDistanceHome() { return _param_gf_max_hor_dist.get(); }
 	float getMaxVerDistanceHome() { return _param_gf_max_ver_dist.get(); }
@@ -218,6 +221,7 @@ private:
 
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::GF_ACTION>)         _param_gf_action,
+		(ParamInt<px4::params::GF2_ACTION>)        _param_gf2_action,
 		(ParamInt<px4::params::GF_ALTMODE>)        _param_gf_altmode,
 		(ParamInt<px4::params::GF_SOURCE>)         _param_gf_source,
 		(ParamInt<px4::params::GF_COUNT>)          _param_gf_count,

@@ -380,6 +380,70 @@ bool Geofence::isInsidePolygonOrCircle(double lat, double lon, float altitude)
 	return (!had_inclusion_areas || inside_inclusion) && outside_exclusion;
 }
 
+bool Geofence::isInsideFence(double lat, double lon, float altitude, int fence_index)
+{
+	// the following uses dm_read, so first we try to lock all items. If that fails, it (most likely) means
+	// the data is currently being updated (via a mavlink geofence transfer), and we do not check for a violation now
+	if (dm_trylock(DM_KEY_FENCE_POINTS) != 0) {
+		return true;
+	}
+
+	// we got the lock, now check if the fence data got updated
+	mission_stats_entry_s stats;
+	int ret = dm_read(DM_KEY_FENCE_POINTS, 0, &stats, sizeof(mission_stats_entry_s));
+
+	if (ret == sizeof(mission_stats_entry_s) && _update_counter != stats.update_counter) {
+		_updateFence();
+	}
+
+	if (isEmpty()) {
+		dm_unlock(DM_KEY_FENCE_POINTS);
+		/* Empty fence -> accept all points */
+		return true;
+	}
+
+	/* Vertical check */
+	if (_altitude_max > _altitude_min) { // only enable vertical check if configured properly
+		if (altitude > _altitude_max || altitude < _altitude_min) {
+			dm_unlock(DM_KEY_FENCE_POINTS);
+			return false;
+		}
+	}
+
+
+	/* Horizontal check: iterate all polygons & circles */
+	bool inside_fence = false;
+	bool had_fence = false;
+
+	if (fence_index < _num_polygons) {
+		if (_polygons[fence_index].fence_type == NAV_CMD_FENCE_POLYGON_VERTEX_INCLUSION) {
+			// it's a polygon
+			bool inside = insidePolygon(_polygons[fence_index], lat, lon, altitude);
+
+			if (_polygons[fence_index].fence_type == NAV_CMD_FENCE_POLYGON_VERTEX_INCLUSION) {
+				if (inside) {
+					inside_fence = true;
+
+				} else {
+				}
+
+				had_fence = true;
+
+			} else {
+				// exclusion
+			}
+		} else {
+			// it's a circle
+		}
+	}
+
+	dm_unlock(DM_KEY_FENCE_POINTS);
+
+	PX4_DEBUG("fence_index=%d, num_fences=%d, had_fence=%d, inside_fence=%d", fence_index, _num_polygons, had_fence, inside_fence);
+
+	return had_fence ? inside_fence : true;
+}
+
 bool Geofence::insidePolygon(const PolygonInfo &polygon, double lat, double lon, float altitude)
 {
 	/**

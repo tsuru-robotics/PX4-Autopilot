@@ -973,20 +973,26 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 		gf_violation_type.flags.max_altitude_exceeded = !_geofence.isBelowMaxAltitude(_global_pos.alt +
 				vertical_test_point_distance);
 
-		gf_violation_type.flags.fence_violation = !_geofence.isInsidePolygonOrCircle(fence_violation_test_point(0),
-				fence_violation_test_point(1),
-				_global_pos.alt);
+		/* inform other apps via the mission result */
+		// First check secondary fence, than - primary
+		if (_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 1)) {
+			_geofence_result.primary_geofence_breached  = !_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 0);
+			_geofence_result.secondary_geofence_breached = false;
+		} else {
+			_geofence_result.primary_geofence_breached = false;
+			_geofence_result.secondary_geofence_breached = true;
+		}
+		gf_violation_type.flags.fence_violation = _geofence_result.primary_geofence_breached || _geofence_result.secondary_geofence_breached;
 
 		_last_geofence_check = hrt_absolute_time();
 		have_geofence_position_data = false;
 
 		_geofence_result.timestamp = hrt_absolute_time();
 		_geofence_result.primary_geofence_action = _geofence.getGeofenceAction();
+		_geofence_result.secondary_geofence_action = _geofence.getSecondaryGeofenceAction();
 		_geofence_result.home_required = _geofence.isHomeRequired();
 
 		if (gf_violation_type.value) {
-			/* inform other apps via the mission result */
-			_geofence_result.primary_geofence_breached = true;
 
 			using geofence_violation_reason_t = events::px4::enums::geofence_violation_reason_t;
 
