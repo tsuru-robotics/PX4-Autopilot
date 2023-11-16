@@ -158,7 +158,7 @@ param set-default SDLOG_PROFILE 61
 param set-default SDLOG_UTC_OFFSET 0
 
 # Circuit Breaker
-param set-default CBRK_FLIGHTTERM 0
+param set-default CBRK_FLIGHTTERM 121212
 param set-default CBRK_IO_SAFETY 22027
 param set-default CBRK_SUPPLY_CHK 894281
 
