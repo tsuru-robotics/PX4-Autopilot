@@ -99,6 +99,7 @@ set(msg_files
 	GimbalManagerStatus.msg
 	GpsDump.msg
 	GpsInjectData.msg
+	GpsTime.msg
 	GimbalControls.msg
 	Gripper.msg
 	HealthReport.msg

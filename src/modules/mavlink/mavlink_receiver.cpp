@@ -2372,29 +2372,6 @@ MavlinkReceiver::handle_message_hil_gps(mavlink_message_t *msg)
 	gps.timestamp_time_relative = 0;
 	gps.time_utc_usec = hil_gps.time_usec;
 
-	// Time sync
-	static constexpr int SET_CLOCK_DRIFT_TIME_S{5};	///< RTC drift time when time synchronization is needed (in seconds)
-	timespec rtc_system_time;
-	px4_clock_gettime(CLOCK_REALTIME, &rtc_system_time);
-
-	timespec rtc_gps_time = {};
-	rtc_gps_time.tv_sec = hil_gps.time_usec / 1000000ULL;
-	rtc_gps_time.tv_nsec = (hil_gps.time_usec % 1000000ULL) * 1000ULL;
-
-	int drift_time = abs(rtc_system_time.tv_sec - rtc_gps_time.tv_sec);
-	int drift_time_msec = (rtc_system_time.tv_nsec - rtc_gps_time.tv_nsec)/1000000ULL;
-	PX4_DEBUG("[hil_gps] dt clock FMU-GPS=%d sec, %d msec. fmu=%ld, gps=%ld",
-	drift_time, drift_time_msec, rtc_system_time.tv_sec, rtc_gps_time.tv_sec);
-	if (drift_time >= SET_CLOCK_DRIFT_TIME_S) {
-		// as of 2021 setting the time on Nuttx temporarily pauses interrupts
-		// so only set the time if it is very wrong.
-		// TODO: clock slewing of the RTC for small time differences
-		if (px4_clock_settime(CLOCK_REALTIME, &rtc_gps_time)) {
-			PX4_ERR("[hil_gps] Failed setting realtime clock");
-		} else {
-			PX4_INFO("[hil_gps] Realtime clock sync done!");
-		}
-	}
 	gps.satellites_used = hil_gps.satellites_visible;
 
 	gps.heading = NAN;
@@ -2403,6 +2380,13 @@ MavlinkReceiver::handle_message_hil_gps(mavlink_message_t *msg)
 	gps.timestamp = hrt_absolute_time();
 
 	_sensor_gps_pub.publish(gps);
+
+	// Publish received GPS UTC time
+	gps_time_s gps_time;
+	gps_time.timestamp = hrt_absolute_time();
+	gps_time.rtc_gps_usec = hil_gps.time_usec;
+	_gps_time_pub.publish(gps_time);
+
 }
 
 void

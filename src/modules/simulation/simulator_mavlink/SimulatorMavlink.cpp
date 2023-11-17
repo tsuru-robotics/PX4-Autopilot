@@ -466,6 +466,12 @@ void SimulatorMavlink::handle_message_hil_gps(const mavlink_message_t *msg)
 				break;
 			}
 		}
+
+		// Publish received GPS UTC time
+		gps_time_s gps_time;
+		gps_time.timestamp = hrt_absolute_time();
+		gps_time.rtc_gps_usec = hil_gps.time_usec;
+		_gps_time_pub.publish(gps_time);
 	}
 }
 

@@ -65,6 +65,7 @@
 #include <uORB/topics/gps_inject_data.h>
 #include <uORB/topics/sensor_gps.h>
 #include <uORB/topics/sensor_gnss_relative.h>
+#include <uORB/topics/gps_time.h>
 
 #ifndef CONSTRAINED_FLASH
 # include "devices/src/ashtech.h"
@@ -207,6 +208,7 @@ private:
 	uORB::SubscriptionMultiArray<gps_inject_data_s, gps_inject_data_s::MAX_INSTANCES> _orb_inject_data_sub{ORB_ID::gps_inject_data};
 	uORB::Publication<gps_inject_data_s> _gps_inject_data_pub{ORB_ID(gps_inject_data)};
 	uORB::Publication<gps_dump_s>	     _dump_communication_pub{ORB_ID(gps_dump)};
+	uORB::Publication<gps_time_s>	     _gps_time_pub{ORB_ID(gps_time)};
 	gps_dump_s			     *_dump_to_device{nullptr};
 	gps_dump_s			     *_dump_from_device{nullptr};
 	gps_dump_comm_mode_t                 _dump_communication_mode{gps_dump_comm_mode_t::Disabled};
@@ -237,6 +239,11 @@ private:
 	 * Publish RTCM corrections
 	 */
 	void 				publishRelativePosition(sensor_gnss_relative_s &gnss_relative);
+
+	/**
+	 * Publish GPS UTC time corrections
+	 */
+	void                		publishTime(timespec &rtc_gps_time);
 
 	/**
 	 * This is an abstraction for the poll on serial used.
@@ -440,6 +447,8 @@ int GPS::callback(GPSCallbackType type, void *data1, int data2, void *user)
 			px4_clock_settime(CLOCK_REALTIME, &rtc_gps_time);
 		}
 
+		// Publish itime
+		gps->publishTime(rtc_gps_time);
 
 		break;
 	}
@@ -1301,6 +1310,15 @@ GPS::publishRelativePosition(sensor_gnss_relative_s &gnss_relative)
 	gnss_relative.device_id = get_device_id();
 	gnss_relative.timestamp = hrt_absolute_time();
 	_sensor_gnss_relative_pub.publish(gnss_relative);
+}
+
+void
+GPS::publishTime(timespec &rtc_gps_time)
+{
+	gps_time_s gps_time;
+	gps_time.timestamp = hrt_absolute_time();
+	gps_time.rtc_gps_usec = rtc_gps_time.tv_sec * 1000000ULL + rtc_gps_time.tv_nsec / 1000ULL;
+	_gps_time_pub.publish(gps_time);
 }
 
 int

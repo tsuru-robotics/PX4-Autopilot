@@ -77,6 +77,7 @@
 #include <uORB/topics/vehicle_command.h>
 #include <uORB/topics/vehicle_command_ack.h>
 #include <uORB/topics/rpm.h>
+#include <uORB/topics/gps_time.h>
 
 #include <random>
 
@@ -200,6 +201,7 @@ private:
 	uORB::Publication<vehicle_odometry_s>		_mocap_odometry_pub{ORB_ID(vehicle_mocap_odometry)};
 
 	uORB::Publication<vehicle_command_ack_s>	_command_ack_pub{ORB_ID(vehicle_command_ack)};
+	uORB::Publication<gps_time_s>	                _gps_time_pub{ORB_ID(gps_time)};
 
 	uORB::PublicationMulti<distance_sensor_s>	*_dist_pubs[ORB_MULTI_MAX_INSTANCES] {};
 	uint32_t _dist_sensor_ids[ORB_MULTI_MAX_INSTANCES] {};
