@@ -10,7 +10,9 @@
 
 . ${R}etc/init.d/airframes/4999_kaiken
 
-
+# Override 4999_kaiken
 param set-default CAL_MAG0_ROT 0
 param set-default SENS_BOARD_ROT 0
 param set-default BAT1_SOURCE 0
+param set-default SDLOG_MODE 1
+param set-default CBRK_FLIGHTTERM 0
