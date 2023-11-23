@@ -39,6 +39,7 @@
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_land_detected.h>
+#include <uORB/topics/sensor_gps.h>
 
 class MavlinkStreamUTMGlobalPosition : public MavlinkStream
 {
@@ -66,10 +67,8 @@ private:
 	uORB::Subscription _position_setpoint_triplet_sub{ORB_ID(position_setpoint_triplet)};
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _land_detected_sub{ORB_ID(vehicle_land_detected)};
+	uORB::Subscription _sensor_gps_sub{ORB_ID(sensor_gps), 0};
 
-    #if defined(ENABLE_LOCKSTEP_SCHEDULER)
-	    uORB::Subscription _sensor_gps_sub{ORB_ID(sensor_gps), 0};
-	#endif
 
 	bool send() override
 	{
@@ -78,17 +77,13 @@ private:
 		if (_global_pos_sub.update(&global_pos)) {
 			mavlink_utm_global_position_t msg{};
 
-            #if defined(ENABLE_LOCKSTEP_SCHEDULER)
-                sensor_gps_s gps;
-                while (!_sensor_gps_sub.update(&gps)) {}
-                uint64_t unix_epoch = gps.time_utc_usec;
-
-            #else // defined(ENABLE_LOCKSTEP_SCHEDULER)
-                // Compute Unix epoch and set time field
-                timespec tv;
-                px4_clock_gettime(CLOCK_REALTIME, &tv);
-                uint64_t unix_epoch = (uint64_t)tv.tv_sec * 1000000 + tv.tv_nsec / 1000;
-            #endif // defined(ENABLE_LOCKSTEP_SCHEDULER)
+			uint64_t unix_epoch{0};
+	    		sensor_gps_s gps;
+			if (_sensor_gps_sub.update(&gps)) {
+				uint64_t dt_usec = hrt_absolute_time() - gps.timestamp;
+				unix_epoch = gps.time_utc_usec + dt_usec;
+				PX4_INFO("TIME_SYNC unix_epoch=%llu, dt=%llu usec", unix_epoch, dt_usec);
+			}
 
 			// If the time is before 2001-01-01, it's probably the default 2000
 			if (unix_epoch > 978307200000000) {
