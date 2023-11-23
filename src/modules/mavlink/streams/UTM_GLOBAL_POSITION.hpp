@@ -79,10 +79,11 @@ private:
 
 			uint64_t unix_epoch{0};
 	    		sensor_gps_s gps;
-			if (_sensor_gps_sub.update(&gps)) {
+
+			if (_sensor_gps_sub.copy(&gps)) {
 				uint64_t dt_usec = hrt_absolute_time() - gps.timestamp;
 				unix_epoch = gps.time_utc_usec + dt_usec;
-				PX4_INFO("TIME_SYNC unix_epoch=%llu, dt=%llu usec", unix_epoch, dt_usec);
+				PX4_DEBUG("TIME_SYNC unix_epoch=%lld, dt=%lld usec", (long long int)unix_epoch, (long long int)dt_usec);
 			}
 
 			// If the time is before 2001-01-01, it's probably the default 2000
