@@ -101,8 +101,8 @@ param set-default RC_MAP_YAW 4
 
 # Failsafes
 param set-default COM_LOW_BAT_ACT 2
-param set-default GF_ACTION 5
-param set-default GF2_ACTION 4
+param set-default GF_ACTION 1
+param set-default GF2_ACTION 5
 param set-default GF_ALTMODE 0
 param set-default GF_COUNT -1
 param set-default GF_SOURCE 1
@@ -115,6 +115,7 @@ param set-default RTL_RETURN_ALT 10
 param set-default RTL_TYPE 0
 param set-default RTL_TIME_MARGIN -1
 param set-default RTL_TIME_FACTOR 0
+param set-default COM_OBL_RC_ACT 4
 
 # PID Tuning
 param set-default MC_PITCHRATE_D 0.002
