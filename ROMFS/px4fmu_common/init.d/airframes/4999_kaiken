@@ -154,7 +154,7 @@ param set-default LNDMC_TRIG_TIME 1
 param set-default SDLOG_DIRS_MAX 0
 param set-default SDLOG_MISSION 3
 param set-default SDLOG_MODE 0
-param set-default SDLOG_PROFILE 61
+param set-default SDLOG_PROFILE 0
 param set-default SDLOG_UTC_OFFSET 0
 
 # Circuit Breaker
