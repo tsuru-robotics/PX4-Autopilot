@@ -40,6 +40,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/sensor_gps.h>
+#include <uORB/topics/utm_time.h>
 
 class MavlinkStreamUTMGlobalPosition : public MavlinkStream
 {
@@ -68,6 +69,7 @@ private:
 	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
 	uORB::Subscription _land_detected_sub{ORB_ID(vehicle_land_detected)};
 	uORB::Subscription _sensor_gps_sub{ORB_ID(sensor_gps), 0};
+	uORB::Publication<utm_time_s> _utm_time_pub{ORB_ID(utm_time)};
 
 
 	bool send() override
@@ -78,10 +80,11 @@ private:
 			mavlink_utm_global_position_t msg{};
 
 			uint64_t unix_epoch{0};
-	    		sensor_gps_s gps;
+			sensor_gps_s gps;
+			uint64_t dt_usec{0};
 
 			if (_sensor_gps_sub.copy(&gps)) {
-				uint64_t dt_usec = hrt_absolute_time() - gps.timestamp;
+				dt_usec = hrt_absolute_time() - gps.timestamp;
 				unix_epoch = gps.time_utc_usec + dt_usec;
 				PX4_DEBUG("TIME_SYNC unix_epoch=%lld, dt=%lld usec", (long long int)unix_epoch, (long long int)dt_usec);
 			}
@@ -187,6 +190,15 @@ private:
 			}
 
 			msg.update_rate = 0; // Data driven mode
+
+			// Publish UTC time
+			utm_time_s utm_time;
+			utm_time.timestamp = hrt_absolute_time();
+			utm_time.time = msg.time;
+			utm_time.time_gps = gps.time_utc_usec;
+			utm_time.dt = dt_usec;
+			utm_time.valid = msg.flags && UTM_DATA_AVAIL_FLAGS_TIME_VALID;
+			_utm_time_pub.publish(utm_time);
 
 			mavlink_msg_utm_global_position_send_struct(_mavlink->get_channel(), &msg);
 
