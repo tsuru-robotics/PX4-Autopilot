@@ -100,7 +100,7 @@ param set-default RC_MAP_THROTTLE 3
 param set-default RC_MAP_YAW 4
 
 # Failsafes
-param set-default COM_LOW_BAT_ACT 2
+param set-default COM_LOW_BAT_ACT 0
 param set-default GF_ACTION 1
 param set-default GF2_ACTION 5
 param set-default GF_ALTMODE 0
