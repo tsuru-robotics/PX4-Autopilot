@@ -28,11 +28,11 @@ void UavcanArmingStatus::periodic_update(const uavcan::TimerEvent &)
 	if (_actuator_armed_sub.update(&actuator_armed)) {
         uavcan::equipment::safety::ArmingStatus msg;
 
-		if ((actuator_armed.armed || actuator_armed.prearmed) && !actuator_armed.lockdown) {
-            msg.status = msg.STATUS_FULLY_ARMED;
+		if (actuator_armed.lockdown) {
+            msg.status = msg.STATUS_DISARMED;
 
 		} else {
-            msg.status = msg.STATUS_DISARMED;
+            msg.status = msg.STATUS_FULLY_ARMED;
 		}
 
 		(void)_arming_status_pub.broadcast(msg);
