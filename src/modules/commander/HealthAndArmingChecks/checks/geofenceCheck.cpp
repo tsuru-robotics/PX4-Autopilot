@@ -41,41 +41,53 @@ void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 		geofence_result = {};
 	}
 
-	reporter.failsafeFlags().primary_geofence_breached = geofence_result.primary_geofence_breached;
-	reporter.failsafeFlags().secondary_geofence_breached = geofence_result.secondary_geofence_breached;
+	// Hard Geofence has high priority
+	if (geofence_result.secondary_geofence_breached) {
 
-	if (geofence_result.primary_geofence_action != 0 && reporter.failsafeFlags().primary_geofence_breached) {
-		/* EVENT
-		 * @description
-		 * <profile name="dev">
-		 * This check can be configured via <param>GF_ACTION</param> parameter.
-		 * </profile>
-		 */
-		reporter.armingCheckFailure<events::px4::enums::geofence_violation_reason_t>(NavModes::All, health_component_t::system,
-				events::ID("check_pr_gf_violation"),
-				events::Log::Error, "Primary Geofence violation: {1}",
-				(events::px4::enums::geofence_violation_reason_t)geofence_result.geofence_violation_reason);
+		reporter.failsafeFlags().geofence_breached = 2;
 
-		if (reporter.mavlink_log_pub()) {
-			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Primary Geofence violation");
+		if (geofence_result.secondary_geofence_action != 0 ) {
+			/* EVENT
+			* @description
+			* <profile name="dev">
+			* This check can be configured via <param>GF2_ACTION</param> parameter.
+			* </profile>
+			*/
+			reporter.armingCheckFailure<events::px4::enums::geofence_violation_reason_t>(NavModes::All, health_component_t::system,
+					events::ID("check_hard_gf_violation"),
+					events::Log::Error, "Hard Geofence violation: {1}",
+					(events::px4::enums::geofence_violation_reason_t)geofence_result.geofence_violation_reason);
+
+			if (reporter.mavlink_log_pub()) {
+				mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Hard Geofence violation");
+			}
+
 		}
-	}
 
-	if (geofence_result.secondary_geofence_action != 0 && reporter.failsafeFlags().secondary_geofence_breached) {
-		/* EVENT
-		 * @description
-		 * <profile name="dev">
-		 * This check can be configured via <param>GF2_ACTION</param> parameter.
-		 * </profile>
-		 */
-		reporter.armingCheckFailure<events::px4::enums::geofence_violation_reason_t>(NavModes::All, health_component_t::system,
-				events::ID("check_sec_gf_violation"),
-				events::Log::Error, "Secondary Geofence violation: {1}",
-				(events::px4::enums::geofence_violation_reason_t)geofence_result.geofence_violation_reason);
+	// Soft Geofence has low priority
+	} else if (geofence_result.primary_geofence_breached) {
 
-		if (reporter.mavlink_log_pub()) {
-			mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Secondary Geofence violation");
+		reporter.failsafeFlags().geofence_breached = 1;
+
+		if (geofence_result.primary_geofence_action != 0) {
+			/* EVENT
+			* @description
+			* <profile name="dev">
+			* This check can be configured via <param>GF_ACTION</param> parameter.
+			* </profile>
+			*/
+			reporter.armingCheckFailure<events::px4::enums::geofence_violation_reason_t>(NavModes::All, health_component_t::system,
+					events::ID("check_soft_gf_violation"),
+					events::Log::Error, "Soft Geofence violation: {1}",
+					(events::px4::enums::geofence_violation_reason_t)geofence_result.geofence_violation_reason);
+
+			if (reporter.mavlink_log_pub()) {
+				mavlink_log_critical(reporter.mavlink_log_pub(), "Preflight Fail: Soft Geofence violation");
+			}
 		}
+
+	} else {
+		reporter.failsafeFlags().geofence_breached = 0;
 	}
 
 	if (geofence_result.primary_geofence_action == geofence_result_s::GF_ACTION_RTL

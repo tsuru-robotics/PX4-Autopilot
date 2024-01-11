@@ -202,7 +202,10 @@ void Navigator::run()
 			_gps_pos_sub.copy(&_gps_pos);
 
 			if (_geofence.getSource() == Geofence::GF_SOURCE_GPS) {
-				have_geofence_position_data = true;
+				estimator_status_flags_s estimator_status_flags{};
+				if (_estimator_status_flags_sub.copy(&estimator_status_flags) && estimator_status_flags.cs_gps == 1) {
+					have_geofence_position_data = true;
+				}
 			}
 		}
 
@@ -973,16 +976,11 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 		gf_violation_type.flags.max_altitude_exceeded = !_geofence.isBelowMaxAltitude(_global_pos.alt +
 				vertical_test_point_distance);
 
-		/* inform other apps via the mission result */
-		// First check secondary fence, than - primary
-		if (_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 1)) {
-			_geofence_result.primary_geofence_breached  = !_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 0);
-			_geofence_result.secondary_geofence_breached = false;
-		} else {
-			_geofence_result.primary_geofence_breached = false;
-			_geofence_result.secondary_geofence_breached = true;
-		}
-		gf_violation_type.flags.fence_violation = _geofence_result.primary_geofence_breached || _geofence_result.secondary_geofence_breached;
+		// fence check
+		bool soft_fence_breached = !_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 0);
+		bool hard_fence_breached = !_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 1);
+
+		gf_violation_type.flags.fence_violation = soft_fence_breached || hard_fence_breached;
 
 		_last_geofence_check = hrt_absolute_time();
 		have_geofence_position_data = false;
@@ -993,6 +991,9 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 		_geofence_result.home_required = _geofence.isHomeRequired();
 
 		if (gf_violation_type.value) {
+			/* inform other apps via the mission result */
+			_geofence_result.primary_geofence_breached = soft_fence_breached;
+			_geofence_result.secondary_geofence_breached = hard_fence_breached;
 
 			using geofence_violation_reason_t = events::px4::enums::geofence_violation_reason_t;
 
@@ -1055,6 +1056,7 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 		} else {
 			/* inform other apps via the mission result */
 			_geofence_result.primary_geofence_breached = false;
+			_geofence_result.secondary_geofence_breached = false;
 
 			/* Reset the _geofence_violation_warning_sent field */
 			_geofence_violation_warning_sent = false;

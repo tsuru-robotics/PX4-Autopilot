@@ -79,6 +79,7 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/mode_completed.h>
+#include <uORB/topics/estimator_status_flags.h>
 #include <uORB/uORB.h>
 
 using namespace time_literals;
@@ -319,6 +320,7 @@ private:
 
 	uORB::Subscription _global_pos_sub{ORB_ID(vehicle_global_position)};	/**< global position subscription */
 	uORB::Subscription _gps_pos_sub{ORB_ID(vehicle_gps_position)};		/**< gps position subscription */
+	uORB::Subscription _estimator_status_flags_sub{ORB_ID(estimator_status_flags)};	/**< estimator_status_flags subscription */
 	uORB::Subscription _home_pos_sub{ORB_ID(home_position)};		/**< home position subscription */
 	uORB::Subscription _land_detected_sub{ORB_ID(vehicle_land_detected)};	/**< vehicle land detected subscription */
 	uORB::Subscription _pos_ctrl_landing_status_sub{ORB_ID(position_controller_landing_status)};	/**< position controller landing status subscription */

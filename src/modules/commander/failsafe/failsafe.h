@@ -148,6 +148,11 @@ private:
 	bool _was_armed{false};
 	bool _manual_control_lost_at_arming{false}; ///< true if manual control was lost at arming time
 
+	bool _last_soft_fence_breached{false};
+	const int _caller_id_soft_fence_breached{genCallerId()};
+	bool _last_hard_fence_breached{false};
+	const int _caller_id_hard_fence_breached{genCallerId()};
+
 	DEFINE_PARAMETERS_CUSTOM_PARENT(FailsafeBase,
 					(ParamInt<px4::params::NAV_DLL_ACT>) 	_param_nav_dll_act,
 					(ParamInt<px4::params::NAV_RCL_ACT>) 	_param_nav_rcl_act,

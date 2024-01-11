@@ -401,8 +401,25 @@ void Failsafe::checkStateAndMode(const hrt_abstime &time_us, const State &state,
 		CHECK_FAILSAFE(status_flags, local_position_accuracy_low, ActionOptions(Action::RTL));
 	}
 
-	CHECK_FAILSAFE(status_flags, primary_geofence_breached, fromGfActParam(_param_gf_action.get()).cannotBeDeferred());
-	CHECK_FAILSAFE(status_flags, secondary_geofence_breached, fromGfActParam(_param_gf2_action.get()).cannotBeDeferred());
+	// Geofence action only if armed
+	if (state.armed) {
+		switch (status_flags.geofence_breached) {
+		case 1:
+			// soft fence action
+			_last_soft_fence_breached = checkFailsafe(_caller_id_soft_fence_breached, _last_soft_fence_breached,
+						    true, fromGfActParam(_param_gf_action.get()).cannotBeDeferred());
+			break;
+
+		case 2:
+			// hard fence action
+			_last_hard_fence_breached = checkFailsafe(_caller_id_hard_fence_breached, _last_hard_fence_breached,
+						    true, fromGfActParam(_param_gf2_action.get()).cannotBeDeferred());
+			break;
+
+		default:
+			break;
+		}
+	}
 
 	// Battery
 	CHECK_FAILSAFE(status_flags, battery_low_remaining_time, ActionOptions(Action::RTL).causedBy(Cause::BatteryLow));
