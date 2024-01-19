@@ -122,11 +122,10 @@ private:
 
 		if (_gpos_sub.copy(&gpos) && _lpos_sub.copy(&lpos)) {
 
-			msg.flags |= FMU_TM_FLAGS_POS_VALID;
-
 			// altitude
 			if (lpos.z_valid && lpos.z_global) {
 				msg.alt = (-lpos.z + lpos.ref_alt) * 1000.0f;
+				msg.flags |= FMU_TM_FLAGS_ALT_VALID;
 
 			} else {
 				// fall back to baro altitude
@@ -135,6 +134,7 @@ private:
 
 				if (air_data.timestamp > 0) {
 					msg.alt = air_data.baro_alt_meter * 1000.0f;
+					msg.flags |= FMU_TM_FLAGS_ALT_VALID;
 				}
 			}
 
@@ -142,6 +142,7 @@ private:
 			msg.lat = gpos.lat * 1e7;
 			msg.lon = gpos.lon * 1e7;
 			msg.hdg = math::degrees(matrix::wrap_2pi(lpos.heading)) * 100.0f;
+			msg.flags |= FMU_TM_FLAGS_POS_VALID;
 
 		}
 
