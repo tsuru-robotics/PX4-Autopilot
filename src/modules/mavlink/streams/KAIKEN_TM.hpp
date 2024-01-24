@@ -102,8 +102,7 @@ private:
 		vehicle_status_s vehicle_status{};
 		_vehicle_status_sub.copy(&vehicle_status);
 
-		if (vehicle_status.timestamp > 0 && land_detected.timestamp > 0
-			&& vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
+		if (vehicle_status.timestamp > 0 && land_detected.timestamp > 0) {
 
 			if (land_detected.landed) {
 				msg.flight_state |= UTM_FLIGHT_STATE_GROUND;
