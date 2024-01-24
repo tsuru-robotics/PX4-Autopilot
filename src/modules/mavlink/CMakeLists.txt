@@ -68,6 +68,9 @@ add_custom_command(
 			#--strict-units
 			--output ${MAVLINK_LIBRARY_DIR}
 			${MAVLINK_GIT_DIR}/message_definitions/v1.0/${CONFIG_MAVLINK_DIALECT}.xml > ${CMAKE_CURRENT_BINARY_DIR}/mavgen_${CONFIG_MAVLINK_DIALECT}.log
+	COMMAND
+		${PYTHON_EXECUTABLE} ${MAVLINK_GIT_DIR}/kaiken_clib_overwrite.py
+			-d ${MAVLINK_LIBRARY_DIR}/${CONFIG_MAVLINK_DIALECT}
 	DEPENDS
 		git_mavlink_v2
 		${MAVLINK_GIT_DIR}/pymavlink/tools/mavgen.py

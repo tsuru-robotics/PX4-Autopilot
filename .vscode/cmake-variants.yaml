@@ -281,3 +281,8 @@ CONFIG:
       buildType: MinSizeRel
       settings:
         CONFIG: raspberrypi_pico_default
+    px4_sitl_kaiken:
+      short: px4_sitl_kaiken
+      buildType: RelWithDebInfo
+      settings:
+        CONFIG: px4_sitl_kaiken
