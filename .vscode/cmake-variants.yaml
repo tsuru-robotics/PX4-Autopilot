@@ -286,3 +286,8 @@ CONFIG:
       buildType: RelWithDebInfo
       settings:
         CONFIG: px4_sitl_kaiken
+    px4_fmu-v4_kaiken:
+      short: px4_fmu-v4_kaiken
+      buildType: MinSizeRel
+      settings:
+        CONFIG: px4_fmu-v4_kaiken

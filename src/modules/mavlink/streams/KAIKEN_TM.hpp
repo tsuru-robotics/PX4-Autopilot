@@ -40,6 +40,7 @@
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_air_data.h>
+#include <uORB/topics/estimator_status_flags.h>
 
 class MavlinkStreamKaikenTm : public MavlinkStream
 {
@@ -66,14 +67,14 @@ private:
 	uORB::Subscription _gpos_sub{ORB_ID(vehicle_global_position)};
 	uORB::Subscription _lpos_sub{ORB_ID(vehicle_local_position)};
 	uORB::Subscription _air_data_sub{ORB_ID(vehicle_air_data)};
+	uORB::Subscription _estimator_status_flags_sub{ORB_ID(estimator_status_flags)};
 
 	bool send() override
 	{
 		mavlink_fmu_tm_t msg{};
 
-		sensor_gps_s gps;
-
 		// gps
+		sensor_gps_s gps;
 		if (_sensor_gps_sub.copy(&gps)) {
 			// abs time
 			uint64_t dt_usec{0};
@@ -86,7 +87,6 @@ private:
 				msg.time = unix_epoch;
 				msg.flags |= FMU_TM_FLAGS_TIME_VALID;
 			}
-
 			// fix_type
 			msg.fix_type = gps.fix_type;
 			// satellites
@@ -98,27 +98,27 @@ private:
 
 		// flight_state
 		vehicle_land_detected_s land_detected{};
-		_land_detected_sub.copy(&land_detected);
 		vehicle_status_s vehicle_status{};
-		_vehicle_status_sub.copy(&vehicle_status);
+		if (_land_detected_sub.copy(&land_detected) && _vehicle_status_sub.copy(&vehicle_status)) {
 
-		if (vehicle_status.timestamp > 0 && land_detected.timestamp > 0) {
+			if (vehicle_status.timestamp > 0 && land_detected.timestamp > 0) {
 
-			if (land_detected.landed) {
-				msg.flight_state |= UTM_FLIGHT_STATE_GROUND;
+				if (land_detected.landed) {
+					msg.flight_state |= UTM_FLIGHT_STATE_GROUND;
+
+				} else {
+					msg.flight_state |= UTM_FLIGHT_STATE_AIRBORNE;
+				}
 
 			} else {
-				msg.flight_state |= UTM_FLIGHT_STATE_AIRBORNE;
+				msg.flight_state |= UTM_FLIGHT_STATE_UNKNOWN;
 			}
-
-		} else {
-			msg.flight_state |= UTM_FLIGHT_STATE_UNKNOWN;
 		}
+
 
 		// position
 		vehicle_global_position_s gpos;
 		vehicle_local_position_s lpos;
-
 		if (_gpos_sub.copy(&gpos) && _lpos_sub.copy(&lpos)) {
 
 			// altitude
@@ -142,7 +142,14 @@ private:
 			msg.lon = gpos.lon * 1e7;
 			msg.hdg = math::degrees(matrix::wrap_2pi(lpos.heading)) * 100.0f;
 			msg.flags |= FMU_TM_FLAGS_POS_VALID;
+		}
 
+		// estimator status
+		estimator_status_flags_s estimator_status_flags;
+		if (_estimator_status_flags_sub.copy(&estimator_status_flags)) {
+			if (estimator_status_flags.cs_gps_hgt == 1) {
+				msg.flags |= FMU_TM_FLAGS_ALT_GPS;
+			}
 		}
 
 		mavlink_msg_fmu_tm_send_struct(_mavlink->get_channel(), &msg);
