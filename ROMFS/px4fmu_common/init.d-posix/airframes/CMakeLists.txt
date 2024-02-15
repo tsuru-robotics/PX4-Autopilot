@@ -95,5 +95,6 @@ px4_add_romfs_files(
 	17001_flightgear_tf-g1
 	17002_flightgear_tf-g2
 
+	4998_sihsim_kaiken
 	4999_gazebo-classic_kaiken
 )

@@ -36,6 +36,7 @@
 #include <drivers/drv_sensor.h>
 #include <lib/drivers/device/Device.hpp>
 #include <lib/geo/geo.h>
+#include <px4_time.h>
 
 using namespace matrix;
 
@@ -149,9 +150,11 @@ void SensorGpsSim::Run()
 			sensor_gps.hdop = 100.f;
 			sensor_gps.vdop = 100.f;
 		}
-
 		sensor_gps.timestamp_sample = gpos.timestamp_sample;
-		sensor_gps.time_utc_usec = 0;
+		timespec ts;
+		px4_clock_gettime(CLOCK_REALTIME, &ts);
+		sensor_gps.time_utc_usec = ts_to_abstime(&ts);
+
 		sensor_gps.device_id = device_id.devid;
 		sensor_gps.lat = roundf(latitude * 1e7); // Latitude in 1E-7 degrees
 		sensor_gps.lon = roundf(longitude * 1e7); // Longitude in 1E-7 degrees
