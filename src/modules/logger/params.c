@@ -99,6 +99,7 @@ PARAM_DEFINE_INT32(SDLOG_BOOT_BAT, 0);
  * @value 0 Disabled
  * @value 1 All mission messages
  * @value 2 Geotagging messages
+ * @value 3 Offboard messages
  *
  * @reboot_required true
  * @group SD Logging

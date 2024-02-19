@@ -456,6 +456,17 @@ void LoggedTopics::initialize_mission_topics(MissionLogType mission_log_type)
 
 	} else if (mission_log_type == MissionLogType::Geotagging) {
 		add_mission_topic("camera_capture");
+	} else if (mission_log_type == MissionLogType::Offboard) {
+		add_mission_topic("vehicle_status", 1000);
+		add_mission_topic("vehicle_control_mode", 1000);
+		add_mission_topic("failsafe_flags", 1000);
+		add_mission_topic("vehicle_gps_position", 1000);
+		add_mission_topic("mavlink_log");
+		add_mission_topic("vehicle_local_position", 1000);
+		add_mission_topic("vehicle_local_position_setpoint", 1000);
+		add_mission_topic("debug_array");
+		add_mission_topic("debug_key_value");
+		add_mission_topic("debug_vect");
 	}
 }
 

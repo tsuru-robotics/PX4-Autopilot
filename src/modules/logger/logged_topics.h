@@ -60,7 +60,8 @@ enum class SDLogProfileMask : int32_t {
 enum class MissionLogType : int32_t {
 	Disabled =               0,
 	Complete =               1,
-	Geotagging =             2
+	Geotagging =             2,
+	Offboard =               3
 };
 
 inline bool operator&(SDLogProfileMask a, SDLogProfileMask b)
