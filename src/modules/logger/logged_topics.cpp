@@ -466,6 +466,7 @@ void LoggedTopics::initialize_mission_topics(MissionLogType mission_log_type)
 		add_mission_topic("vehicle_local_position_setpoint", 1000);
 		add_mission_topic("debug_array");
 		add_mission_topic("debug_key_value");
+		add_mission_topic("debug_value");
 		add_mission_topic("debug_vect");
 	}
 }
