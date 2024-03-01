@@ -10,7 +10,7 @@
 
 . ${R}etc/init.d/airframes/4999_kaiken
 
-
+PX4_SIMULATOR=${PX4_SIMULATOR:=gz}
 param set SYS_HITL 1
 
 param set-default HIL_ACT_FUNC1 101

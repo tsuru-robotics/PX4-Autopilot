@@ -2344,7 +2344,9 @@ Mavlink::task_main(int argc, char *argv[])
 
 			if (_vehicle_status_sub.copy(&vehicle_status)) {
 				/* switch HIL mode if required */
-				set_hil_enabled(vehicle_status.hil_state == vehicle_status_s::HIL_STATE_ON);
+				if (_mode != MAVLINK_MODE_CUSTOM) {
+					set_hil_enabled(vehicle_status.hil_state == vehicle_status_s::HIL_STATE_ON);
+				}
 
 				if (_mode == MAVLINK_MODE_IRIDIUM) {
 
