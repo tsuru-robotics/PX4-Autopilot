@@ -58,6 +58,7 @@
 #include <uORB/topics/vehicle_command_ack.h>
 #include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/land_position.h>
 
 // subscriptions
 #include <uORB/Subscription.hpp>
@@ -296,6 +297,7 @@ private:
 	uORB::Publication<vehicle_command_ack_s>		_vehicle_command_ack_pub{ORB_ID(vehicle_command_ack)};
 	uORB::Publication<vehicle_control_mode_s>		_vehicle_control_mode_pub{ORB_ID(vehicle_control_mode)};
 	uORB::Publication<vehicle_status_s>			_vehicle_status_pub{ORB_ID(vehicle_status)};
+	uORB::Publication<land_position_s>			_land_position_pub{ORB_ID(land_position)};
 
 	orb_advert_t _mavlink_log_pub{nullptr};
 

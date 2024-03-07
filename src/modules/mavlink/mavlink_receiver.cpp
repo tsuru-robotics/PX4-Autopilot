@@ -374,11 +374,7 @@ MavlinkReceiver::evaluate_target_ok(int command, int target_system, int target_c
 
 	case MAV_CMD_REQUEST_AUTOPILOT_CAPABILITIES:
 	case MAV_CMD_REQUEST_PROTOCOL_VERSION:
-		/* broadcast and ignore component */
-		target_ok = (target_system == 0) || (target_system == mavlink_system.sysid);
-		break;
-
-	case MAV_CMD_NAV_LAND:
+	case MAV_CMD_DO_SET_MODE:
 		/* broadcast and ignore component */
 		target_ok = (target_system == 0) || (target_system == mavlink_system.sysid);
 		break;
@@ -2618,6 +2614,8 @@ MavlinkReceiver::handle_message_gps_rtcm_data(mavlink_message_t *msg)
 	mavlink_msg_gps_rtcm_data_decode(msg, &gps_rtcm_data_msg);
 
 	gps_inject_data_s gps_inject_data_topic{};
+
+	gps_inject_data_topic.device_id = msg->compid;
 
 	gps_inject_data_topic.timestamp = hrt_absolute_time();
 

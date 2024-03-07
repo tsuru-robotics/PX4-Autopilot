@@ -1016,10 +1016,27 @@ Commander::handle_command(const vehicle_command_s &cmd)
 
 	case vehicle_command_s::VEHICLE_CMD_NAV_LAND: {
 			if (_user_mode_intention.change(vehicle_status_s::NAVIGATION_STATE_AUTO_LAND)) {
-				mavlink_log_info(&_mavlink_log_pub, "Landing at current position\t");
-				events::send(events::ID("commander_landing_current_pos"), events::Log::Info,
-					     "Landing at current position");
-				cmd_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
+
+				// Landing at exact position
+				const double lat = cmd.param5;
+				const double lon = cmd.param6;
+
+				if (PX4_ISFINITE(lat) && PX4_ISFINITE(lon)) {
+					land_position_s land_position_topic{};
+					land_position_topic.timestamp = hrt_absolute_time();
+					land_position_topic.lat = lat;
+					land_position_topic.lon = lon;
+					_land_position_pub.publish(land_position_topic);
+
+					mavlink_log_info(&_mavlink_log_pub, "Landing at lat=%f, lon=%f\t", lat, lon);
+					events::send(events::ID("commander_landing_pos"), events::Log::Info,
+						"Landing at Land position");
+
+					cmd_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_ACCEPTED;
+
+				} else {
+					cmd_result = vehicle_command_ack_s::VEHICLE_CMD_RESULT_DENIED;
+				}
 
 			} else {
 				printRejectMode(vehicle_status_s::NAVIGATION_STATE_AUTO_LAND);

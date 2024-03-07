@@ -131,6 +131,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("wind", 1000);
 	add_topic("geofence_result");
 	add_topic("utm_time");
+	add_topic_multi("rtcm_channel", 0, 2);
 
 	// multi topics
 	add_optional_topic_multi("actuator_outputs", 100, 3);

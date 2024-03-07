@@ -290,3 +290,29 @@ PARAM_DEFINE_INT32(GPS_1_GNSS, 0);
  * @group GPS
  */
 PARAM_DEFINE_INT32(GPS_2_GNSS, 0);
+
+/**
+ * Source component ID of RTCM messages tramsmitted by LoRa
+ *
+ * Is used to identify RTCM messages from LoRa. Must differ from GPS_RTCM_WIFI_ID
+ *
+ * @min 1
+ * @max 255
+ *
+ * @reboot_required true
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(GPS_RTCM_LORA_ID, 25);
+
+/**
+ * Source component ID of RTCM messages tramsmitted by WiFi
+ *
+ * Is used to identify RTCM messages from WiFi. Must differ from GPS_RTCM_LORA_ID
+ *
+ * @min 1
+ * @max 255
+ *
+ * @reboot_required true
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(GPS_RTCM_WIFI_ID, 26);

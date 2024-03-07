@@ -53,6 +53,8 @@ float32 heading_offset		# heading offset of dual antenna array in body frame. Se
 float32 heading_accuracy	# heading accuracy (rad, [0, 2PI])
 
 float32 rtcm_injection_rate	# RTCM message injection rate Hz
+float32 rtcm_rate_lora	        # RTCM message rate in LoRa channel Hz
+float32 rtcm_rate_wifi	        # RTCM message rate in WiFi channel Hz
 uint8 selected_rtcm_instance	# uorb instance that is being used for RTCM corrections
 
 # TOPICS sensor_gps vehicle_gps_position

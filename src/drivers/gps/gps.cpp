@@ -65,6 +65,7 @@
 #include <uORB/topics/gps_inject_data.h>
 #include <uORB/topics/sensor_gps.h>
 #include <uORB/topics/sensor_gnss_relative.h>
+#include <uORB/topics/rtcm_channel.h>
 
 #ifndef CONSTRAINED_FLASH
 # include "devices/src/ashtech.h"
@@ -211,6 +212,21 @@ private:
 	gps_dump_s			     *_dump_from_device{nullptr};
 	gps_dump_comm_mode_t                 _dump_communication_mode{gps_dump_comm_mode_t::Disabled};
 
+	// Main RTCM instance (instance 0) is mux of 2 channels: 0 - LoRa, 1-WiFi
+	int32_t _rtcm_lora_compid{0};
+	int32_t _rtcm_wifi_compid{0};
+	uint32_t _rtcm_counter_in_channel[2] {0,0};
+	uint32_t _rtcm_dropout_counter_in_channel[2] {0,0};
+	uint8_t _last_rtcm_sequence_id_in_channel[2] {0,0};
+	uint8_t _last_rtcm_fragment_in_channel[2] {0,0};
+	unsigned _last_rate_rtcm_count_in_channel[2] {0,0}; ///< counter for number of RTCM messages in both channels
+	float _rate_rtcm_lora{0.0f};        ///< RTCM message rate from LoRa channel
+	float _rate_rtcm_wifi{0.0f};        ///< RTCM message rate from WiFi channel
+	uORB::PublicationMulti<rtcm_channel_s> _rtcm_channel_pub[2] {ORB_ID(rtcm_channel), ORB_ID(rtcm_channel)};
+	// Last consistent rtcm flags
+ 	int8_t _prev_consistent_rtcm_sequence_id{-1};
+	int8_t _prev_consistent_rtcm_fragment_id{0};
+
 	static px4::atomic_bool _is_gps_main_advertised; ///< for the second gps we want to make sure that it gets instance 1
 	/// and thus we wait until the first one publishes at least one message.
 
@@ -261,6 +277,13 @@ private:
 	 * @param len
 	 */
 	inline bool injectData(uint8_t *data, size_t len);
+
+	/**
+	 * Demux RTCM message from main RTCM injection instance (instance 0)
+	 * @param msg
+	 * @return: true if input msg contains consistent RTCM injection
+	 */
+	bool rtcmInjectionDemux(const gps_inject_data_s *msg);
 
 	/**
 	 * set the Baudrate
@@ -360,6 +383,11 @@ GPS::GPS(const char *path, gps_driver_mode_t mode, GPSHelper::Interface interfac
 	}
 
 	_mode_auto = _mode == gps_driver_mode_t::None;
+
+	param_get(param_find("GPS_RTCM_LORA_ID"), &_rtcm_lora_compid);
+	param_get(param_find("GPS_RTCM_WIFI_ID"), &_rtcm_wifi_compid);
+	_rtcm_channel_pub[0].advertise();
+	_rtcm_channel_pub[1].advertise();
 }
 
 GPS::~GPS()
@@ -566,11 +594,13 @@ void GPS::handleInjectDataTopic()
 				/* Write the message to the gps device. Note that the message could be fragmented.
 				* But as we don't write anywhere else to the device during operation, we don't
 				* need to assemble the message first.
+				* Messages from instance #0 must be demultiplexed first.
 				*/
-				injectData(msg.data, msg.len);
-
-				++_last_rate_rtcm_injection_count;
-				_last_rtcm_injection_time = hrt_absolute_time();
+				if ((_selected_rtcm_instance==0 && rtcmInjectionDemux(&msg)) || _selected_rtcm_instance>0) {
+					injectData(msg.data, msg.len);
+					++_last_rate_rtcm_injection_count;
+					_last_rtcm_injection_time = hrt_absolute_time();
+				}
 			}
 		}
 
@@ -586,6 +616,89 @@ bool GPS::injectData(uint8_t *data, size_t len)
 	size_t written = ::write(_serial_fd, data, len);
 	::fsync(_serial_fd);
 	return written == len;
+}
+
+bool GPS::rtcmInjectionDemux(const gps_inject_data_s *msg)
+{
+	// select RTCM channel
+	int ch = 0;
+	if (msg->device_id == (uint8_t)(_rtcm_lora_compid)) {
+		ch = 0;
+	} else if (msg->device_id == (uint8_t)(_rtcm_wifi_compid)) {
+		ch = 1;
+	} else {
+		PX4_WARN("Unknown RTCM source %lu", (unsigned long)msg->device_id);
+		return false;
+	}
+
+	// flags
+	bool is_fragmented = ((msg->flags & 0x1) == 1) ? true : false;
+	uint8_t fragment_id = (msg->flags >> 1) & 0x3; // 0-3
+	uint8_t sequence_id = (msg->flags >> 3) & 0x1f;
+	bool sequence_id_reset = false;
+	if (sequence_id < _last_rtcm_sequence_id_in_channel[ch]) {
+		sequence_id_reset = true;
+	}
+
+	// dropouts
+	if (_rtcm_counter_in_channel[ch] > 0) {
+		int8_t dropouts = 0;
+		if (is_fragmented) {
+			dropouts = fragment_id - _last_rtcm_fragment_in_channel[ch] - 1;
+		} else {
+			if (sequence_id_reset) {
+				dropouts = 31 - _last_rtcm_sequence_id_in_channel[ch] + sequence_id - 1;
+			} else {
+				dropouts = sequence_id - _last_rtcm_sequence_id_in_channel[ch] - 1;
+			}
+		}
+		// PX4_INFO("dropouts=%d", dropouts);
+		_rtcm_dropout_counter_in_channel[ch] += (dropouts > 0) ? dropouts : 0;
+
+	}
+	_last_rtcm_sequence_id_in_channel[ch] = sequence_id;
+	_last_rtcm_fragment_in_channel[ch] = fragment_id;
+
+	// counters
+	++_rtcm_counter_in_channel[ch];
+	++_last_rate_rtcm_count_in_channel[ch];
+
+	// demux (check sequence_id consistency)
+	bool is_consistent = false;
+	// PX4_INFO("msg->device_id %lu, seq=%d, last_seq=%d, frag=%d, last_frag=%d",
+	// msg->device_id, sequence_id, _prev_consistent_rtcm_sequence_id, fragment_id, _prev_consistent_rtcm_fragment_id);
+
+	if ((sequence_id > _prev_consistent_rtcm_sequence_id) || (sequence_id_reset && sequence_id < _prev_consistent_rtcm_sequence_id)) {
+		// consistent sequence
+		is_consistent = true;
+		// update consistent sequence
+		_prev_consistent_rtcm_sequence_id = sequence_id;
+		// init fragment id
+		_prev_consistent_rtcm_fragment_id = 0;
+	} else if (sequence_id == _prev_consistent_rtcm_sequence_id && is_fragmented) {
+		// sequence is the same and is fragmented
+		if (fragment_id > _prev_consistent_rtcm_fragment_id) {
+			// consistent fragment
+			is_consistent = true;
+			// save consistent fragment number
+			_prev_consistent_rtcm_fragment_id = fragment_id;
+		}
+	}
+	//PX4_INFO("msg->device_id %lu, is_consistent=%d ",msg->device_id, is_consistent);
+
+	// rtcm_channel_topic
+	rtcm_channel_s rtcm_channel_topic{};
+	rtcm_channel_topic.timestamp = hrt_absolute_time();
+	rtcm_channel_topic.flags = msg->flags;
+	rtcm_channel_topic.counter = _rtcm_counter_in_channel[ch];
+	rtcm_channel_topic.dropout_counter = _rtcm_dropout_counter_in_channel[ch];
+	rtcm_channel_topic.sequence_id = sequence_id;
+	rtcm_channel_topic.fragment_id = is_fragmented ? fragment_id+1 : 0; //1-4 if fragmented
+	rtcm_channel_topic.consistent = is_consistent ? 1 : 0;
+	rtcm_channel_topic.dropout_prcnt =  100.f * (float)(_rtcm_dropout_counter_in_channel[ch])/(float)(_rtcm_counter_in_channel[ch]);
+	_rtcm_channel_pub[ch].publish(rtcm_channel_topic);
+
+	return is_consistent;
 }
 
 int GPS::setBaudrate(unsigned baud)
@@ -1010,10 +1123,14 @@ GPS::run()
 					float dt = (float)((hrt_absolute_time() - last_rate_measurement)) / 1000000.0f;
 					_rate = last_rate_count / dt;
 					_rate_rtcm_injection = _last_rate_rtcm_injection_count / dt;
+					_rate_rtcm_lora = _last_rate_rtcm_count_in_channel[0] / dt;
+					_rate_rtcm_wifi = _last_rate_rtcm_count_in_channel[1] / dt;
 					_rate_reading = _num_bytes_read / dt;
 					last_rate_measurement = hrt_absolute_time();
 					last_rate_count = 0;
 					_last_rate_rtcm_injection_count = 0;
+					_last_rate_rtcm_count_in_channel[0] = 0;
+					_last_rate_rtcm_count_in_channel[1] = 0;
 					_num_bytes_read = 0;
 					_helper->storeUpdateRates();
 					_helper->resetUpdateRates();
@@ -1053,6 +1170,8 @@ GPS::run()
 				_healthy = false;
 				_rate = 0.0f;
 				_rate_rtcm_injection = 0.0f;
+				_rate_rtcm_lora = 0.0f;
+				_rate_rtcm_wifi = 0.0f;
 			}
 		}
 
@@ -1167,6 +1286,8 @@ GPS::print_status()
 
 		PX4_INFO("rate publication:\t\t%6.2f Hz", (double)_rate);
 		PX4_INFO("rate RTCM injection:\t%6.2f Hz", (double)_rate_rtcm_injection);
+		PX4_INFO("rate RTCM (LoRa):\t%6.2f Hz", (double)_rate_rtcm_lora);
+		PX4_INFO("rate RTCM (WiFi):\t%6.2f Hz", (double)_rate_rtcm_wifi);
 
 		print_message(ORB_ID(sensor_gps), _report_gps_pos);
 	}
@@ -1219,6 +1340,8 @@ GPS::publish()
 
 		_report_gps_pos.selected_rtcm_instance = _selected_rtcm_instance;
 		_report_gps_pos.rtcm_injection_rate = _rate_rtcm_injection;
+		_report_gps_pos.rtcm_rate_lora = _rate_rtcm_lora;
+		_report_gps_pos.rtcm_rate_wifi = _rate_rtcm_wifi;
 
 		_report_gps_pos_pub.publish(_report_gps_pos);
 		// Heading/yaw data can be updated at a lower rate than the other navigation data.

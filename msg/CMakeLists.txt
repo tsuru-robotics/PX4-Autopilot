@@ -109,6 +109,7 @@ set(msg_files
 	InternalCombustionEngineStatus.msg
 	IridiumsbdStatus.msg
 	IrlockReport.msg
+	LandPosition.msg
 	LandingGear.msg
 	LandingGearWheel.msg
 	LandingTargetInnovations.msg
@@ -156,6 +157,7 @@ set(msg_files
 	RcParameterMap.msg
 	Rpm.msg
 	RtlTimeEstimate.msg
+	RtcmChannel.msg
 	SatelliteInfo.msg
 	SensorAccel.msg
 	SensorAccelFifo.msg

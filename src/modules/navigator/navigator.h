@@ -80,6 +80,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/mode_completed.h>
 #include <uORB/topics/estimator_status_flags.h>
+#include <uORB/topics/land_position.h>
 #include <uORB/uORB.h>
 
 using namespace time_literals;
@@ -287,6 +288,9 @@ public:
 
 	void geofence_breach_check(bool &have_geofence_position_data);
 
+	// Land
+	bool get_land_position(land_position_s* land_pos) {return  _land_position_sub.update(land_pos);}
+
 	// Param access
 	int get_loiter_min_alt() const { return _param_min_ltr_alt.get(); }
 	int get_landing_abort_min_alt() const { return _param_mis_lnd_abrt_alt.get(); }
@@ -326,6 +330,7 @@ private:
 	uORB::Subscription _pos_ctrl_landing_status_sub{ORB_ID(position_controller_landing_status)};	/**< position controller landing status subscription */
 	uORB::Subscription _traffic_sub{ORB_ID(transponder_report)};		/**< traffic subscription */
 	uORB::Subscription _vehicle_command_sub{ORB_ID(vehicle_command)};	/**< vehicle commands (onboard and offboard) */
+	uORB::Subscription _land_position_sub{ORB_ID(land_position)};           /**< optional land position for LAND */
 
 	uORB::Publication<geofence_result_s>		_geofence_result_pub{ORB_ID(geofence_result)};
 	uORB::Publication<mission_result_s>		_mission_result_pub{ORB_ID(mission_result)};

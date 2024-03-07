@@ -41,6 +41,8 @@
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_air_data.h>
 #include <uORB/topics/estimator_status_flags.h>
+#include <uORB/topics/health_report.h>
+#include <uORB/topics/battery_status.h>
 
 class MavlinkStreamKaikenTm : public MavlinkStream
 {
@@ -68,10 +70,35 @@ private:
 	uORB::Subscription _lpos_sub{ORB_ID(vehicle_local_position)};
 	uORB::Subscription _air_data_sub{ORB_ID(vehicle_air_data)};
 	uORB::Subscription _estimator_status_flags_sub{ORB_ID(estimator_status_flags)};
+	uORB::Subscription _health_report_sub{ORB_ID(health_report)};
+	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
+
+
+	using health_component_t = events::px4::enums::health_component_t;
+
+	void fillOutComponent(const health_report_s &health_report, FMU_COMPONENT_STATUS mav_component,
+			      health_component_t health_component, mavlink_fmu_tm_t &msg)
+	{
+		if (health_report.health_is_present_flags & (uint64_t)health_component) {
+			msg.component_present |= mav_component;
+
+			// Check health only if present
+			if (((health_report.arming_check_error_flags | health_report.arming_check_warning_flags |
+			health_report.health_error_flags | health_report.health_warning_flags) & (uint64_t)health_component) == 0) {
+				msg.component_health |= mav_component;
+				}
+		}
+	}
 
 	bool send() override
 	{
 		mavlink_fmu_tm_t msg{};
+
+		vehicle_status_s vehicle_status{};
+		_vehicle_status_sub.copy(&vehicle_status);
+
+		health_report_s health_report{};
+		_health_report_sub.copy(&health_report);
 
 		// gps
 		sensor_gps_s gps;
@@ -91,15 +118,14 @@ private:
 			msg.fix_type = gps.fix_type;
 			// satellites
 			msg.satellites_visible = gps.satellites_used;
-			// rtcm_injection_rate
-			msg.rtcm_rate_ch0 = abs(gps.rtcm_injection_rate);
-			msg.rtcm_rate_ch1 = abs(gps.rtcm_injection_rate);
+			// rtcm_rate
+			msg.rtcm_rate_wifi = abs(gps.rtcm_rate_wifi * 10.0f);
+			msg.rtcm_rate_lora = abs(gps.rtcm_rate_lora * 10.0f);
 		}
 
 		// flight_state
 		vehicle_land_detected_s land_detected{};
-		vehicle_status_s vehicle_status{};
-		if (_land_detected_sub.copy(&land_detected) && _vehicle_status_sub.copy(&vehicle_status)) {
+		if (_land_detected_sub.copy(&land_detected)) {
 
 			if (vehicle_status.timestamp > 0 && land_detected.timestamp > 0) {
 
@@ -114,7 +140,6 @@ private:
 				msg.flight_state |= UTM_FLIGHT_STATE_UNKNOWN;
 			}
 		}
-
 
 		// position
 		vehicle_global_position_s gpos;
@@ -150,6 +175,33 @@ private:
 			if (estimator_status_flags.cs_gps_hgt == 1) {
 				msg.flags |= FMU_TM_FLAGS_ALT_GPS;
 			}
+		}
+
+		// prearm check
+		if (health_report.can_arm_mode_flags & (1u << vehicle_status.nav_state)) {
+			msg.flags |= FMU_TM_FLAGS_PREARM_CHECK;
+		}
+
+		// Components
+		fillOutComponent(health_report, FMU_COMPONENT_STATUS_GYRO, health_component_t::gyro, msg);
+		fillOutComponent(health_report, FMU_COMPONENT_STATUS_ACCEL, health_component_t::accel, msg);
+		fillOutComponent(health_report, FMU_COMPONENT_STATUS_MAG, health_component_t::magnetometer, msg);
+		fillOutComponent(health_report, FMU_COMPONENT_STATUS_BARO, health_component_t::absolute_pressure, msg);
+		fillOutComponent(health_report, FMU_COMPONENT_STATUS_GPS, health_component_t::gps, msg);
+		fillOutComponent(health_report, FMU_COMPONENT_STATUS_BATTERY, health_component_t::battery, msg);
+
+		// Battery
+		battery_status_s battery_status{};
+		_battery_status_sub.copy(&battery_status);
+		if (battery_status.connected) {
+			msg.voltage_battery = battery_status.voltage_filtered_v * 1000.0f;
+			msg.current_battery = battery_status.current_filtered_a * 100.0f;
+			msg.battery_remaining = ceilf(battery_status.remaining * 100.0f);
+
+		} else {
+			msg.voltage_battery = UINT16_MAX;
+			msg.current_battery = -1;
+			msg.battery_remaining = -1;
 		}
 
 		mavlink_msg_fmu_tm_send_struct(_mavlink->get_channel(), &msg);
