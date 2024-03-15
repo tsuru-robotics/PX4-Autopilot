@@ -560,6 +560,8 @@ private:
 		_param_ekf2_mag_acclim,	///< integer used to specify the type of magnetometer fusion used
 		(ParamExtFloat<px4::params::EKF2_MAG_YAWLIM>)
 		_param_ekf2_mag_yawlim,	///< yaw rate threshold used by mode select logic (rad/sec)
+		(ParamExtFloat<px4::params::EKF2_MAG_MIN_ALT>)
+		_param_ekf2_mag_min_alt,	///< mag fusion is enabled only above the given altitude, -1 - disabled (m)
 
 		(ParamExtInt<px4::params::EKF2_GPS_CHECK>)
 		_param_ekf2_gps_check,	///< bitmask used to control which GPS quality checks are used
