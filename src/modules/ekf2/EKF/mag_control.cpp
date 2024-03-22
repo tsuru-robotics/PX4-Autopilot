@@ -47,7 +47,7 @@ void Ekf::controlMagFusion()
 
 	const Vector3f position{getPosition()};
 
-	if ((_params.mag_fusion_min_alt > 0) && (position(2) > -_params.mag_fusion_min_alt)){
+	if ((_params.mag_fusion_min_alt > 0.0f) && (position(2) > -_params.mag_fusion_min_alt)){
 		// disable mag fusion
 		if (!_control_status.flags.yaw_align) {
 			// Align yaw
