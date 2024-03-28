@@ -397,7 +397,7 @@ void MulticopterPositionControl::Run()
 								_setpoint = _ob_setpoint1;
 							} else {
 								_ob_sp_dt = _ob_setpoint2.timestamp - _ob_setpoint1.timestamp;
-								PX4_INFO("Set setpoints dt = %lu", (unsigned long)_ob_sp_dt);
+								PX4_INFO("Set offboard setpoints dt = %lu", (unsigned long)_ob_sp_dt);
 							}
 
 							_ob_sp_interval = _ob_setpoint2.timestamp - _ob_setpoint1.timestamp;
@@ -406,7 +406,7 @@ void MulticopterPositionControl::Run()
 							_ob_sp_dpos[2] = (_ob_setpoint2.position[2] - _ob_setpoint1.position[2]) / (float)_ob_sp_interval;
 							_ob_interpolation_start_time = _ob_setpoint1.timestamp + _ob_sp_dt;
 							_ob_new_sp_needed = false;
-							PX4_INFO("Setpoint update %d. sp1_ts=%lu, sp2_ts=%lu, interval=%lu", last_generation,
+							PX4_DEBUG("Setpoint update %d. sp1_ts=%lu, sp2_ts=%lu, interval=%lu", last_generation,
 							(long unsigned)_ob_setpoint1.timestamp, (long unsigned)_ob_setpoint2.timestamp, (long unsigned)_ob_sp_interval);
 						}
 					}
