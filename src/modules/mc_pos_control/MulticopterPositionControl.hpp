@@ -213,6 +213,7 @@ private:
 	uint64_t _ob_sp_interval{0};
 	hrt_abstime _ob_interpolation_start_time{0};
 	float _ob_sp_dpos[3];
+	uint64_t _ob_sp_dt{0};
 
 	/**
 	 * Update our local parameter cache.

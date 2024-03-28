@@ -395,15 +395,18 @@ void MulticopterPositionControl::Run()
 							if (tmp_setpoint.timestamp > 0) {
 								_ob_setpoint1 = tmp_setpoint;
 								_setpoint = _ob_setpoint1;
+							} else {
+								_ob_sp_dt = _ob_setpoint2.timestamp - _ob_setpoint1.timestamp;
+								PX4_INFO("Set setpoints dt = %lu", (unsigned long)_ob_sp_dt);
 							}
 
 							_ob_sp_interval = _ob_setpoint2.timestamp - _ob_setpoint1.timestamp;
 							_ob_sp_dpos[0] = (_ob_setpoint2.position[0] - _ob_setpoint1.position[0]) / (float)_ob_sp_interval;
 							_ob_sp_dpos[1] = (_ob_setpoint2.position[1] - _ob_setpoint1.position[1]) / (float)_ob_sp_interval;
 							_ob_sp_dpos[2] = (_ob_setpoint2.position[2] - _ob_setpoint1.position[2]) / (float)_ob_sp_interval;
-							_ob_interpolation_start_time = _ob_setpoint2.timestamp;
+							_ob_interpolation_start_time = _ob_setpoint1.timestamp + _ob_sp_dt;
 							_ob_new_sp_needed = false;
-							PX4_DEBUG("Setpoint update %d. sp1_ts=%lu, sp2_ts=%lu, interval=%lu", last_generation,
+							PX4_INFO("Setpoint update %d. sp1_ts=%lu, sp2_ts=%lu, interval=%lu", last_generation,
 							(long unsigned)_ob_setpoint1.timestamp, (long unsigned)_ob_setpoint2.timestamp, (long unsigned)_ob_sp_interval);
 						}
 					}
@@ -418,7 +421,7 @@ void MulticopterPositionControl::Run()
 				_setpoint.position[1] = _ob_setpoint1.position[1] + _ob_sp_dpos[1] * (float)dt_intepolation;
 				_setpoint.position[2] = _ob_setpoint1.position[2] + _ob_sp_dpos[2] * (float)dt_intepolation;
 
-				if (dt_intepolation >= _ob_sp_interval) {
+				if (hrt_absolute_time() >= _ob_setpoint2.timestamp + _ob_sp_dt) {
 					_ob_new_sp_needed = true;
 				}
 			}
