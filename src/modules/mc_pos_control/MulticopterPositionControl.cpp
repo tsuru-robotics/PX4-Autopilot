@@ -368,7 +368,64 @@ void MulticopterPositionControl::Run()
 			}
 		}
 
-		_trajectory_setpoint_sub.update(&_setpoint);
+		if (_vehicle_control_mode.flag_control_offboard_enabled) {
+
+			// handle last setpoint, as the system needs to be updated to handle them
+			if (_ob_new_sp_needed) {
+				if ( _trajectory_setpoint_sub.updated()) {
+					const unsigned last_generation = _trajectory_setpoint_sub.get_last_generation();
+
+					if (_ob_setpoint1.timestamp == 0) {
+						// init setpoint 1 first
+						if (_trajectory_setpoint_sub.copy(&_ob_setpoint1)) {
+							_setpoint = _ob_setpoint1;
+						}
+					} else {
+						trajectory_setpoint_s tmp_setpoint{PositionControl::empty_trajectory_setpoint};
+						// save setpoint 2 if it is valid
+						if (_ob_setpoint2.timestamp > 0) {
+							tmp_setpoint = _ob_setpoint2;
+						}
+						// update setpoints
+						if (_trajectory_setpoint_sub.copy(&_ob_setpoint2)) {
+							if (_trajectory_setpoint_sub.get_last_generation() != last_generation + 1) {
+								PX4_ERR("trajectory setpoint lost, generation %u -> %u", last_generation, _trajectory_setpoint_sub.get_last_generation());
+							}
+
+							if (tmp_setpoint.timestamp > 0) {
+								_ob_setpoint1 = tmp_setpoint;
+								_setpoint = _ob_setpoint1;
+							}
+
+							_ob_sp_interval = _ob_setpoint2.timestamp - _ob_setpoint1.timestamp;
+							_ob_sp_dpos[0] = (_ob_setpoint2.position[0] - _ob_setpoint1.position[0]) / (float)_ob_sp_interval;
+							_ob_sp_dpos[1] = (_ob_setpoint2.position[1] - _ob_setpoint1.position[1]) / (float)_ob_sp_interval;
+							_ob_sp_dpos[2] = (_ob_setpoint2.position[2] - _ob_setpoint1.position[2]) / (float)_ob_sp_interval;
+							_ob_interpolation_start_time = _ob_setpoint2.timestamp;
+							_ob_new_sp_needed = false;
+							PX4_DEBUG("Setpoint update %d. sp1_ts=%lu, sp2_ts=%lu, interval=%lu", last_generation,
+							(long unsigned)_ob_setpoint1.timestamp, (long unsigned)_ob_setpoint2.timestamp, (long unsigned)_ob_sp_interval);
+						}
+					}
+				}
+			}
+
+			// add interpolated position to setpoint
+			if (!_ob_new_sp_needed) {
+				uint64_t dt_intepolation = hrt_absolute_time() - _ob_interpolation_start_time;
+				PX4_DEBUG("dt_intepolation=%lu", (long unsigned)dt_intepolation);
+				_setpoint.position[0] = _ob_setpoint1.position[0] + _ob_sp_dpos[0] * (float)dt_intepolation;
+				_setpoint.position[1] = _ob_setpoint1.position[1] + _ob_sp_dpos[1] * (float)dt_intepolation;
+				_setpoint.position[2] = _ob_setpoint1.position[2] + _ob_sp_dpos[2] * (float)dt_intepolation;
+
+				if (dt_intepolation >= _ob_sp_interval) {
+					_ob_new_sp_needed = true;
+				}
+			}
+
+		} else {
+			_trajectory_setpoint_sub.update(&_setpoint);
+		}
 
 		// adjust existing (or older) setpoint with any EKF reset deltas
 		if ((_setpoint.timestamp != 0) && (_setpoint.timestamp < vehicle_local_position.timestamp)) {

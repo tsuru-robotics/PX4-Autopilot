@@ -206,6 +206,14 @@ private:
 
 	perf_counter_t _cycle_perf{perf_alloc(PC_ELAPSED, MODULE_NAME": cycle time")};
 
+	/** Offboard setpoints interpolation */
+	bool _ob_new_sp_needed{true};
+	trajectory_setpoint_s _ob_setpoint1{PositionControl::empty_trajectory_setpoint};
+	trajectory_setpoint_s _ob_setpoint2{PositionControl::empty_trajectory_setpoint};
+	uint64_t _ob_sp_interval{0};
+	hrt_abstime _ob_interpolation_start_time{0};
+	float _ob_sp_dpos[3];
+
 	/**
 	 * Update our local parameter cache.
 	 * Parameter update can be forced when argument is true.
