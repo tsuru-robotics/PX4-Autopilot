@@ -3,7 +3,7 @@
 # Needs to be kinematically consistent and feasible for smooth flight.
 # setting a value to NaN means the state should not be controlled
 
-uint8 ORB_QUEUE_LENGTH = 3
+uint8 ORB_QUEUE_LENGTH = 24
 
 uint64 timestamp # time since system start (microseconds)
 

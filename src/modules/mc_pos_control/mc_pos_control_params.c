@@ -896,3 +896,16 @@ PARAM_DEFINE_FLOAT(MPC_XY_VEL_ALL, -10.0f);
  * @group Multicopter Position Control
  */
 PARAM_DEFINE_FLOAT(MPC_Z_VEL_ALL, -3.0f);
+
+/**
+ * Offboard Setpoint Interpolation Delay
+ *
+ * Specifies delay of setpoint interpolation stream in Offboard mode.
+ *
+ * @group Multicopter Position Control
+ * @min 0
+ * @max 1000
+ * @unit ms
+ * @reboot_required false
+ */
+PARAM_DEFINE_INT32(MPC_OB_SP_DELAY, 350);
