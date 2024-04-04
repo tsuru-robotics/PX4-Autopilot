@@ -442,6 +442,9 @@ void SimulatorMavlink::handle_message_hil_gps(const mavlink_message_t *msg)
 		gps.heading = NAN;
 		gps.heading_offset = NAN;
 
+		gps.rtcm_rate_wifi = 1.5f;
+		gps.rtcm_rate_lora = 1.6f;
+
 		gps.timestamp = hrt_absolute_time();
 
 		// New publishers will be created based on the HIL_GPS ID's being different or not
