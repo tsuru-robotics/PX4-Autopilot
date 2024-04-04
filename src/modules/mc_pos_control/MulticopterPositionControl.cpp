@@ -384,14 +384,14 @@ void MulticopterPositionControl::Run()
 			}
 
 			if (!_ob_interpolation_active) {
-				if ( _trajectory_setpoint_sub.updated()) {
-					const unsigned last_generation = _trajectory_setpoint_sub.get_last_generation();
+				if ( _trajectory_setpoint_queued_sub.updated()) {
+					const unsigned last_generation = _trajectory_setpoint_queued_sub.get_last_generation();
 					// copy next trajectory setpoint
 					trajectory_setpoint_s next_setpoint{PositionControl::empty_trajectory_setpoint};
-					if (_trajectory_setpoint_sub.copy(&next_setpoint)) {
+					if (_trajectory_setpoint_queued_sub.copy(&next_setpoint)) {
 
-						if (_trajectory_setpoint_sub.get_last_generation() != last_generation + 1) {
-							PX4_ERR("trajectory setpoint lost, generation %u -> %u", last_generation, _trajectory_setpoint_sub.get_last_generation());
+						if (_trajectory_setpoint_queued_sub.get_last_generation() != last_generation + 1) {
+							PX4_ERR("trajectory setpoint lost, generation %u -> %u", last_generation, _trajectory_setpoint_queued_sub.get_last_generation());
 						}
 
 						if (_ob_setpoint1.timestamp == 0) {
@@ -406,7 +406,7 @@ void MulticopterPositionControl::Run()
 							_ob_interpolation_start_time = _ob_setpoint1.timestamp;
 							_ob_interpolation_stop_time = _ob_setpoint1.timestamp + _param_ob_sp_dealy.get() * 1000;
 							_ob_interpolation_active = true;
-							PX4_DEBUG("Received first sepoint %d. Delay=%d ms.", _trajectory_setpoint_sub.get_last_generation(), _param_ob_sp_dealy.get());
+							PX4_DEBUG("Received first sepoint %d. Delay=%d ms.", _trajectory_setpoint_queued_sub.get_last_generation(), _param_ob_sp_dealy.get());
 						} else 	{
 							if (_ob_setpoint2.timestamp > 0) {
 								// update 1st and 2nd setpoints
@@ -435,7 +435,7 @@ void MulticopterPositionControl::Run()
 							_ob_interpolation_active = true;
 
 							PX4_DEBUG("Received next sepoint %d. Interpolation starting %lu us later, interval=%lu us",
-							_trajectory_setpoint_sub.get_last_generation(), (long unsigned)(hrt_absolute_time()-_ob_interpolation_start_time), (long unsigned)ob_sp_interval);
+							_trajectory_setpoint_queued_sub.get_last_generation(), (long unsigned)(hrt_absolute_time()-_ob_interpolation_start_time), (long unsigned)ob_sp_interval);
 						}
 					} else {
 						PX4_ERR("Fail copying msg from trajectory que");
@@ -447,7 +447,7 @@ void MulticopterPositionControl::Run()
 			}
 
 		} else {
-			// use trajectory setpoint as is
+			// use trajectory setpoint from default uORB
 			_trajectory_setpoint_sub.update(&_setpoint);
 			// clear existing setpoints when offboard mode is no longer active
 			if (_ob_setpoint2.timestamp > 0) {

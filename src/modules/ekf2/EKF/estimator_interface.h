@@ -44,7 +44,7 @@
 
 #if defined(MODULE_NAME)
 #include <px4_platform_common/log.h>
-# define ECL_INFO PX4_INFO
+# define ECL_INFO PX4_DEBUG
 # define ECL_WARN PX4_DEBUG
 # define ECL_ERR  PX4_DEBUG
 # define ECL_DEBUG PX4_DEBUG
