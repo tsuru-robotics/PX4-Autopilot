@@ -102,6 +102,7 @@ EKF2::EKF2(bool multi_mode, const px4::wq_config_t &config, bool replay_mode):
 	_param_ekf2_mag_type(_params->mag_fusion_type),
 	_param_ekf2_mag_acclim(_params->mag_acc_gate),
 	_param_ekf2_mag_yawlim(_params->mag_yaw_rate_gate),
+	_param_ekf2_mag_min_alt(_params->mag_fusion_min_alt),
 	_param_ekf2_gps_check(_params->gps_check_mask),
 	_param_ekf2_req_eph(_params->req_hacc),
 	_param_ekf2_req_epv(_params->req_vacc),

@@ -337,6 +337,7 @@ struct parameters {
 	int32_t mag_fusion_type{0};             ///< integer used to specify the type of magnetometer fusion used
 	float mag_acc_gate{0.5f};               ///< when in auto select mode, heading fusion will be used when manoeuvre accel is lower than this (m/sec**2)
 	float mag_yaw_rate_gate{0.20f};         ///< yaw rate threshold used by mode select logic (rad/sec)
+	float mag_fusion_min_alt{-1.0f};		///< mag fusion is enabled only above the given altitude, -1 - disabled (m)
 
 #if defined(CONFIG_EKF2_GNSS_YAW)
 	// GNSS heading fusion

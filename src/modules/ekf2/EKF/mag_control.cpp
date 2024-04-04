@@ -45,7 +45,20 @@ void Ekf::controlMagFusion()
 
 	magSample mag_sample;
 
-	if (_mag_buffer) {
+	const Vector3f position{getPosition()};
+
+	if ((_params.mag_fusion_min_alt > 0.0f) && (position(2) > -_params.mag_fusion_min_alt)){
+		// disable mag fusion
+		if (!_control_status.flags.yaw_align) {
+			// Align yaw
+			const float yaw_init = 0.0f;
+			_state.quat_nominal = updateYawInRotMat(yaw_init, Dcmf(_state.quat_nominal));
+			_control_status.flags.yaw_align = true;
+			ECL_INFO("Yaw aligned by external value %.3f rad", (double)yaw_init);
+		}
+		stopMagFusion();
+	}
+	else if (_mag_buffer) {
 		mag_data_ready = _mag_buffer->pop_first_older_than(_time_delayed_us, &mag_sample);
 
 		if (mag_data_ready) {
@@ -392,11 +405,18 @@ bool Ekf::shouldInhibitMag() const
 	// is available, assume that we are operating indoors and the magnetometer should not be used.
 	// Also inhibit mag fusion when a strong magnetic field interference is detected or the user
 	// has explicitly stopped magnetometer use.
-	const bool user_selected = (_params.mag_fusion_type == MagFuseType::INDOOR);
+	bool should_inhibit_mag = false;
+	if (_params.mag_fusion_min_alt > 0) {
+		const Vector3f position{getPosition()};
+		should_inhibit_mag = (position(2) > -_params.mag_fusion_min_alt) ? true : false;
+	} else {
+		const bool user_selected = (_params.mag_fusion_type == MagFuseType::INDOOR);
 
-	const bool heading_not_required_for_navigation = !_control_status.flags.gps;
+		const bool heading_not_required_for_navigation = !_control_status.flags.gps;
+		should_inhibit_mag = user_selected && heading_not_required_for_navigation;
+	}
 
-	return (user_selected && heading_not_required_for_navigation) || _control_status.flags.mag_field_disturbed;
+	return should_inhibit_mag || _control_status.flags.mag_field_disturbed;
 }
 
 bool Ekf::magFieldStrengthDisturbed(const Vector3f &mag_sample) const

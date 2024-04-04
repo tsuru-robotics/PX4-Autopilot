@@ -174,3 +174,6 @@ GPS_RTCM_WIFI_ID: 26
 # GPS debug
 GPS_DUMP_COMM: 1
 GPS_SAT_INFO: 1
+
+# Magnetometer
+EKF2_MAG_MIN_ALT: -1.0

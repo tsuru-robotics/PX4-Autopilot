@@ -97,9 +97,15 @@ void MagnetometerChecks::checkAndReport(const Context &context, Report &reporter
 				}
 
 			} else if (!is_valid) {
+				NavModes required_groups_mag = NavModes::All;
+
+				if (_param_ekf2_mag_min_alt.get() > 0.0f) {
+					required_groups_mag = NavModes::None; // optional
+				}
+
 				/* EVENT
 				 */
-				reporter.healthFailure<uint8_t>(NavModes::All, health_component_t::magnetometer, events::ID("check_mag_no_data"),
+				reporter.healthFailure<uint8_t>(required_groups_mag, health_component_t::magnetometer, events::ID("check_mag_no_data"),
 								events::Log::Error, "No valid data from Compass {1}", instance);
 
 				if (reporter.mavlink_log_pub()) {

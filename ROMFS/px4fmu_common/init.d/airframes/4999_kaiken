@@ -187,3 +187,6 @@ param set-default GPS_RTCM_WIFI_ID 26
 # GPS debug
 param set-default GPS_DUMP_COMM 1
 param set-default GPS_SAT_INFO 1
+
+# Magnetometer
+param set-default EKF2_MAG_MIN_ALT -1.0

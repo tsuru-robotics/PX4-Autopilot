@@ -61,6 +61,7 @@ private:
 
 	DEFINE_PARAMETERS_CUSTOM_PARENT(HealthAndArmingCheckBase,
 					(ParamInt<px4::params::SYS_HAS_MAG>) _param_sys_has_mag,
-					(ParamInt<px4::params::COM_ARM_MAG_ANG>) _param_com_arm_mag_ang
+					(ParamInt<px4::params::COM_ARM_MAG_ANG>) _param_com_arm_mag_ang,
+					(ParamFloat<px4::params::EKF2_MAG_MIN_ALT>) _param_ekf2_mag_min_alt
 				       )
 };

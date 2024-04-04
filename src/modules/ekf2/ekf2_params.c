@@ -535,6 +535,18 @@ PARAM_DEFINE_FLOAT(EKF2_MAG_ACCLIM, 0.5f);
 PARAM_DEFINE_FLOAT(EKF2_MAG_YAWLIM, 0.20f);
 
 /**
+ * Magnetometer fusion is enabled only above the given altitude, if is > 0 (m)
+ *
+ * -1, to enable continuous magnetometer fusion
+ *
+ * @group EKF2
+ * @min -1
+ * @unit m
+ * @decimal 2
+ */
+PARAM_DEFINE_FLOAT(EKF2_MAG_MIN_ALT, -1.0f);
+
+/**
  * Gate size for barometric and GPS height fusion
  *
  * Sets the number of standard deviations used by the innovation consistency test.
