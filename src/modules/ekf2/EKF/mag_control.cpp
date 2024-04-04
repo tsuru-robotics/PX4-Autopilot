@@ -38,6 +38,8 @@
 
 #include "ekf.h"
 #include <mathlib/mathlib.h>
+#include <uORB/Subscription.hpp>
+#include <uORB/topics/home_position.h>
 
 void Ekf::controlMagFusion()
 {
@@ -45,12 +47,9 @@ void Ekf::controlMagFusion()
 
 	magSample mag_sample;
 
-	const Vector3f position{getPosition()};
-
-	if ((_params.mag_fusion_min_alt > 0.0f) && (position(2) > -_params.mag_fusion_min_alt)){
-		// disable mag fusion
+	if (inhibitMagForTakeoffAndLand()) {
+		// Alignt yaw if not aligned yet
 		if (!_control_status.flags.yaw_align) {
-			// Align yaw
 			const float yaw_init = 0.0f;
 			_state.quat_nominal = updateYawInRotMat(yaw_init, Dcmf(_state.quat_nominal));
 			_control_status.flags.yaw_align = true;
@@ -405,18 +404,38 @@ bool Ekf::shouldInhibitMag() const
 	// is available, assume that we are operating indoors and the magnetometer should not be used.
 	// Also inhibit mag fusion when a strong magnetic field interference is detected or the user
 	// has explicitly stopped magnetometer use.
-	bool should_inhibit_mag = false;
-	if (_params.mag_fusion_min_alt > 0) {
-		const Vector3f position{getPosition()};
-		should_inhibit_mag = (position(2) > -_params.mag_fusion_min_alt) ? true : false;
-	} else {
-		const bool user_selected = (_params.mag_fusion_type == MagFuseType::INDOOR);
+	const bool user_selected = (_params.mag_fusion_type == MagFuseType::INDOOR);
 
-		const bool heading_not_required_for_navigation = !_control_status.flags.gps;
-		should_inhibit_mag = user_selected && heading_not_required_for_navigation;
+	const bool heading_not_required_for_navigation = !_control_status.flags.gps;
+
+	return (user_selected && heading_not_required_for_navigation) || _control_status.flags.mag_field_disturbed;
+}
+
+bool Ekf::inhibitMagForTakeoffAndLand()
+{
+	bool inhibit_mag = false;
+	if (_params.mag_fusion_min_alt > 0.0f){
+		// take-off/land without mag is enabled
+		uORB::SubscriptionData<home_position_s> _home_position_sub{ORB_ID(home_position)};
+		if  (_home_position_sub.get().valid_lpos) {
+			const Vector3f position{getPosition()};
+			float ref_alt = position(2) - _home_position_sub.get().z;
+			if (ref_alt > -_params.mag_fusion_min_alt) {
+				// drone is below the mag_fusion_min_alt
+				_mag_use_inhibit_for_takeoff_and_land_us = _time_delayed_us;
+				inhibit_mag = true;
+			} else if (uint32_t(_time_delayed_us - _mag_use_inhibit_for_takeoff_and_land_us) < (uint32_t)1e6) {
+				// drone is above the mag_fusion_min_alt
+				// but we still inhibit mag within 1 sec
+				inhibit_mag = true;
+			}
+		} else {
+			// inhibit mag until home position becomes valid
+			inhibit_mag = true;
+		}
 	}
 
-	return should_inhibit_mag || _control_status.flags.mag_field_disturbed;
+	return inhibit_mag;
 }
 
 bool Ekf::magFieldStrengthDisturbed(const Vector3f &mag_sample) const
