@@ -469,6 +469,7 @@ void LoggedTopics::initialize_mission_topics(MissionLogType mission_log_type)
 		add_mission_topic("debug_key_value");
 		add_mission_topic("debug_value");
 		add_mission_topic("debug_vect");
+		add_mission_topic("estimator_gps_status", 1000);
 	}
 }
 
