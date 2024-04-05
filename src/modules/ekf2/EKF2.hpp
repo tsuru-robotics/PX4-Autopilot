@@ -90,6 +90,7 @@
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/wind.h>
 #include <uORB/topics/yaw_estimator_status.h>
+#include <uORB/topics/home_position.h>
 
 #if defined(CONFIG_EKF2_AIRSPEED)
 # include <uORB/topics/airspeed.h>
@@ -392,6 +393,7 @@ private:
 	uORB::Subscription _vehicle_command_sub{ORB_ID(vehicle_command)};
 	uORB::Subscription _vehicle_gps_position_sub{ORB_ID(vehicle_gps_position)};
 	uORB::Subscription _vehicle_land_detected_sub{ORB_ID(vehicle_land_detected)};
+	uORB::Subscription _home_position_sub{ORB_ID(home_position)};
 
 	uORB::SubscriptionCallbackWorkItem _sensor_combined_sub{this, ORB_ID(sensor_combined)};
 	uORB::SubscriptionCallbackWorkItem _vehicle_imu_sub{this, ORB_ID(vehicle_imu)};

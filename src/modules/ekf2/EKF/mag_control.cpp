@@ -38,8 +38,6 @@
 
 #include "ekf.h"
 #include <mathlib/mathlib.h>
-#include <uORB/Subscription.hpp>
-#include <uORB/topics/home_position.h>
 
 void Ekf::controlMagFusion()
 {
@@ -416,21 +414,15 @@ bool Ekf::inhibitMagForTakeoffAndLand()
 	bool inhibit_mag = false;
 	if (_params.mag_fusion_min_alt > 0.0f){
 		// take-off/land without mag is enabled
-		uORB::SubscriptionData<home_position_s> _home_position_sub{ORB_ID(home_position)};
-		if  (_home_position_sub.get().valid_lpos) {
-			const Vector3f position{getPosition()};
-			float ref_alt = position(2) - _home_position_sub.get().z;
-			if (ref_alt > -_params.mag_fusion_min_alt) {
-				// drone is below the mag_fusion_min_alt
-				_mag_use_inhibit_for_takeoff_and_land_us = _time_delayed_us;
-				inhibit_mag = true;
-			} else if (uint32_t(_time_delayed_us - _mag_use_inhibit_for_takeoff_and_land_us) < (uint32_t)1e6) {
-				// drone is above the mag_fusion_min_alt
-				// but we still inhibit mag within 1 sec
-				inhibit_mag = true;
-			}
-		} else {
-			// inhibit mag until home position becomes valid
+		const Vector3f position{getPosition()};
+		float ref_alt = position(2) - _home_pos_z;
+		if (ref_alt > -_params.mag_fusion_min_alt) {
+			// drone is below the mag_fusion_min_alt
+			_mag_use_inhibit_for_takeoff_and_land_us = _time_delayed_us;
+			inhibit_mag = true;
+		} else if (uint32_t(_time_delayed_us - _mag_use_inhibit_for_takeoff_and_land_us) < (uint32_t)1e6) {
+			// drone is above the mag_fusion_min_alt
+			// but we still inhibit mag within 1 sec
 			inhibit_mag = true;
 		}
 	}
