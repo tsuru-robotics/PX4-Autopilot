@@ -972,11 +972,12 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 		gf_violation_type.flags.dist_to_home_exceeded = !_geofence.isCloserThanMaxDistToHome(fence_violation_test_point(0),
 				fence_violation_test_point(1),
 				_global_pos.alt);
-
-		gf_violation_type.flags.max_altitude_exceeded = !_geofence.isBelowMaxAltitude(_global_pos.alt +
+		bool soft_fence_alt_exceeded = !_geofence.isBelowMaxAltitude(_global_pos.alt +
 				vertical_test_point_distance);
+		bool hard_fence_alt_exceeded = !_geofence.isBelowHardFenceAltitude(_global_pos.alt +
+				vertical_test_point_distance);
+		gf_violation_type.flags.max_altitude_exceeded = soft_fence_alt_exceeded || hard_fence_alt_exceeded;
 
-		// fence check
 		bool soft_fence_breached = !_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 0);
 		bool hard_fence_breached = !_geofence.isInsideFence(fence_violation_test_point(0), fence_violation_test_point(1), _global_pos.alt, 1);
 
@@ -987,14 +988,13 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 
 		_geofence_result.timestamp = hrt_absolute_time();
 		_geofence_result.primary_geofence_action = _geofence.getGeofenceAction();
+		_geofence_result.primary_geofence_breached = soft_fence_breached || soft_fence_alt_exceeded;
 		_geofence_result.secondary_geofence_action = _geofence.getSecondaryGeofenceAction();
+		_geofence_result.secondary_geofence_breached = hard_fence_breached || hard_fence_alt_exceeded;
 		_geofence_result.home_required = _geofence.isHomeRequired();
 
 		if (gf_violation_type.value) {
 			/* inform other apps via the mission result */
-			_geofence_result.primary_geofence_breached = soft_fence_breached;
-			_geofence_result.secondary_geofence_breached = hard_fence_breached;
-
 			using geofence_violation_reason_t = events::px4::enums::geofence_violation_reason_t;
 
 			if (gf_violation_type.flags.fence_violation) {
@@ -1054,10 +1054,6 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 			}
 
 		} else {
-			/* inform other apps via the mission result */
-			_geofence_result.primary_geofence_breached = false;
-			_geofence_result.secondary_geofence_breached = false;
-
 			/* Reset the _geofence_violation_warning_sent field */
 			_geofence_violation_warning_sent = false;
 		}

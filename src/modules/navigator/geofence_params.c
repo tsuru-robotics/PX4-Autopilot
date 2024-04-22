@@ -146,6 +146,19 @@ PARAM_DEFINE_FLOAT(GF_MAX_HOR_DIST, 0);
 PARAM_DEFINE_FLOAT(GF_MAX_VER_DIST, 0);
 
 /**
+ * Max vertical distance to Hardfence roof in meters.
+ *
+ * Maximum vertical distance in meters the vehicle can be from home before triggering a hard geofence action. Disabled if 0.
+ *
+ * @unit m
+ * @min 0
+ * @max 10000
+ * @increment 1
+ * @group Geofence
+ */
+PARAM_DEFINE_FLOAT(GF2_MAX_VER_DIST, 0);
+
+/**
  * [EXPERIMENTAL] Use Pre-emptive geofence triggering
  *
  * WARNING: This experimental feature may cause flyaways. Use at your own risk.

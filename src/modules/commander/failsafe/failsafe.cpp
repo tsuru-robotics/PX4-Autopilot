@@ -113,6 +113,7 @@ FailsafeBase::ActionOptions Failsafe::fromGfActParam(int param_value)
 
 	case geofence_violation_action::Land_mode:
 		options.action = Action::Land;
+		options.clear_condition = ClearCondition::OnModeChangeOrDisarm;
 		break;
 
 	default:

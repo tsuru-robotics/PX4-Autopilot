@@ -109,6 +109,8 @@ public:
 
 	bool isBelowMaxAltitude(float altitude);
 
+	bool isBelowHardFenceAltitude(float altitude);
+
 	virtual bool isInsidePolygonOrCircle(double lat, double lon, float altitude);
 
 	bool isInsideFence(double lat, double lon, float altitude, int fence_index);
@@ -219,6 +221,8 @@ private:
 	 */
 	bool insideCircle(const PolygonInfo &polygon, double lat, double lon, float altitude);
 
+	bool isBelowGivenMaxAltitude(float altitude, float max_vertical_distance);
+
 	DEFINE_PARAMETERS(
 		(ParamInt<px4::params::GF_ACTION>)         _param_gf_action,
 		(ParamInt<px4::params::GF2_ACTION>)        _param_gf2_action,
@@ -227,6 +231,7 @@ private:
 		(ParamInt<px4::params::GF_COUNT>)          _param_gf_count,
 		(ParamFloat<px4::params::GF_MAX_HOR_DIST>) _param_gf_max_hor_dist,
 		(ParamFloat<px4::params::GF_MAX_VER_DIST>) _param_gf_max_ver_dist,
+		(ParamFloat<px4::params::GF2_MAX_VER_DIST>) _param_gf2_max_ver_dist,
 		(ParamBool<px4::params::GF_PREDICT>)       _param_gf_predict
 	)
 };

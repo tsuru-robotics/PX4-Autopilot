@@ -276,13 +276,12 @@ bool Geofence::isCloserThanMaxDistToHome(double lat, double lon, float altitude)
 	return inside_fence;
 }
 
-bool Geofence::isBelowMaxAltitude(float altitude)
+bool Geofence::isBelowGivenMaxAltitude(float altitude, float max_vertical_distance)
 {
 	bool inside_fence = true;
 
 	if (isHomeRequired() && _navigator->home_alt_valid()) {
 
-		const float max_vertical_distance = _param_gf_max_ver_dist.get();
 		const float home_alt = _navigator->get_home_position()->alt;
 
 		float dist_z = altitude - home_alt;
@@ -302,6 +301,18 @@ bool Geofence::isBelowMaxAltitude(float altitude)
 	}
 
 	return inside_fence;
+}
+
+bool Geofence::isBelowMaxAltitude(float altitude)
+{
+	const float soft_fence_max_alt = _param_gf_max_ver_dist.get();
+	return isBelowGivenMaxAltitude(altitude, soft_fence_max_alt);
+}
+
+bool Geofence::isBelowHardFenceAltitude(float altitude)
+{
+	const float hard_fence_max_alt = _param_gf2_max_ver_dist.get();
+	return isBelowGivenMaxAltitude(altitude, hard_fence_max_alt);
 }
 
 bool Geofence::isInsidePolygonOrCircle(double lat, double lon, float altitude)
