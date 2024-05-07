@@ -55,6 +55,3 @@ param set-default CAL_MAG0_ROT 0
 param set-default SENS_BOARD_ROT 0
 param set-default BAT1_SOURCE 0
 param set-default SDLOG_MODE 1
-param set-default CBRK_FLIGHTTERM 0
-param set-default GF_ACTION 5
-param set-default GF2_ACTION 4
