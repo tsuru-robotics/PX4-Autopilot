@@ -285,22 +285,20 @@ void SimulatorMavlink::update_sensors(const hrt_abstime &time, const mavlink_hil
 
 	// magnetometer
 	if ((sensors.fields_updated & SensorSource::MAG) == SensorSource::MAG) {
-		for (int i = 0; i < MAG_COUNT_MAX; i++) {
-			if (i >= MAG_COUNT_MAX) {
-				PX4_ERR("Number of simulated magnetometer %d out of range. Max: %d", i, MAG_COUNT_MAX);
-				return;
-			}
+		if (sensors.id >= MAG_COUNT_MAX) {
+			PX4_ERR("Number of simulated magnetometer %d out of range. Max: %d", sensors.id, MAG_COUNT_MAX);
+			return;
+		}
 
-			if (_mag_stuck[i]) {
-				_px4_mag[i].update(time, _last_magx[i], _last_magy[i], _last_magz[i]);
+		if (_mag_stuck[sensors.id]) {
+			_px4_mag[sensors.id].update(time, _last_magx[sensors.id], _last_magy[sensors.id], _last_magz[sensors.id]);
 
-			} else if (!_mag_blocked[i]) {
-				_px4_mag[i].set_temperature(_sensors_temperature);
-				_px4_mag[i].update(time, sensors.xmag, sensors.ymag, sensors.zmag);
-				_last_magx[i] = sensors.xmag;
-				_last_magy[i] = sensors.ymag;
-				_last_magz[i] = sensors.zmag;
-			}
+		} else if (!_mag_blocked[sensors.id]) {
+			_px4_mag[sensors.id].set_temperature(_sensors_temperature);
+			_px4_mag[sensors.id].update(time, sensors.xmag, sensors.ymag, sensors.zmag);
+			_last_magx[sensors.id] = sensors.xmag;
+			_last_magy[sensors.id] = sensors.ymag;
+			_last_magz[sensors.id] = sensors.zmag;
 		}
 	}
 
