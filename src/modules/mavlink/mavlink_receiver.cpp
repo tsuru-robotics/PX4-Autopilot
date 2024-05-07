@@ -2390,6 +2390,9 @@ MavlinkReceiver::handle_message_hil_gps(mavlink_message_t *msg)
 	gps.heading = NAN;
 	gps.heading_offset = NAN;
 
+	gps.rtcm_rate_wifi = 1.5f;
+	gps.rtcm_rate_lora = 1.6f;
+
 	gps.timestamp = hrt_absolute_time();
 
 	_sensor_gps_pub.publish(gps);
