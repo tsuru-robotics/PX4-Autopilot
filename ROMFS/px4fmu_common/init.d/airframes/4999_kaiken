@@ -57,6 +57,8 @@ param set-default EKF2_GPS_P_GATE 5
 param set-default EKF2_GPS_P_NOISE 0.3
 param set-default EKF2_GPS_V_NOISE 0.3
 param set-default EKF2_HGT_REF 1
+param set-default EKF2_REQ_HDRIFT 0.05
+param set-default EKF2_REQ_VDRIFT 0.05
 param set-default GPS_UBX_DYNMODEL 7
 param set-default GPS_1_CONFIG 201
 
@@ -116,6 +118,7 @@ param set-default RTL_TYPE 0
 param set-default RTL_TIME_MARGIN -1
 param set-default RTL_TIME_FACTOR 0
 param set-default COM_OBL_RC_ACT 4
+param set-default COM_POSCTL_NAVL 1 # Land/Descend
 
 # PID Tuning
 param set-default MC_PITCHRATE_D 0.002
