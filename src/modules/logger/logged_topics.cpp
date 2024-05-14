@@ -107,7 +107,7 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic("takeoff_status", 1000);
 	add_optional_topic("tecs_status", 200);
 	add_optional_topic("tiltrotor_extra_controls", 100);
-	add_topic("trajectory_setpoint");
+	add_topic("trajectory_setpoint", 200);
 	add_topic("transponder_report");
 	add_topic("vehicle_acceleration", 50);
 	add_topic("vehicle_air_data", 200);
@@ -122,16 +122,16 @@ void LoggedTopics::add_default_topics()
 	add_topic("vehicle_gps_position", 500);
 	add_topic("vehicle_land_detected");
 	add_topic("vehicle_local_position", 100);
-	add_topic("vehicle_local_position_setpoint");
+	add_topic("vehicle_local_position_setpoint", 100);
 	add_topic("vehicle_magnetometer", 200);
 	add_topic("vehicle_rates_setpoint", 20);
 	add_topic("vehicle_roi", 1000);
 	add_topic("vehicle_status");
 	add_optional_topic("vtol_vehicle_status", 200);
 	add_topic("wind", 1000);
-	add_topic("geofence_result");
-	add_topic("utm_time");
-	add_topic_multi("rtcm_channel", 0, 2);
+	add_topic("geofence_result", 1000);
+	add_topic("utm_time", 100);
+	add_topic_multi("rtcm_channel", 1000, 2);
 
 	// multi topics
 	add_optional_topic_multi("actuator_outputs", 100, 3);
@@ -312,6 +312,10 @@ void LoggedTopics::add_high_rate_topics()
 	add_topic("actuator_motors");
 	add_topic("vehicle_thrust_setpoint");
 	add_topic("vehicle_torque_setpoint");
+	add_topic("utm_time");
+	add_topic("trajectory_setpoint");
+	add_topic("vehicle_local_position_setpoint");
+	add_topic_multi("rtcm_channel", 0, 2);
 }
 
 void LoggedTopics::add_debug_topics()
@@ -469,7 +473,6 @@ void LoggedTopics::initialize_mission_topics(MissionLogType mission_log_type)
 		add_mission_topic("debug_key_value");
 		add_mission_topic("debug_value");
 		add_mission_topic("debug_vect");
-		add_mission_topic("estimator_gps_status", 1000);
 	}
 }
 
