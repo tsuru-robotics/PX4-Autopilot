@@ -575,6 +575,7 @@ private:
 	bool _yaw_angle_observable{false};	///< true when there is enough horizontal acceleration to make yaw observable
 	uint64_t _time_yaw_started{0};		///< last system time in usec that a yaw rotation manoeuvre was detected
 	uint64_t _mag_use_not_inhibit_us{0};	///< last system time in usec before magnetometer use was inhibited
+	uint64_t _mag_use_inhibit_for_takeoff_and_land_us{0};	///< last system time in usec when magnetometer was inhibited for takeoff/land
 	float _last_static_yaw{NAN};		///< last yaw angle recorded when on ground motion checks were passing (rad)
 
 	bool _mag_yaw_reset_req{false};		///< true when a reset of the yaw using the magnetometer data has been requested
@@ -1032,6 +1033,7 @@ private:
 
 	void checkMagDeclRequired();
 	bool shouldInhibitMag() const;
+	bool inhibitMagForTakeoffAndLand();
 	bool magFieldStrengthDisturbed(const Vector3f &mag) const;
 	static bool isMeasuredMatchingExpected(float measured, float expected, float gate);
 	void runMagAndMagDeclFusions(const Vector3f &mag);

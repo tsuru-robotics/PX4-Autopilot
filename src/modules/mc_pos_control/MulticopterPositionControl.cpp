@@ -368,7 +368,100 @@ void MulticopterPositionControl::Run()
 			}
 		}
 
-		_trajectory_setpoint_sub.update(&_setpoint);
+		if (_vehicle_control_mode.flag_control_offboard_enabled) {
+
+			// interpolation
+			if (_ob_interpolation_active) {
+				float dt_intepolation = (float)(hrt_absolute_time() - _ob_interpolation_start_time);
+				_setpoint.timestamp = hrt_absolute_time();
+				_setpoint.position[0] = _ob_setpoint1.position[0] + _ob_sp_dpos[0] * dt_intepolation;
+				_setpoint.position[1] = _ob_setpoint1.position[1] + _ob_sp_dpos[1] * dt_intepolation;
+				_setpoint.position[2] = _ob_setpoint1.position[2] + _ob_sp_dpos[2] * dt_intepolation;
+
+				if (hrt_absolute_time() >= _ob_interpolation_stop_time) {
+					_ob_interpolation_active = false;
+				}
+			}
+
+			if (!_ob_interpolation_active) {
+				if ( _trajectory_setpoint_queued_sub.updated()) {
+					const unsigned last_generation = _trajectory_setpoint_queued_sub.get_last_generation();
+					// copy next trajectory setpoint
+					trajectory_setpoint_s next_setpoint{PositionControl::empty_trajectory_setpoint};
+					if (_trajectory_setpoint_queued_sub.copy(&next_setpoint)) {
+
+						if (_trajectory_setpoint_queued_sub.get_last_generation() != last_generation + 1) {
+							PX4_ERR("trajectory setpoint lost, generation %u -> %u", last_generation, _trajectory_setpoint_queued_sub.get_last_generation());
+						}
+
+						if (_ob_setpoint1.timestamp == 0) {
+							// set 1st trajectory setpoint first time
+							_ob_setpoint1 = next_setpoint;
+							// set starting point for interpolation
+							_setpoint = _ob_setpoint1;
+							// setpoint interpolation with zero derivatives
+							_ob_sp_dpos[0] = 0.0f;
+							_ob_sp_dpos[1] = 0.0f;
+							_ob_sp_dpos[2] = 0.0f;
+							_ob_interpolation_start_time = _ob_setpoint1.timestamp;
+							_ob_interpolation_stop_time = _ob_setpoint1.timestamp + _param_ob_sp_dealy.get() * 1000;
+							_ob_interpolation_active = true;
+							PX4_DEBUG("Received first sepoint %d. Delay=%d ms.", _trajectory_setpoint_queued_sub.get_last_generation(), _param_ob_sp_dealy.get());
+						} else 	{
+							if (_ob_setpoint2.timestamp > 0) {
+								// update 1st and 2nd setpoints
+								_ob_setpoint1 = _ob_setpoint2;
+								_ob_setpoint2 = next_setpoint;
+
+							} else {
+								// set 2nd trajectory setpoint first time
+								_ob_setpoint2 = next_setpoint;
+							}
+							// setpoint derivatives on interpolation interval
+							float ob_sp_interval = (float)(_ob_setpoint2.timestamp - _ob_setpoint1.timestamp);
+							_ob_sp_dpos[0] = (_ob_setpoint2.position[0] - _ob_setpoint1.position[0]) / ob_sp_interval;
+							_ob_sp_dpos[1] = (_ob_setpoint2.position[1] - _ob_setpoint1.position[1]) / ob_sp_interval;
+							_ob_sp_dpos[2] = (_ob_setpoint2.position[2] - _ob_setpoint1.position[2]) / ob_sp_interval;
+							_ob_interpolation_start_time = _ob_setpoint1.timestamp + _param_ob_sp_dealy.get() * 1000;
+							_ob_interpolation_stop_time = _ob_setpoint2.timestamp + _param_ob_sp_dealy.get() * 1000;
+
+							// 1st step interpolation
+							_setpoint = _ob_setpoint1;
+							float dt_intepolation = (float)(hrt_absolute_time() - _ob_interpolation_start_time);
+							_setpoint.timestamp = hrt_absolute_time();
+							_setpoint.position[0] = _ob_setpoint1.position[0] + _ob_sp_dpos[0] * dt_intepolation;
+							_setpoint.position[1] = _ob_setpoint1.position[1] + _ob_sp_dpos[1] * dt_intepolation;
+							_setpoint.position[2] = _ob_setpoint1.position[2] + _ob_sp_dpos[2] * dt_intepolation;
+							_ob_interpolation_active = true;
+
+							PX4_DEBUG("Received next sepoint %d. Interpolation starting %lu us later, interval=%lu us",
+							_trajectory_setpoint_queued_sub.get_last_generation(), (long unsigned)(hrt_absolute_time()-_ob_interpolation_start_time), (long unsigned)ob_sp_interval);
+						}
+					} else {
+						PX4_ERR("Fail copying msg from trajectory que");
+					}
+
+				} else {
+					PX4_DEBUG("Empty trajectory que");
+				}
+			}
+
+		} else {
+			// use trajectory setpoint from default uORB
+			_trajectory_setpoint_sub.update(&_setpoint);
+			// clear existing setpoints when offboard mode is no longer active
+			if (_ob_setpoint2.timestamp > 0) {
+				_ob_setpoint1 = PositionControl::empty_trajectory_setpoint;
+				_ob_setpoint2 = PositionControl::empty_trajectory_setpoint;
+				_ob_interpolation_active = false;
+				_ob_interpolation_start_time = 0;
+				_ob_interpolation_stop_time = 0;
+				_ob_sp_dpos[0] = 0.0f;
+				_ob_sp_dpos[1] = 0.0f;
+				_ob_sp_dpos[2] = 0.0f;
+				PX4_DEBUG("Init offboard setpoints interpolation");
+			}
+		}
 
 		// adjust existing (or older) setpoint with any EKF reset deltas
 		if ((_setpoint.timestamp != 0) && (_setpoint.timestamp < vehicle_local_position.timestamp)) {

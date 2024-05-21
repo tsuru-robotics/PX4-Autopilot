@@ -676,6 +676,12 @@ void EKF2::Run()
 #endif // CONFIG_EKF2_RANGE_FINDER
 		UpdateSystemFlagsSample(ekf2_timestamps);
 
+		// update home position altitude
+		home_position_s _home_position;
+		if  (_home_position_sub.update(&_home_position)) {
+			_ekf.set_home_position_z(_home_position.z);
+		}
+
 		// run the EKF update and output
 		const hrt_abstime ekf_update_start = hrt_absolute_time();
 

@@ -57,6 +57,8 @@ param set-default EKF2_GPS_P_GATE 5
 param set-default EKF2_GPS_P_NOISE 0.3
 param set-default EKF2_GPS_V_NOISE 0.3
 param set-default EKF2_HGT_REF 1
+param set-default EKF2_REQ_HDRIFT 0.05
+param set-default EKF2_REQ_VDRIFT 0.05
 param set-default GPS_UBX_DYNMODEL 7
 param set-default GPS_1_CONFIG 201
 
@@ -101,12 +103,12 @@ param set-default RC_MAP_YAW 4
 
 # Failsafes
 param set-default COM_LOW_BAT_ACT 0
-param set-default GF_ACTION 1
-param set-default GF2_ACTION 5
+param set-default GF_ACTION 5 # Land mode
+param set-default GF2_ACTION 4 # Terminate
 param set-default GF_ALTMODE 0
 param set-default GF_COUNT -1
 param set-default GF_SOURCE 1
-param set-default COM_FAIL_ACT_T 5
+param set-default COM_FAIL_ACT_T 0
 param set-default RTL_CONE_ANG 0
 param set-default RTL_DESCEND_ALT 6
 param set-default RTL_LAND_DELAY 5.0
@@ -116,6 +118,7 @@ param set-default RTL_TYPE 0
 param set-default RTL_TIME_MARGIN -1
 param set-default RTL_TIME_FACTOR 0
 param set-default COM_OBL_RC_ACT 4
+param set-default COM_POSCTL_NAVL 1 # Land/Descend
 
 # PID Tuning
 param set-default MC_PITCHRATE_D 0.002
@@ -145,6 +148,7 @@ param set-default MPC_XY_P 0.95
 param set-default MPC_XY_VEL_MAX 10
 param set-default MPC_YAWRAUTO_MAX 45
 param set-default MPC_Z_VEL_MAX_UP 3
+param set-default MPC_OB_SP_DELAY 350
 param set-default NAV_ACC_RAD 1.2
 param set-default NAV_RCL_ACT 0
 param set-default LNDMC_ROT_MAX 80
@@ -164,7 +168,7 @@ param set-default SDLOG_PROFILE 1
 param set-default SDLOG_UTC_OFFSET 0
 
 # Circuit Breaker
-param set-default CBRK_FLIGHTTERM 121212
+param set-default CBRK_FLIGHTTERM 0 # Termination enabled
 param set-default CBRK_IO_SAFETY 22027
 param set-default CBRK_SUPPLY_CHK 894281
 
@@ -172,7 +176,7 @@ param set-default CBRK_SUPPLY_CHK 894281
 param set-default COM_ARM_WO_GPS 0
 param set-default COM_DISARM_LAND 2
 param set-default COM_DISARM_PRFLT 15.0
-param set-default COM_ARM_EKF_YAW 0.5 # deafult PX4 value
+param set-default COM_ARM_EKF_YAW 0.5
 param set-default COM_RCL_EXCEPT 4
 
 # Mavlink
@@ -183,9 +187,5 @@ param set-default SER_WIFI_BAUD 460800
 param set-default GPS_RTCM_LORA_ID 25
 param set-default GPS_RTCM_WIFI_ID 26
 
-# GPS debug
-param set-default GPS_DUMP_COMM 1
-param set-default GPS_SAT_INFO 1
-
 # Magnetometer
-param set-default EKF2_MAG_MIN_ALT 5.0
+param set-default EKF2_MAG_MIN_ALT -1.0

@@ -129,9 +129,9 @@ void LoggedTopics::add_default_topics()
 	add_topic("vehicle_status");
 	add_optional_topic("vtol_vehicle_status", 200);
 	add_topic("wind", 1000);
-	add_topic("geofence_result");
-	add_topic("utm_time");
-	add_topic_multi("rtcm_channel", 0, 2);
+	add_topic("geofence_result", 1000);
+	add_topic("utm_time", 100);
+	add_topic_multi("rtcm_channel", 1000, 2);
 
 	// multi topics
 	add_optional_topic_multi("actuator_outputs", 100, 3);
@@ -312,6 +312,10 @@ void LoggedTopics::add_high_rate_topics()
 	add_topic("actuator_motors");
 	add_topic("vehicle_thrust_setpoint");
 	add_topic("vehicle_torque_setpoint");
+	add_topic("utm_time");
+	add_topic("trajectory_setpoint");
+	add_topic("vehicle_local_position_setpoint");
+	add_topic_multi("rtcm_channel", 0, 2);
 }
 
 void LoggedTopics::add_debug_topics()

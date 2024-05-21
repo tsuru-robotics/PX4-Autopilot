@@ -44,7 +44,7 @@
 
 #if defined(MODULE_NAME)
 #include <px4_platform_common/log.h>
-# define ECL_INFO PX4_INFO
+# define ECL_INFO PX4_DEBUG
 # define ECL_WARN PX4_DEBUG
 # define ECL_ERR  PX4_DEBUG
 # define ECL_DEBUG PX4_DEBUG
@@ -175,6 +175,9 @@ public:
 
 	// set air density used by the multi-rotor specific drag force fusion
 	void set_air_density(float air_density) { _air_density = air_density; }
+
+	// set home position local altitude
+	void set_home_position_z(float home_z) {_home_pos_z = home_z;}
 
 	// the flags considered are opt_flow, gps, ev_vel and ev_pos
 	bool isOnlyActiveSourceOfHorizontalAiding(bool aiding_flag) const;
@@ -416,6 +419,8 @@ protected:
 	// state logic becasue they will be cleared externally after being read.
 	warning_event_status_u _warning_events{};
 	information_event_status_u _information_events{};
+
+	float _home_pos_z{0.0f}; // home position altitude in local frame (m)
 
 private:
 

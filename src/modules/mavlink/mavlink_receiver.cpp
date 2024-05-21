@@ -1172,6 +1172,18 @@ MavlinkReceiver::handle_message_set_position_target_global_int(mavlink_message_t
 				// only publish setpoint once in OFFBOARD
 				setpoint.timestamp = hrt_absolute_time();
 				_trajectory_setpoint_pub.publish(setpoint);
+				// publish to queued uORB used for setpoint interpolation in MulticopterPositionControl.cpp
+				trajectory_setpoint_queued_s setpoint_queued{};
+				setpoint_queued.timestamp = setpoint.timestamp;
+				setpoint_queued.yaw = setpoint.yaw;
+				setpoint_queued.yawspeed = setpoint.yawspeed;
+				for (int i=0; i<3; i++) {
+					setpoint_queued.position[i] = setpoint.position[i];
+					setpoint_queued.velocity[i] = setpoint.velocity[i];
+					setpoint_queued.acceleration[i] = setpoint.acceleration[i];
+					setpoint_queued.jerk[i] = setpoint.jerk[i];
+				}
+				_trajectory_setpoint_queued_pub.publish(setpoint_queued);
 			}
 		}
 	}
@@ -2377,6 +2389,9 @@ MavlinkReceiver::handle_message_hil_gps(mavlink_message_t *msg)
 
 	gps.heading = NAN;
 	gps.heading_offset = NAN;
+
+	gps.rtcm_rate_wifi = 1.5f;
+	gps.rtcm_rate_lora = 1.6f;
 
 	gps.timestamp = hrt_absolute_time();
 
