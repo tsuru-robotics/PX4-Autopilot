@@ -46,12 +46,13 @@ void Ekf::controlMagFusion()
 	magSample mag_sample;
 
 	if (inhibitMagForTakeoffAndLand()) {
-		// Alignt yaw if not aligned yet
-		if (!_control_status.flags.yaw_align) {
-			const float yaw_init = 0.0f;
-			_state.quat_nominal = updateYawInRotMat(yaw_init, Dcmf(_state.quat_nominal));
+		// Re-alignt yaw if not airborne
+		if (!_control_status.flags.yaw_align && PX4_ISFINITE(_takeoff_wo_mag_init_heading)) {
+			const float yaw = wrap_pi(_takeoff_wo_mag_init_heading * M_DEG_TO_RAD_F); //(rad, [-PI, PI])
+			_state.quat_nominal = updateYawInRotMat(yaw, Dcmf(_state.quat_nominal));
 			_control_status.flags.yaw_align = true;
-			ECL_INFO("Yaw aligned by external value %.3f rad", (double)yaw_init);
+			_last_static_yaw = yaw;
+			PX4_INFO("Yaw aligned by external value %.3f rad", (double)yaw);
 		}
 		stopMagFusion();
 	}
@@ -412,16 +413,16 @@ bool Ekf::shouldInhibitMag() const
 bool Ekf::inhibitMagForTakeoffAndLand()
 {
 	bool inhibit_mag = false;
-	if (_params.mag_fusion_min_alt > FLT_EPSILON){
+	if (_takeoff_wo_mag_enabled) {
 		// take-off/land without mag is enabled
 		const Vector3f position{getPosition()};
 		float ref_alt = position(2) - _home_pos_z;
-		if (ref_alt > -_params.mag_fusion_min_alt) {
-			// drone is below the mag_fusion_min_alt
+		if (PX4_ISFINITE(_takeoff_wo_mag_fusion_alt) && ref_alt > -_takeoff_wo_mag_fusion_alt) {
+			// drone is below the _takeoff_wo_mag_fusion_alt
 			_mag_use_inhibit_for_takeoff_and_land_us = _time_delayed_us;
 			inhibit_mag = true;
 		} else if (uint32_t(_time_delayed_us - _mag_use_inhibit_for_takeoff_and_land_us) < (uint32_t)1e6) {
-			// drone is above the mag_fusion_min_alt
+			// drone is above the _takeoff_wo_mag_fusion_alt
 			// but we still inhibit mag within 1 sec
 			inhibit_mag = true;
 		}

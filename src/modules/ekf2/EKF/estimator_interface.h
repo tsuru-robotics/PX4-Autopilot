@@ -179,6 +179,12 @@ public:
 	// set home position local altitude
 	void set_home_position_z(float home_z) {_home_pos_z = home_z;}
 
+	// enable takeoff without mag
+	void enableTakeoffWithoutMag(float mag_fusion_alt, float init_heading);
+
+	// disable takeoff without mag
+	void disableTakeoffWithoutMag();
+
 	// the flags considered are opt_flow, gps, ev_vel and ev_pos
 	bool isOnlyActiveSourceOfHorizontalAiding(bool aiding_flag) const;
 
@@ -420,7 +426,11 @@ protected:
 	warning_event_status_u _warning_events{};
 	information_event_status_u _information_events{};
 
+	// takeoff without mag
 	float _home_pos_z{0.0f}; // home position altitude in local frame (m)
+	bool _takeoff_wo_mag_enabled{false};
+	float _takeoff_wo_mag_fusion_alt{NAN};
+	float _takeoff_wo_mag_init_heading{NAN};
 
 private:
 

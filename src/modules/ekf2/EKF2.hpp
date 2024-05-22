@@ -91,6 +91,7 @@
 #include <uORB/topics/wind.h>
 #include <uORB/topics/yaw_estimator_status.h>
 #include <uORB/topics/home_position.h>
+#include <uORB/topics/takeoff_without_mag_status.h>
 
 #if defined(CONFIG_EKF2_AIRSPEED)
 # include <uORB/topics/airspeed.h>
@@ -462,6 +463,7 @@ private:
 	uORB::PublicationMulti<vehicle_odometry_s>           _odometry_pub;
 	uORB::PublicationMulti<wind_s>              _wind_pub;
 
+	uORB::Publication<takeoff_without_mag_status_s> _takeoff_without_mag_status_pub{ORB_ID(takeoff_without_mag_status)};
 
 	PreFlightChecker _preflt_checker;
 
@@ -562,9 +564,6 @@ private:
 		_param_ekf2_mag_acclim,	///< integer used to specify the type of magnetometer fusion used
 		(ParamExtFloat<px4::params::EKF2_MAG_YAWLIM>)
 		_param_ekf2_mag_yawlim,	///< yaw rate threshold used by mode select logic (rad/sec)
-		(ParamExtFloat<px4::params::EKF2_MAG_MIN_ALT>)
-		_param_ekf2_mag_min_alt,	///< mag fusion is enabled only above the given altitude, -1 - disabled (m)
-
 		(ParamExtInt<px4::params::EKF2_GPS_CHECK>)
 		_param_ekf2_gps_check,	///< bitmask used to control which GPS quality checks are used
 		(ParamExtFloat<px4::params::EKF2_REQ_EPH>) _param_ekf2_req_eph,	///< maximum acceptable horiz position error (m)

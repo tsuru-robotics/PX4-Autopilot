@@ -41,6 +41,7 @@
 #include <uORB/topics/sensor_mag.h>
 #include <uORB/topics/estimator_status.h>
 #include <lib/sensor_calibration/Magnetometer.hpp>
+#include <uORB/topics/takeoff_without_mag_status.h>
 
 class MagnetometerChecks : public HealthAndArmingCheckBase
 {
@@ -59,9 +60,9 @@ private:
 
 	uORB::Subscription _sensor_preflight_mag_sub{ORB_ID(sensor_preflight_mag)};
 
+	uORB::Subscription _takeoff_without_mag_status_sub{ORB_ID(takeoff_without_mag_status)};
+
 	DEFINE_PARAMETERS_CUSTOM_PARENT(HealthAndArmingCheckBase,
 					(ParamInt<px4::params::SYS_HAS_MAG>) _param_sys_has_mag,
-					(ParamInt<px4::params::COM_ARM_MAG_ANG>) _param_com_arm_mag_ang,
-					(ParamFloat<px4::params::EKF2_MAG_MIN_ALT>) _param_ekf2_mag_min_alt
-				       )
+					(ParamInt<px4::params::COM_ARM_MAG_ANG>) _param_com_arm_mag_ang)
 };

@@ -102,7 +102,6 @@ EKF2::EKF2(bool multi_mode, const px4::wq_config_t &config, bool replay_mode):
 	_param_ekf2_mag_type(_params->mag_fusion_type),
 	_param_ekf2_mag_acclim(_params->mag_acc_gate),
 	_param_ekf2_mag_yawlim(_params->mag_yaw_rate_gate),
-	_param_ekf2_mag_min_alt(_params->mag_fusion_min_alt),
 	_param_ekf2_gps_check(_params->gps_check_mask),
 	_param_ekf2_req_eph(_params->req_hacc),
 	_param_ekf2_req_epv(_params->req_vacc),
@@ -481,6 +480,34 @@ void EKF2::Run()
 				} else {
 					PX4_ERR("%d - Failed to set new NED origin (LLA): %3.10f, %3.10f, %4.3f\n",
 						_instance, latitude, longitude, static_cast<double>(altitude));
+				}
+			} else if (vehicle_command.command == vehicle_command_s::VEHICLE_CMD_SET_TAKEOFF_WO_MAG) {
+				const int param1 = vehicle_command.param1;
+				if (param1 == 0) {
+					// Disable
+					_ekf.disableTakeoffWithoutMag();
+					// publish
+					takeoff_without_mag_status_s takeoff_status{};
+					takeoff_status.enabled = false;
+					takeoff_status.fusion_alt = 0.f;
+					takeoff_status.init_heading = 0.f;
+					takeoff_status.timestamp = hrt_absolute_time();
+					_takeoff_without_mag_status_pub.publish(takeoff_status);
+
+				} else if (param1 == 1) {
+					// Enable
+					float mag_activation_alt  = vehicle_command.param2;
+					float initial_heading     = vehicle_command.param3;
+					_ekf.enableTakeoffWithoutMag(mag_activation_alt, initial_heading);
+					// publish
+					takeoff_without_mag_status_s takeoff_status{};
+					takeoff_status.enabled = true;
+					takeoff_status.fusion_alt = mag_activation_alt;
+					takeoff_status.init_heading = initial_heading;
+					takeoff_status.timestamp = hrt_absolute_time();
+					_takeoff_without_mag_status_pub.publish(takeoff_status);
+				} else {
+					PX4_ERR("Failed handling VEHICLE_CMD_SET_TAKEOFF_WO_MAG");
 				}
 			}
 		}

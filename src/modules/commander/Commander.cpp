@@ -465,6 +465,34 @@ int Commander::custom_command(int argc, char *argv[])
 		return (ret ? 0 : 1);
 	}
 
+	if (!strcmp(argv[0], "takeoff_wo_mag")) {
+
+		if (argc > 2) {
+
+			float mag_activation_alt  = atof(argv[1]);
+			float initial_heading     = atof(argv[2]);
+
+			// Enable takeoff without mag
+			bool ret = send_vehicle_command(vehicle_command_s::VEHICLE_CMD_SET_TAKEOFF_WO_MAG,
+							1 , mag_activation_alt, initial_heading);
+			return (ret ? 0 : 1);
+
+		} else if (argc > 1) {
+			if (!strcmp(argv[1], "off")) {
+				// Disable takeoff without mag
+				bool ret = send_vehicle_command(vehicle_command_s::VEHICLE_CMD_SET_TAKEOFF_WO_MAG, 0);
+				return (ret ? 0 : 1);
+
+			} else {
+				PX4_ERR("argument %s unsupported.", argv[1]);
+				return 0;
+			}
+		}
+		else {
+			PX4_ERR("missing argument");
+			return 0;
+		}
+	}
 
 #endif
 

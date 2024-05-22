@@ -179,6 +179,7 @@ set(msg_files
 	SensorUwb.msg
 	SystemPower.msg
 	TakeoffStatus.msg
+	TakeoffWithoutMagStatus.msg
 	TaskStackInfo.msg
 	TecsStatus.msg
 	TelemetryStatus.msg

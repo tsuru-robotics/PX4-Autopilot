@@ -132,6 +132,7 @@ void LoggedTopics::add_default_topics()
 	add_topic("geofence_result", 1000);
 	add_topic("utm_time", 100);
 	add_topic_multi("rtcm_channel", 1000, 2);
+	add_topic("takeoff_without_mag_status");
 
 	// multi topics
 	add_optional_topic_multi("actuator_outputs", 100, 3);

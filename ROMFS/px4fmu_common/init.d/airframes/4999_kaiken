@@ -178,6 +178,7 @@ param set-default COM_DISARM_LAND 2
 param set-default COM_DISARM_PRFLT 15.0
 param set-default COM_ARM_EKF_YAW 0.5
 param set-default COM_RCL_EXCEPT 4
+param set COM_ARM_MAG_STR 1 # Deny arming in strong magnetic disturbance
 
 # Mavlink
 param set-default MAV_2_MODE 1
@@ -186,6 +187,3 @@ param set-default SER_WIFI_BAUD 460800
 # RTCM channels
 param set-default GPS_RTCM_LORA_ID 25
 param set-default GPS_RTCM_WIFI_ID 26
-
-# Magnetometer
-param set-default EKF2_MAG_MIN_ALT -1.0

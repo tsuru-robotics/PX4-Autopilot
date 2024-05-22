@@ -86,9 +86,13 @@ void MagnetometerChecks::checkAndReport(const Context &context, Report &reporter
 		const bool is_sensor_ok = is_valid && is_calibration_valid && !is_mag_fault;
 
 		if (!is_sensor_ok) {
+			takeoff_without_mag_status_s takeoff_without_mag_status{};
+			_takeoff_without_mag_status_sub.copy(&takeoff_without_mag_status);
+
 			NavModes required_groups_mag = NavModes::All;
 			if (!exists) {
-				if (_param_ekf2_mag_min_alt.get() > FLT_EPSILON) {
+
+				if (takeoff_without_mag_status.enabled) {
 					required_groups_mag = NavModes::None; // optional
 				}
 
@@ -102,7 +106,7 @@ void MagnetometerChecks::checkAndReport(const Context &context, Report &reporter
 				}
 
 			} else if (!is_valid) {
-				if (_param_ekf2_mag_min_alt.get() > FLT_EPSILON) {
+				if (takeoff_without_mag_status.enabled) {
 					required_groups_mag = NavModes::None; // optional
 				}
 
