@@ -126,6 +126,10 @@ void EstimatorChecks::checkAndReport(const Context &context, Report &reporter)
 void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &reporter,
 		const estimator_status_s &estimator_status, NavModes required_groups)
 {
+	NavModes required_groups_mag = required_groups;
+	takeoff_without_mag_status_s takeoff_without_mag_status{};
+	_takeoff_without_mag_status_sub.copy(&takeoff_without_mag_status);
+
 	if (!context.isArmed() && estimator_status.pre_flt_fail_innov_heading) {
 		/* EVENT
 		 */
@@ -175,9 +179,7 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 	if ((_param_com_arm_mag_str.get() >= 1)
 	    && (!context.isArmed() && estimator_status.pre_flt_fail_mag_field_disturbed)) {
 
-		NavModes required_groups_mag = required_groups;
-
-		if (_param_com_arm_mag_str.get() != 1) {
+		if (_param_com_arm_mag_str.get() != 1 || takeoff_without_mag_status.enabled) {
 			required_groups_mag = NavModes::None; // optional
 		}
 
@@ -255,6 +257,11 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 
 	// check magnetometer innovation test ratio
 	if (!context.isArmed() && (estimator_status.mag_test_ratio > _param_com_arm_ekf_yaw.get())) {
+
+		if (takeoff_without_mag_status.enabled) {
+			required_groups_mag = NavModes::None; // optional
+		}
+
 		/* EVENT
 		 * @description
 		 * <profile name="dev">
@@ -263,7 +270,7 @@ void EstimatorChecks::checkEstimatorStatus(const Context &context, Report &repor
 		 * This check can be configured via <param>COM_ARM_EKF_YAW</param> parameter.
 		 * </profile>
 		 */
-		reporter.armingCheckFailure<float, float>(required_groups, health_component_t::local_position_estimate,
+		reporter.armingCheckFailure<float, float>(required_groups_mag, health_component_t::local_position_estimate,
 				events::ID("check_estimator_yaw_est_err"),
 				events::Log::Error, "Yaw estimate error", estimator_status.mag_test_ratio, _param_com_arm_ekf_yaw.get());
 

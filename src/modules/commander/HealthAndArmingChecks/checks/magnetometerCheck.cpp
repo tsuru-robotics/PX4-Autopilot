@@ -86,19 +86,12 @@ void MagnetometerChecks::checkAndReport(const Context &context, Report &reporter
 		const bool is_sensor_ok = is_valid && is_calibration_valid && !is_mag_fault;
 
 		if (!is_sensor_ok) {
-			takeoff_without_mag_status_s takeoff_without_mag_status{};
-			_takeoff_without_mag_status_sub.copy(&takeoff_without_mag_status);
 
-			NavModes required_groups_mag = NavModes::All;
 			if (!exists) {
-
-				if (takeoff_without_mag_status.enabled) {
-					required_groups_mag = NavModes::None; // optional
-				}
 
 				/* EVENT
 				 */
-				reporter.healthFailure<uint8_t>(required_groups_mag, health_component_t::magnetometer, events::ID("check_mag_missing"),
+				reporter.healthFailure<uint8_t>(NavModes::All, health_component_t::magnetometer, events::ID("check_mag_missing"),
 								events::Log::Error, "Compass sensor {1} missing", instance);
 
 				if (reporter.mavlink_log_pub()) {
@@ -106,6 +99,9 @@ void MagnetometerChecks::checkAndReport(const Context &context, Report &reporter
 				}
 
 			} else if (!is_valid) {
+				takeoff_without_mag_status_s takeoff_without_mag_status{};
+				_takeoff_without_mag_status_sub.copy(&takeoff_without_mag_status);
+				NavModes required_groups_mag = NavModes::All;
 				if (takeoff_without_mag_status.enabled) {
 					required_groups_mag = NavModes::None; // optional
 				}
