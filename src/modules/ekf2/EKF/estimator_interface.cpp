@@ -743,7 +743,7 @@ void EstimatorInterface::enableTakeoffWithoutMag(float mag_fusion_alt, float ini
 	_takeoff_wo_mag_enabled = true;
 	_takeoff_wo_mag_fusion_alt = mag_fusion_alt;
 	_takeoff_wo_mag_init_heading = init_heading;
-	PX4_INFO("Takeoff without mag enabled: mag_activation_alt=%f, initial_heading=%f",
+	ECL_INFO("Takeoff without mag enabled: mag_activation_alt=%f, initial_heading=%f",
 	(double)_takeoff_wo_mag_fusion_alt, (double)_takeoff_wo_mag_init_heading);
 }
 
@@ -753,5 +753,5 @@ void EstimatorInterface::disableTakeoffWithoutMag()
 	_takeoff_wo_mag_fusion_alt = NAN;
 	_takeoff_wo_mag_init_heading = NAN;
 	_control_status.flags.yaw_align = false;
-	PX4_INFO("Takeoff without mag disabled");
+	ECL_INFO("Takeoff without mag disabled");
 }
