@@ -404,8 +404,9 @@ void Failsafe::checkStateAndMode(const hrt_abstime &time_us, const State &state,
 	// Geofence action only if armed
 	if (state.armed) {
 		switch (status_flags.geofence_breached) {
-		case 1:
-			// soft fence action
+		case 1: // soft fence action
+		case 3: // path deviation action
+
 			_last_soft_fence_breached = checkFailsafe(_caller_id_soft_fence_breached, _last_soft_fence_breached,
 						    true, fromGfActParam(_param_gf_action.get()).cannotBeDeferred());
 			break;

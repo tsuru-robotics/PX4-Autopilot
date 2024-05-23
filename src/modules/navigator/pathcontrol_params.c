@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2022 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2013-2016 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -17,7 +17,7 @@
  *    without specific prior written permission.
  *
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
- * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * AS IS AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
  * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
  * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
  * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -31,23 +31,29 @@
  *
  ****************************************************************************/
 
-#pragma once
+/**
+ * @file pathcontrol_params.c
+ *
+ * Parameters for pathcontrol
+ *
+ * @author Vladimir Savelyev <vmsavelyev@gmail.com>
+ */
 
-#include "../Common.hpp"
+/*
+ * Pathcontrol parameters, accessible via MAVLink
+ */
 
-#include <uORB/Subscription.hpp>
-#include <uORB/topics/geofence_result.h>
-#include <uORB/topics/path_control_result.h>
 
-class GeofenceChecks : public HealthAndArmingCheckBase
-{
-public:
-	GeofenceChecks() = default;
-	~GeofenceChecks() = default;
-
-	void checkAndReport(const Context &context, Report &reporter) override;
-
-private:
-	uORB::Subscription _geofence_result_sub{ORB_ID(geofence_result)};
-	uORB::Subscription _path_control_result_sub{ORB_ID(path_control_result)};
-};
+/**
+ * Acceptance radius for path control in offboard mode.
+ *
+ * Maximum distance in meters the vehicle can be from its setpoint.
+ *
+ * @unit m
+ * @min 0
+ * @max 100
+ * @decimal 2
+ * @increment 0.1
+ * @group Patchcontrol
+ */
+PARAM_DEFINE_FLOAT(PC_ACCEPT_R, 1.0);

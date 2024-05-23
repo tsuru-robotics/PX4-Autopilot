@@ -36,9 +36,13 @@
 void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 {
 	geofence_result_s geofence_result;
-
 	if (!_geofence_result_sub.copy(&geofence_result)) {
 		geofence_result = {};
+	}
+
+	path_control_result_s path_control_result;
+	if (!_path_control_result_sub.copy(&path_control_result)) {
+		path_control_result = {};
 	}
 
 	// Hard Geofence has high priority
@@ -86,7 +90,25 @@ void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 			}
 		}
 
-	} else {
+	// Path deviation
+	} else if (path_control_result.breached) {
+
+		reporter.failsafeFlags().geofence_breached = 3;
+
+		/* EVENT
+		* @description
+		* <profile name="dev">
+		* This check can be configured via <param>GF_ACTION</param> parameter.
+		* </profile>
+		*/
+		reporter.armingCheckFailure(NavModes::All, health_component_t::system, events::ID("check_path_deviation"),
+				events::Log::Error, "Path deviation");
+
+		if (reporter.mavlink_log_pub()) {
+			mavlink_log_critical(reporter.mavlink_log_pub(), "Path deviation");
+		}
+
+	}else {
 		reporter.failsafeFlags().geofence_breached = 0;
 	}
 

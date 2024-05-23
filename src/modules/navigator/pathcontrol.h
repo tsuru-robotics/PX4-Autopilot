@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2022 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2013 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,24 +30,47 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+/**
+ * @file pathcontrol
+ * Provides functions for handling the pathcontrol
+ *
+ * @author Vladimir Savelyev <vmsavelyev@gmail.com>
+ */
 
 #pragma once
 
-#include "../Common.hpp"
+#include <float.h>
 
+#include <lib/mathlib/mathlib.h>
+#include <px4_platform_common/module_params.h>
+#include <drivers/drv_hrt.h>
+#include <px4_platform_common/defines.h>
 #include <uORB/Subscription.hpp>
-#include <uORB/topics/geofence_result.h>
+#include <uORB/Publication.hpp>
+#include <uORB/topics/vehicle_local_position_setpoint.h>
 #include <uORB/topics/path_control_result.h>
 
-class GeofenceChecks : public HealthAndArmingCheckBase
+class Navigator;
+
+class PathControl : public ModuleParams
 {
 public:
-	GeofenceChecks() = default;
-	~GeofenceChecks() = default;
+	PathControl(Navigator *navigator);
 
-	void checkAndReport(const Context &context, Report &reporter) override;
+	~PathControl() = default;
+
+	void pathControlUpdate();
 
 private:
-	uORB::Subscription _geofence_result_sub{ORB_ID(geofence_result)};
-	uORB::Subscription _path_control_result_sub{ORB_ID(path_control_result)};
+
+	Navigator   *_navigator{nullptr};
+
+	uORB::Subscription _vehicle_local_position_setpoint_sub{ORB_ID(vehicle_local_position_setpoint)};
+	uORB::Publication<path_control_result_s> _path_control_result_pub{ORB_ID(path_control_result)};
+
+	hrt_abstime _last_time_inside_path_acc_r_us{0};	///< last system time in usec when drone was within path accepnatce radius
+
+	DEFINE_PARAMETERS(
+		(ParamFloat<px4::params::PC_ACCEPT_R>) _param_pc_acc_radius
+	)
 };
