@@ -52,7 +52,7 @@ void Ekf::controlMagFusion()
 			_state.quat_nominal = updateYawInRotMat(yaw, Dcmf(_state.quat_nominal));
 			_control_status.flags.yaw_align = true;
 			_last_static_yaw = yaw;
-			PX4_INFO("Yaw aligned by external value %.3f rad", (double)yaw);
+			ECL_INFO("Yaw aligned by external value %.3f rad", (double)yaw);
 		}
 		stopMagFusion();
 	}
