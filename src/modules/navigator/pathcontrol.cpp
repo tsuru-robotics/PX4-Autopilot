@@ -51,8 +51,7 @@ PathControl::PathControl(Navigator *navigator) :
 
 void PathControl::pathControlUpdate()
 {
-	if (_navigator->get_vstatus()->arming_state == vehicle_status_s::ARMING_STATE_ARMED
-	&& _navigator->get_vstatus()->nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
+	if (_navigator->get_vstatus()->nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
 		path_control_result_s res{};
 		vehicle_local_position_setpoint_s setpoint{};
 		_vehicle_local_position_setpoint_sub.copy(&setpoint);
@@ -75,6 +74,7 @@ void PathControl::pathControlUpdate()
 			}
 		}
 
+		res.action = _param_pc_action.get();
 		_path_control_result_pub.publish(res);
 	}
 

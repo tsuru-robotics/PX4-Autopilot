@@ -95,17 +95,19 @@ void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 
 		reporter.failsafeFlags().geofence_breached = 3;
 
-		/* EVENT
-		* @description
-		* <profile name="dev">
-		* This check can be configured via <param>GF_ACTION</param> parameter.
-		* </profile>
-		*/
-		reporter.armingCheckFailure(NavModes::All, health_component_t::system, events::ID("check_path_deviation"),
-				events::Log::Error, "Path deviation");
+		if (path_control_result.action != 0) {
+			/* EVENT
+			* @description
+			* <profile name="dev">
+			* This check can be configured via <param>PC_ACTION</param> parameter.
+			* </profile>
+			*/
+			reporter.armingCheckFailure(NavModes::All, health_component_t::system, events::ID("check_path_deviation"),
+					events::Log::Error, "Path deviation");
 
-		if (reporter.mavlink_log_pub()) {
-			mavlink_log_critical(reporter.mavlink_log_pub(), "Path deviation");
+			if (reporter.mavlink_log_pub()) {
+				mavlink_log_critical(reporter.mavlink_log_pub(), "Path deviation");
+			}
 		}
 
 	}else {

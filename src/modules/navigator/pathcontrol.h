@@ -71,6 +71,7 @@ private:
 	hrt_abstime _last_time_inside_path_acc_r_us{0};	///< last system time in usec when drone was within path accepnatce radius
 
 	DEFINE_PARAMETERS(
-		(ParamFloat<px4::params::PC_ACCEPT_R>) _param_pc_acc_radius
+		(ParamFloat<px4::params::PC_ACCEPT_R>) _param_pc_acc_radius,
+		(ParamInt<px4::params::PC_ACTION>)     _param_pc_action
 	)
 };
