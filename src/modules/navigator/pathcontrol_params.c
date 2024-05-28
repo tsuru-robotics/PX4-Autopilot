@@ -56,7 +56,7 @@
  * @increment 0.1
  * @group Patchcontrol
  */
-PARAM_DEFINE_FLOAT(PC_ACCEPT_R, 1.0);
+PARAM_DEFINE_FLOAT(PC_ACCEPT_R, 3.5);
 
 /**
  * Acceptance radius violation action.

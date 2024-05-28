@@ -189,3 +189,7 @@ param set-default GPS_RTCM_WIFI_ID 26
 
 # Magnetometer
 param set-default EKF2_MAG_MIN_ALT -1.0
+
+# Pathcontrol
+param set-default PC_ACTION 5 # Land mode
+param set-default PC_ACCEPT_R 3.5

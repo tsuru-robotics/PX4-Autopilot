@@ -58,7 +58,8 @@ void PathControl::pathControlUpdate()
 
 		float dx = setpoint.x - _navigator->get_local_position()->x;
 		float dy = setpoint.y - _navigator->get_local_position()->y;
-		res.deviation = sqrtf(dx*dx + dy*dy);
+		float dz = setpoint.z - _navigator->get_local_position()->z;
+		res.deviation = sqrtf(dx*dx + dy*dy * dz*dz);
 
 		res.inside_acc_r = (res.deviation < _param_pc_acc_radius.get()) ? true :false;
 		res.timestamp = hrt_absolute_time();
