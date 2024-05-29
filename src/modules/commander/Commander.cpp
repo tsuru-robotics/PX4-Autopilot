@@ -465,7 +465,7 @@ int Commander::custom_command(int argc, char *argv[])
 		return (ret ? 0 : 1);
 	}
 
-	if (!strcmp(argv[0], "takeoff_wo_mag")) {
+	if (!strcmp(argv[0], "takeoff_womag")) {
 
 		if (argc > 2) {
 

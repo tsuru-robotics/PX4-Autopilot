@@ -46,12 +46,31 @@ void Ekf::controlMagFusion()
 	magSample mag_sample;
 
 	if (inhibitMagForTakeoffAndLand()) {
-		// Re-alignt yaw if not airborne
+		// Re-alignt yaw
 		if (!_control_status.flags.yaw_align && PX4_ISFINITE(_takeoff_wo_mag_init_heading)) {
 			const float yaw = wrap_pi(_takeoff_wo_mag_init_heading * M_DEG_TO_RAD_F); //(rad, [-PI, PI])
-			_state.quat_nominal = updateYawInRotMat(yaw, Dcmf(_state.quat_nominal));
+			//_state.quat_nominal = updateYawInRotMat(yaw, Dcmf(_state.quat_nominal));
 			_control_status.flags.yaw_align = true;
 			_last_static_yaw = yaw;
+			// // update quaternion states and corresponding covarainces
+			// float yaw_new_variance = 0.0f;
+			// resetQuatStateYaw(yaw, yaw_new_variance);
+			// resetMagCov();
+
+			// update the rotation matrix using the new yaw value
+			_R_to_earth = updateYawInRotMat(yaw, Dcmf(_state.quat_nominal));
+			_state.quat_nominal = _R_to_earth;
+
+			// reset the output predictor state history to match the EKF initial values
+			_output_predictor.alignOutputFilter(_state.quat_nominal, _state.vel, _state.pos);
+
+			// set the earth magnetic field states using the updated rotation
+			_state.mag_I = _R_to_earth * _mag_lpf.getState();
+			_state.mag_B.zero();
+
+			_aid_src_mag_heading.time_last_fuse = _time_delayed_us;
+			_time_last_heading_fuse = _time_delayed_us;
+
 			ECL_INFO("Yaw aligned by external value %.3f rad", (double)yaw);
 		}
 		stopMagFusion();
@@ -131,6 +150,9 @@ void Ekf::controlMagFusion()
 		_control_status.flags.mag_aligned_in_flight = false;
 	}
 
+	//ECL_INFO("mag_data_ready=%d tilt_align=%d yaw_align=%d", mag_data_ready, _control_status.flags.tilt_align, _control_status.flags.yaw_align);
+
+	// if (mag_data_ready /*&& !_control_status.flags.tilt_align*/ && (!_control_status.flags.yaw_align || _takeoff_wo_mag_init_req)) {
 	if (mag_data_ready && !_control_status.flags.tilt_align && !_control_status.flags.yaw_align) {
 		// calculate the initial magnetic field and yaw alignment
 		// but do not mark the yaw alignement complete as it needs to be
@@ -144,7 +166,9 @@ void Ekf::controlMagFusion()
 
 				const float yaw_prev = getEulerYaw(_R_to_earth);
 
-				if (fabsf(yaw_new - yaw_prev) > math::radians(1.f)) {
+				//ECL_INFO("_takeoff_wo_mag_init_req=%d yaw_changed=%d", _takeoff_wo_mag_init_req, fabsf(yaw_new - yaw_prev) > math::radians(1.f));
+
+				if (/*_takeoff_wo_mag_init_req ||*/ fabsf(yaw_new - yaw_prev) > math::radians(1.f)) {
 
 					ECL_INFO("mag heading init %.3f -> %.3f rad (declination %.1f)", (double)yaw_prev, (double)yaw_new, (double)getMagDeclination());
 
@@ -163,6 +187,7 @@ void Ekf::controlMagFusion()
 					_time_last_heading_fuse = _time_delayed_us;
 
 					_last_static_yaw = NAN;
+					_takeoff_wo_mag_init_req = false;
 				}
 			}
 		}
@@ -216,6 +241,9 @@ void Ekf::controlMagFusion()
 			startMag3DFusion();
 			break;
 		}
+
+		// ECL_INFO("_control_status.flags.mag_hdg=%d _mag_yaw_reset_req=%d _control_status.flags.yaw_align=%d",
+		//_control_status.flags.mag_hdg,_mag_yaw_reset_req, _control_status.flags.yaw_align);
 
 		if (_control_status.flags.mag_hdg || _control_status.flags.mag_3D) {
 
@@ -421,12 +449,20 @@ bool Ekf::inhibitMagForTakeoffAndLand()
 			// drone is below the _takeoff_wo_mag_fusion_alt
 			_mag_use_inhibit_for_takeoff_and_land_us = _time_delayed_us;
 			inhibit_mag = true;
+
 		} else if (uint32_t(_time_delayed_us - _mag_use_inhibit_for_takeoff_and_land_us) < (uint32_t)1e6) {
 			// drone is above the _takeoff_wo_mag_fusion_alt
 			// but we still inhibit mag within 1 sec
 			inhibit_mag = true;
+
+		} else if (_takeoff_wo_mag_inhibit_prev) {
+			// inhibit_mag turned false first time
+			_takeoff_wo_mag_init_req = true;
+			_takeoff_wo_mag_reset_req = true;
 		}
 	}
+
+	_takeoff_wo_mag_inhibit_prev = inhibit_mag;
 
 	return inhibit_mag;
 }
