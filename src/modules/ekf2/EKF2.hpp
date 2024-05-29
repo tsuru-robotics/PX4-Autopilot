@@ -171,6 +171,7 @@ private:
 	void PublishAttitude(const hrt_abstime &timestamp);
 	void PublishBaroBias(const hrt_abstime &timestamp);
 	void PublishGnssHgtBias(const hrt_abstime &timestamp);
+	void PublishTakeoffWoMag(const hrt_abstime &timestamp);
 
 #if defined(CONFIG_EKF2_RANGE_FINDER)
 	void PublishRngHgtBias(const hrt_abstime &timestamp);

@@ -486,26 +486,12 @@ void EKF2::Run()
 				if (param1 == 0) {
 					// Disable
 					_ekf.disableTakeoffWithoutMag();
-					// publish
-					takeoff_without_mag_status_s takeoff_status{};
-					takeoff_status.enabled = false;
-					takeoff_status.fusion_alt = 0.f;
-					takeoff_status.init_heading = 0.f;
-					takeoff_status.timestamp = hrt_absolute_time();
-					_takeoff_without_mag_status_pub.publish(takeoff_status);
 
 				} else if (param1 == 1) {
 					// Enable
 					float mag_activation_alt  = vehicle_command.param2;
 					float initial_heading     = vehicle_command.param3;
 					_ekf.enableTakeoffWithoutMag(mag_activation_alt, initial_heading);
-					// publish
-					takeoff_without_mag_status_s takeoff_status{};
-					takeoff_status.enabled = true;
-					takeoff_status.fusion_alt = mag_activation_alt;
-					takeoff_status.init_heading = initial_heading;
-					takeoff_status.timestamp = hrt_absolute_time();
-					_takeoff_without_mag_status_pub.publish(takeoff_status);
 				} else {
 					PX4_ERR("Failed handling VEHICLE_CMD_SET_TAKEOFF_WO_MAG");
 				}
@@ -722,6 +708,7 @@ void EKF2::Run()
 
 			// publish status/logging messages
 			PublishBaroBias(now);
+			PublishTakeoffWoMag(now);
 			PublishGnssHgtBias(now);
 #if defined(CONFIG_EKF2_RANGE_FINDER)
 			PublishRngHgtBias(now);
@@ -1036,6 +1023,19 @@ void EKF2::PublishBaroBias(const hrt_abstime &timestamp)
 			_last_baro_bias_published = status.bias;
 		}
 	}
+}
+
+void EKF2::PublishTakeoffWoMag(const hrt_abstime &timestamp)
+{
+	takeoff_without_mag_status_s takeoff_status{};
+	takeoff_status.enabled = _ekf._takeoff_wo_mag_enabled;
+	takeoff_status.fusion_alt = _ekf._takeoff_wo_mag_fusion_alt;
+	takeoff_status.init_heading = _ekf._takeoff_wo_mag_init_heading;
+	takeoff_status.inhibit = _ekf._takeoff_wo_mag_inhibit;
+	takeoff_status.home_pos_z = _ekf._home_pos_z;
+	takeoff_status.ref_alt = _ekf._takeoff_wo_mag_ref_alt;
+	takeoff_status.timestamp = timestamp;
+	_takeoff_without_mag_status_pub.publish(takeoff_status);
 }
 
 void EKF2::PublishGnssHgtBias(const hrt_abstime &timestamp)

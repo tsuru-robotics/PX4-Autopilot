@@ -278,6 +278,15 @@ public:
 
 	OutputPredictor &output_predictor() { return _output_predictor; };
 
+        // takeoff without mag
+	float _home_pos_z{0.0f}; // home position altitude in local frame (m)
+	bool _takeoff_wo_mag_enabled{false};  // takeoff without mag is enabled
+	float _takeoff_wo_mag_fusion_alt{0.0f}; // mag fusion activates above this altitude
+	float _takeoff_wo_mag_init_heading{0.0f}; // initial heading for takeoff without mag
+	bool _takeoff_wo_mag_init_req{false}; // heading init is required
+	bool _takeoff_wo_mag_inhibit{false}; // mag measurements are inhibited
+	float _takeoff_wo_mag_ref_alt{0.0f}; // reference altitude above home position
+
 protected:
 
 	EstimatorInterface() = default;
@@ -425,12 +434,6 @@ protected:
 	// state logic becasue they will be cleared externally after being read.
 	warning_event_status_u _warning_events{};
 	information_event_status_u _information_events{};
-
-	// takeoff without mag
-	float _home_pos_z{0.0f}; // home position altitude in local frame (m)
-	bool _takeoff_wo_mag_enabled{false};
-	float _takeoff_wo_mag_fusion_alt{NAN};
-	float _takeoff_wo_mag_init_heading{NAN};
 
 private:
 
