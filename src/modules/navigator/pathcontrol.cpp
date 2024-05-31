@@ -68,10 +68,11 @@ void PathControl::pathControlUpdate()
 			_last_time_inside_path_acc_r_us = hrt_absolute_time();
 			res.breached = false;
 		} else {
+			// assume no path breach if less than 1 sec passed since drone exceeded the acceptance radius
 			if (res.timestamp  - _last_time_inside_path_acc_r_us < (uint32_t)1e6) {
-				res.breached = true;
-			} else {
 				res.breached = false;
+			} else {
+				res.breached = true;
 			}
 		}
 
