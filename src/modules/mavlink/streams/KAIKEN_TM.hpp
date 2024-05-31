@@ -43,6 +43,8 @@
 #include <uORB/topics/estimator_status_flags.h>
 #include <uORB/topics/health_report.h>
 #include <uORB/topics/battery_status.h>
+#include <uORB/topics/failsafe_flags.h>
+#include <uORB/topics/geofence_result.h>
 
 class MavlinkStreamKaikenTm : public MavlinkStream
 {
@@ -72,6 +74,8 @@ private:
 	uORB::Subscription _estimator_status_flags_sub{ORB_ID(estimator_status_flags)};
 	uORB::Subscription _health_report_sub{ORB_ID(health_report)};
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
+	uORB::Subscription _failsafe_flags_sub{ORB_ID(failsafe_flags)};
+	uORB::Subscription _geofence_result_sub{ORB_ID(geofence_result)};
 
 
 	using health_component_t = events::px4::enums::health_component_t;
@@ -202,6 +206,34 @@ private:
 			msg.voltage_battery = UINT16_MAX;
 			msg.current_battery = -1;
 			msg.battery_remaining = -1;
+		}
+
+		// Specify failsafe
+		if (vehicle_status.failsafe) {
+			failsafe_flags_s failsafe_flags{};
+			if (_failsafe_flags_sub.copy(&failsafe_flags)) {
+				if (failsafe_flags.battery_warning > 0) {
+					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_BATTERY;
+				}
+				if (failsafe_flags.fd_critical_failure) {
+					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
+				}
+				if (failsafe_flags.offboard_control_signal_lost) {
+					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
+				}
+				if (failsafe_flags.global_position_invalid) {
+					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_POSITION_LOSS;
+				}
+			}
+			geofence_result_s geofence_result{};
+			if (_geofence_result_sub.copy(&geofence_result)) {
+				if (geofence_result.primary_geofence_breached) {
+					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_SOFTFENCE;
+				}
+				if (geofence_result.secondary_geofence_breached) {
+					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_HARDFENCE;
+				}
+			}
 		}
 
 		mavlink_msg_fmu_tm_send_struct(_mavlink->get_channel(), &msg);
