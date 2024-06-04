@@ -179,3 +179,7 @@ GPS_RTCM_WIFI_ID: 26
 
 # Magnetometer
 EKF2_MAG_MIN_ALT: -1.0
+
+# Path Control
+PC_ACTION: 0 # Disabled
+PC_ACCEPT_R: 5.0
