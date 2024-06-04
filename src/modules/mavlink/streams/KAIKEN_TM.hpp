@@ -44,7 +44,6 @@
 #include <uORB/topics/health_report.h>
 #include <uORB/topics/battery_status.h>
 #include <uORB/topics/failsafe_flags.h>
-#include <uORB/topics/geofence_result.h>
 #include "commander/failsafe/framework.h"
 
 class MavlinkStreamKaikenTm : public MavlinkStream
@@ -76,8 +75,6 @@ private:
 	uORB::Subscription _health_report_sub{ORB_ID(health_report)};
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
 	uORB::Subscription _failsafe_flags_sub{ORB_ID(failsafe_flags)};
-	uORB::Subscription _geofence_result_sub{ORB_ID(geofence_result)};
-
 
 	using health_component_t = events::px4::enums::health_component_t;
 
@@ -230,14 +227,17 @@ private:
 				if (failsafe_flags.global_position_invalid) {
 					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_POSITION_LOSS;
 				}
-			}
-			geofence_result_s geofence_result{};
-			if (_geofence_result_sub.copy(&geofence_result)) {
-				if (geofence_result.primary_geofence_breached) {
-					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_SOFTFENCE;
-				}
-				if (geofence_result.secondary_geofence_breached) {
-					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_HARDFENCE;
+
+				switch (failsafe_flags.geofence_breached) {
+					case 1:
+						msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_SOFTFENCE;
+						break;
+					case 2:
+						msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_HARDFENCE;
+						break;
+					case 3:
+						msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_PATH;
+						break;
 				}
 			}
 		}
