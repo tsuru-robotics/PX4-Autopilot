@@ -182,4 +182,4 @@ EKF2_MAG_MIN_ALT: -1.0
 
 # Path Control
 PC_ACTION: 0 # Disabled
-PC_ACCEPT_R: 5.0
+PC_ACCEPT_R: 10.0
