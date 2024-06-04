@@ -122,3 +122,4 @@ bool calibration_enabled
 
 bool pre_flight_checks_pass		# true if all checks necessary to arm pass
 
+uint8 failsafe_action_selected

@@ -45,6 +45,7 @@
 #include <uORB/topics/battery_status.h>
 #include <uORB/topics/failsafe_flags.h>
 #include <uORB/topics/geofence_result.h>
+#include "commander/failsafe/framework.h"
 
 class MavlinkStreamKaikenTm : public MavlinkStream
 {
@@ -210,9 +211,14 @@ private:
 
 		// Specify failsafe
 		if (vehicle_status.failsafe) {
+			// Irreversible failsafe is activated
+			if ((FailsafeBase::Action)vehicle_status.failsafe_action_selected > FailsafeBase::Action::Warn) {
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_ACTION;
+			}
+
 			failsafe_flags_s failsafe_flags{};
 			if (_failsafe_flags_sub.copy(&failsafe_flags)) {
-				if (failsafe_flags.battery_warning > 0) {
+				if (failsafe_flags.battery_warning > 0 || failsafe_flags.battery_unhealthy) {
 					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_BATTERY;
 				}
 				if (failsafe_flags.fd_critical_failure) {

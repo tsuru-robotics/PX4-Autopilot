@@ -2244,6 +2244,7 @@ bool Commander::handleModeIntentionAndFailsafe()
 	}
 
 	_vehicle_status.failsafe = _failsafe.inFailsafe();
+	_vehicle_status.failsafe_action_selected = (uint8_t)_failsafe.selectedAction();
 	_vehicle_status.failsafe_and_user_took_over = _failsafe.userTakeoverActive();
 
 	if (prev_nav_state != _vehicle_status.nav_state) {
