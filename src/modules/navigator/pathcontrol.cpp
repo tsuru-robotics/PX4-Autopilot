@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- *   Copyright (c) 2022 PX4 Development Team. All rights reserved.
+ *   Copyright (c) 2013,2017 PX4 Development Team. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,24 +30,55 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  ****************************************************************************/
+/**
+ * @file pathcontrol.cpp
+ * Provides functions for handling the pathcontrol
+ *
+ * @author Vladimir Savelyev <vmsavelyev@gmail.com>
 
-#pragma once
+ */
+#include "pathcontrol.h"
+#include "navigator.h"
+#include <ctype.h>
+#include <drivers/drv_hrt.h>
 
-#include "../Common.hpp"
 
-#include <uORB/Subscription.hpp>
-#include <uORB/topics/geofence_result.h>
-#include <uORB/topics/path_control_result.h>
-
-class GeofenceChecks : public HealthAndArmingCheckBase
+PathControl::PathControl(Navigator *navigator) :
+	ModuleParams(navigator),
+	_navigator(navigator)
 {
-public:
-	GeofenceChecks() = default;
-	~GeofenceChecks() = default;
+}
 
-	void checkAndReport(const Context &context, Report &reporter) override;
+void PathControl::pathControlUpdate()
+{
+	if (_navigator->get_vstatus()->nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
+		path_control_result_s res{};
+		vehicle_local_position_setpoint_s setpoint{};
+		_vehicle_local_position_setpoint_sub.copy(&setpoint);
 
-private:
-	uORB::Subscription _geofence_result_sub{ORB_ID(geofence_result)};
-	uORB::Subscription _path_control_result_sub{ORB_ID(path_control_result)};
-};
+		float dx = setpoint.x - _navigator->get_local_position()->x;
+		float dy = setpoint.y - _navigator->get_local_position()->y;
+		float dz = setpoint.z - _navigator->get_local_position()->z;
+		res.deviation = sqrtf(dx*dx + dy*dy + dz*dz);
+
+		res.inside_acc_r = (res.deviation < _param_pc_acc_radius.get()) ? true :false;
+		res.timestamp = hrt_absolute_time();
+
+		if (res.inside_acc_r) {
+			_last_time_inside_path_acc_r_us = hrt_absolute_time();
+			res.breached = false;
+		} else {
+			// assume no path breach if less than 1 sec passed since drone exceeded the acceptance radius
+			if (res.timestamp  - _last_time_inside_path_acc_r_us < (uint32_t)1e6) {
+				res.breached = false;
+			} else {
+				res.breached = true;
+			}
+		}
+
+		res.action = _param_pc_action.get();
+		_path_control_result_pub.publish(res);
+	}
+
+}
+

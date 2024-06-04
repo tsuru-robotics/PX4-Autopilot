@@ -42,6 +42,7 @@
 #pragma once
 
 #include "geofence.h"
+#include "pathcontrol.h"
 #include "land.h"
 #include "precland.h"
 #include "loiter.h"
@@ -402,6 +403,7 @@ private:
 
 	bool _is_capturing_images{false}; // keep track if we need to stop capturing images
 
+	PathControl _pathcontrol; /**< class that handles the pathcontrol */
 
 	// update subscriptions
 	void params_update();

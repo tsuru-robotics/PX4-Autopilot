@@ -130,6 +130,7 @@ void LoggedTopics::add_default_topics()
 	add_optional_topic("vtol_vehicle_status", 200);
 	add_topic("wind", 1000);
 	add_topic("geofence_result", 1000);
+	add_topic("path_control_result", 1000);
 	add_topic("utm_time", 100);
 	add_topic_multi("rtcm_channel", 1000, 2);
 

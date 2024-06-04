@@ -152,6 +152,8 @@ private:
 	const int _caller_id_soft_fence_breached{genCallerId()};
 	bool _last_hard_fence_breached{false};
 	const int _caller_id_hard_fence_breached{genCallerId()};
+	bool _last_path_breached{false};
+	const int _caller_id_path_breached{genCallerId()};
 
 	DEFINE_PARAMETERS_CUSTOM_PARENT(FailsafeBase,
 					(ParamInt<px4::params::NAV_DLL_ACT>) 	_param_nav_dll_act,
@@ -161,6 +163,7 @@ private:
 					(ParamInt<px4::params::COM_POSCTL_NAVL>) _param_com_posctl_navl,
 					(ParamInt<px4::params::GF_ACTION>)  	_param_gf_action,
 					(ParamInt<px4::params::GF2_ACTION>)  	_param_gf2_action,
+					(ParamInt<px4::params::PC_ACTION>)  	_param_pc_action,
 					(ParamFloat<px4::params::COM_SPOOLUP_TIME>) _param_com_spoolup_time,
 					(ParamInt<px4::params::COM_IMB_PROP_ACT>) _param_com_imb_prop_act,
 					(ParamFloat<px4::params::COM_LKDOWN_TKO>) _param_com_lkdown_tko,

@@ -113,6 +113,7 @@ FailsafeBase::ActionOptions Failsafe::fromGfActParam(int param_value)
 
 	case geofence_violation_action::Land_mode:
 		options.action = Action::Land;
+		options.clear_condition = ClearCondition::OnModeChangeOrDisarm;
 		break;
 
 	default:
@@ -414,6 +415,12 @@ void Failsafe::checkStateAndMode(const hrt_abstime &time_us, const State &state,
 			// hard fence action
 			_last_hard_fence_breached = checkFailsafe(_caller_id_hard_fence_breached, _last_hard_fence_breached,
 						    true, fromGfActParam(_param_gf2_action.get()).cannotBeDeferred());
+			break;
+
+		case 3:
+			// path deviation action
+			_last_path_breached = checkFailsafe(_caller_id_path_breached, _last_path_breached,
+						    true, fromGfActParam(_param_pc_action.get()).cannotBeDeferred());
 			break;
 
 		default:

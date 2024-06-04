@@ -78,7 +78,8 @@ Navigator::Navigator() :
 	_vtol_takeoff(this),
 	_land(this),
 	_precland(this),
-	_rtl(this)
+	_rtl(this),
+	_pathcontrol(this)
 {
 	/* Create a list of our possible navigation types */
 	_navigation_mode_array[0] = &_mission;
@@ -1064,6 +1065,9 @@ void Navigator::geofence_breach_check(bool &have_geofence_position_data)
 
 		_geofence_result_pub.publish(_geofence_result);
 	}
+
+	// pathcontrol in offboard
+	_pathcontrol.pathControlUpdate();
 }
 
 int Navigator::task_spawn(int argc, char *argv[])
