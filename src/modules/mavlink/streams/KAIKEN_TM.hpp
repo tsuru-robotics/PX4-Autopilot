@@ -37,6 +37,7 @@
 #include <uORB/topics/sensor_gps.h>
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_air_data.h>
@@ -75,8 +76,11 @@ private:
 	uORB::Subscription _health_report_sub{ORB_ID(health_report)};
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
 	uORB::Subscription _failsafe_flags_sub{ORB_ID(failsafe_flags)};
+	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 
 	using health_component_t = events::px4::enums::health_component_t;
+
+	bool _offboard_activated_once{false};
 
 	void fillOutComponent(const health_report_s &health_report, FMU_COMPONENT_STATUS mav_component,
 			      health_component_t health_component, mavlink_fmu_tm_t &msg)
@@ -98,6 +102,9 @@ private:
 
 		vehicle_status_s vehicle_status{};
 		_vehicle_status_sub.copy(&vehicle_status);
+
+		vehicle_control_mode_s vehicle_control_mode{};
+		_vehicle_control_mode_sub.copy(&vehicle_control_mode);
 
 		health_report_s health_report{};
 		_health_report_sub.copy(&health_report);
@@ -206,6 +213,14 @@ private:
 			msg.battery_remaining = -1;
 		}
 
+		// Check if offboard is active
+		if (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
+			_offboard_activated_once = true;
+		} else if (!vehicle_control_mode.flag_armed) {
+			// drop flag when offboard not active and disarmed
+			_offboard_activated_once = false;
+		}
+
 		// Specify failsafe
 		if (vehicle_status.failsafe) {
 			// Irreversible failsafe is activated
@@ -221,7 +236,7 @@ private:
 				if (failsafe_flags.fd_critical_failure) {
 					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
 				}
-				if (failsafe_flags.offboard_control_signal_lost) {
+				if (_offboard_activated_once && failsafe_flags.offboard_control_signal_lost) {
 					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
 				}
 				if (failsafe_flags.global_position_invalid) {
