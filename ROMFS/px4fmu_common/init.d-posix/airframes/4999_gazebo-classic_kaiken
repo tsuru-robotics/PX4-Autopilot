@@ -49,4 +49,4 @@ param set-default BAT1_SOURCE 0
 param set-default SDLOG_MODE 1
 
 # Battery
-param set-default BAT1_V_EMPTY 3.0
+param set-default BAT1_V_EMPTY 3.5

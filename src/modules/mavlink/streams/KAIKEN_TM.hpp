@@ -236,7 +236,8 @@ private:
 				if (failsafe_flags.fd_critical_failure) {
 					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
 				}
-				if (_offboard_activated_once && failsafe_flags.offboard_control_signal_lost) {
+				if (_offboard_activated_once && failsafe_flags.offboard_control_signal_lost
+					&& (failsafe_flags.mode_req_offboard_signal & (1u << vehicle_status.nav_state))) {
 					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
 				}
 				if (failsafe_flags.global_position_invalid) {
