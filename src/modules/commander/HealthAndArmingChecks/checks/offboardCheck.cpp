@@ -61,6 +61,20 @@ void OffboardChecks::checkAndReport(const Context &context, Report &reporter)
 			offboard_available = false;
 		}
 
+		vehicle_status_s vehicle_status;
+		if (_vehicle_status_sub.copy(&vehicle_status)) {
+			// Check offboard failsafe trigger only when armed
+			if (vehicle_status.arming_state == vehicle_status_s::ARMING_STATE_ARMED) {
+				if (!_offboard_failsafe_triggered) {
+					_offboard_failsafe_triggered = !offboard_available && (reporter.failsafeFlags().mode_req_offboard_signal & (1u << vehicle_status.nav_state));
+				}
+			} else {
+				// drop trigger when disarmed
+				_offboard_failsafe_triggered = false;
+			}
+			reporter.failsafeFlags().offboard_failsafe = _offboard_failsafe_triggered;
+		}
+
 		// This is a mode requirement, no need to report
 		reporter.failsafeFlags().offboard_control_signal_lost = !offboard_available;
 	}

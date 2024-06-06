@@ -80,7 +80,6 @@ private:
 
 	using health_component_t = events::px4::enums::health_component_t;
 
-	bool _offboard_activated_once{false};
 
 	void fillOutComponent(const health_report_s &health_report, FMU_COMPONENT_STATUS mav_component,
 			      health_component_t health_component, mavlink_fmu_tm_t &msg)
@@ -108,6 +107,9 @@ private:
 
 		health_report_s health_report{};
 		_health_report_sub.copy(&health_report);
+
+		failsafe_flags_s failsafe_flags{};
+		_failsafe_flags_sub.copy(&failsafe_flags);
 
 		// gps
 		sensor_gps_s gps;
@@ -213,49 +215,34 @@ private:
 			msg.battery_remaining = -1;
 		}
 
-		// Check if offboard is active
-		if (vehicle_status.nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
-			_offboard_activated_once = true;
-		} else if (!vehicle_control_mode.flag_armed) {
-			// drop flag when offboard not active and disarmed
-			_offboard_activated_once = false;
+		// Irreversible failsafe is activated
+		if ((FailsafeBase::Action)vehicle_status.failsafe_action_selected > FailsafeBase::Action::Warn) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_ACTION;
+		}
+		// Specify failsafes
+		if (failsafe_flags.battery_warning > 0 || failsafe_flags.battery_unhealthy) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_BATTERY;
+		}
+		if (failsafe_flags.fd_critical_failure) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
+		}
+		if (failsafe_flags.global_position_invalid) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_POSITION_LOSS;
+		}
+		if (failsafe_flags.offboard_failsafe) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
 		}
 
-		// Specify failsafe
-		if (vehicle_status.failsafe) {
-			// Irreversible failsafe is activated
-			if ((FailsafeBase::Action)vehicle_status.failsafe_action_selected > FailsafeBase::Action::Warn) {
-				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_ACTION;
-			}
-
-			failsafe_flags_s failsafe_flags{};
-			if (_failsafe_flags_sub.copy(&failsafe_flags)) {
-				if (failsafe_flags.battery_warning > 0 || failsafe_flags.battery_unhealthy) {
-					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_BATTERY;
-				}
-				if (failsafe_flags.fd_critical_failure) {
-					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
-				}
-				if (_offboard_activated_once && failsafe_flags.offboard_control_signal_lost
-					&& (failsafe_flags.mode_req_offboard_signal & (1u << vehicle_status.nav_state))) {
-					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
-				}
-				if (failsafe_flags.global_position_invalid) {
-					msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_POSITION_LOSS;
-				}
-
-				switch (failsafe_flags.geofence_breached) {
-					case 1:
-						msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_SOFTFENCE;
-						break;
-					case 2:
-						msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_HARDFENCE;
-						break;
-					case 3:
-						msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_PATH;
-						break;
-				}
-			}
+		switch (failsafe_flags.geofence_breached) {
+			case 1:
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_SOFTFENCE;
+				break;
+			case 2:
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_HARDFENCE;
+				break;
+			case 3:
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_PATH;
+				break;
 		}
 
 		mavlink_msg_fmu_tm_send_struct(_mavlink->get_channel(), &msg);
