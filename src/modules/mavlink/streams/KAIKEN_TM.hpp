@@ -223,7 +223,7 @@ private:
 		if (failsafe_flags.battery_warning > 0 || failsafe_flags.battery_unhealthy) {
 			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_BATTERY;
 		}
-		if (failsafe_flags.fd_critical_failure) {
+		if (failsafe_flags.attitude_failsafe) {
 			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
 		}
 		if (failsafe_flags.global_position_invalid) {

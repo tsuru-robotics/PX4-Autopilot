@@ -45,4 +45,5 @@ public:
 	void checkAndReport(const Context &context, Report &reporter) override;
 
 private:
+	bool _attitude_failsafe_triggered{false};
 };
