@@ -280,7 +280,7 @@ public:
 
         // takeoff without mag
 	float _home_pos_z{0.0f}; // home position altitude in local frame (m)
-	bool _takeoff_wo_mag_enabled{false};  // takeoff without mag is enabled
+	bool _takeoff_wo_mag_enabled{true};  // takeoff without mag is enabled
 	float _takeoff_wo_mag_fusion_alt{0.0f}; // mag fusion activates above this altitude
 	float _takeoff_wo_mag_init_heading{0.0f}; // initial heading for takeoff without mag
 	bool _takeoff_wo_mag_init_req{false}; // heading init is required
