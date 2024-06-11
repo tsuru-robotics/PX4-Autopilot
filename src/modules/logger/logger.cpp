@@ -647,6 +647,7 @@ void Logger::run()
 
 	if ((_log_mode == LogMode::boot_until_disarm || _log_mode == LogMode::boot_until_shutdown) && !disable_boot_logging) {
 		start_log_file(LogType::Full);
+		start_log_file(LogType::Mission);
 	}
 
 	/* init the update timer */
@@ -1416,10 +1417,12 @@ void Logger::start_log_file(LogType type)
 	write_header(type);
 	write_version(type);
 	write_formats(type);
+	write_parameters(type);
+	write_parameter_defaults(type);
 
 	if (type == LogType::Full) {
-		write_parameters(type);
-		write_parameter_defaults(type);
+		// write_parameters(type);
+		// write_parameter_defaults(type);
 		write_perf_data(PrintLoadReason::Preflight);
 		write_console_output();
 		write_events_file(LogType::Full);
