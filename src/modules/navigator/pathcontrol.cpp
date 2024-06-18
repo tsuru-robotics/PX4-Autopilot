@@ -51,7 +51,9 @@ PathControl::PathControl(Navigator *navigator) :
 
 void PathControl::pathControlUpdate()
 {
-	if (_navigator->get_vstatus()->nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
+	// Pathcontrol only works when armed and in offboard mode
+	if (_navigator->get_vstatus()->nav_state == vehicle_status_s::NAVIGATION_STATE_OFFBOARD
+		&& _navigator->get_vstatus()->nav_state == vehicle_status_s::ARMING_STATE_ARMED) {
 		path_control_result_s res{};
 		vehicle_local_position_setpoint_s setpoint{};
 		_vehicle_local_position_setpoint_sub.copy(&setpoint);

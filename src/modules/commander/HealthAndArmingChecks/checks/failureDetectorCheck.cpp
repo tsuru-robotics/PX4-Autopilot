@@ -98,6 +98,10 @@ void FailureDetectorChecks::checkAndReport(const Context &context, Report &repor
 			(vehicle_status_s::FAILURE_ROLL | vehicle_status_s::FAILURE_PITCH | vehicle_status_s::FAILURE_ALT |
 			 vehicle_status_s::FAILURE_EXT);
 
+	if (!_attitude_failsafe_triggered) {
+		_attitude_failsafe_triggered = reporter.failsafeFlags().fd_critical_failure;
+	}
+	reporter.failsafeFlags().attitude_failsafe = _attitude_failsafe_triggered;
 
 	reporter.failsafeFlags().fd_esc_arming_failure = context.status().failure_detector_status &
 			vehicle_status_s::FAILURE_ARM_ESC;

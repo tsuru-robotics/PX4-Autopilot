@@ -37,12 +37,15 @@
 #include <uORB/topics/sensor_gps.h>
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/vehicle_status.h>
+#include <uORB/topics/vehicle_control_mode.h>
 #include <uORB/topics/vehicle_global_position.h>
 #include <uORB/topics/vehicle_local_position.h>
 #include <uORB/topics/vehicle_air_data.h>
 #include <uORB/topics/estimator_status_flags.h>
 #include <uORB/topics/health_report.h>
 #include <uORB/topics/battery_status.h>
+#include <uORB/topics/failsafe_flags.h>
+#include "commander/failsafe/framework.h"
 
 class MavlinkStreamKaikenTm : public MavlinkStream
 {
@@ -72,9 +75,11 @@ private:
 	uORB::Subscription _estimator_status_flags_sub{ORB_ID(estimator_status_flags)};
 	uORB::Subscription _health_report_sub{ORB_ID(health_report)};
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
-
+	uORB::Subscription _failsafe_flags_sub{ORB_ID(failsafe_flags)};
+	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
 
 	using health_component_t = events::px4::enums::health_component_t;
+
 
 	void fillOutComponent(const health_report_s &health_report, FMU_COMPONENT_STATUS mav_component,
 			      health_component_t health_component, mavlink_fmu_tm_t &msg)
@@ -97,8 +102,14 @@ private:
 		vehicle_status_s vehicle_status{};
 		_vehicle_status_sub.copy(&vehicle_status);
 
+		vehicle_control_mode_s vehicle_control_mode{};
+		_vehicle_control_mode_sub.copy(&vehicle_control_mode);
+
 		health_report_s health_report{};
 		_health_report_sub.copy(&health_report);
+
+		failsafe_flags_s failsafe_flags{};
+		_failsafe_flags_sub.copy(&failsafe_flags);
 
 		// gps
 		sensor_gps_s gps;
@@ -202,6 +213,36 @@ private:
 			msg.voltage_battery = UINT16_MAX;
 			msg.current_battery = -1;
 			msg.battery_remaining = -1;
+		}
+
+		// Irreversible failsafe is activated
+		if ((FailsafeBase::Action)vehicle_status.failsafe_action_selected > FailsafeBase::Action::Warn) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_ACTION;
+		}
+		// Specify failsafes
+		if (failsafe_flags.battery_warning > 0 || failsafe_flags.battery_unhealthy) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_BATTERY;
+		}
+		if (failsafe_flags.attitude_failsafe) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_CRITICAL_ATTITUDE;
+		}
+		if (failsafe_flags.global_position_invalid) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_POSITION_LOSS;
+		}
+		if (failsafe_flags.offboard_failsafe) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
+		}
+
+		switch (failsafe_flags.geofence_breached) {
+			case 1:
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_SOFTFENCE;
+				break;
+			case 2:
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_HARDFENCE;
+				break;
+			case 3:
+				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_PATH;
+				break;
 		}
 
 		mavlink_msg_fmu_tm_send_struct(_mavlink->get_channel(), &msg);

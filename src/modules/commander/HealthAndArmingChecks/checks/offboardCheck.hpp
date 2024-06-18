@@ -37,6 +37,7 @@
 
 #include <uORB/Subscription.hpp>
 #include <uORB/topics/offboard_control_mode.h>
+#include <uORB/topics/vehicle_status.h>
 
 class OffboardChecks : public HealthAndArmingCheckBase
 {
@@ -48,6 +49,9 @@ public:
 
 private:
 	uORB::Subscription _offboard_control_mode_sub{ORB_ID(offboard_control_mode)};
+	uORB::Subscription _vehicle_status_sub{ORB_ID(vehicle_status)};
+
+	bool _offboard_failsafe_triggered{false};
 
 	DEFINE_PARAMETERS_CUSTOM_PARENT(HealthAndArmingCheckBase,
 					(ParamFloat<px4::params::COM_OF_LOSS_T>) _param_com_of_loss_t
