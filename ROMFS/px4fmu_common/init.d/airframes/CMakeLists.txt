@@ -71,6 +71,7 @@ px4_add_romfs_files(
 	4900_crazyflie
 	4901_crazyflie21
 	4999_kaiken
+	4998_kaiken
 
 	# [5000, 5999] Quadrotor +"
 	5001_quad_+
