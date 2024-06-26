@@ -54,6 +54,9 @@
 #include <uORB/topics/mission.h>
 #include <uORB/topics/mission_result.h>
 
+#undef PX4_DEBUG
+#define PX4_DEBUG PX4_INFO
+
 using matrix::wrap_2pi;
 
 dm_item_t MavlinkMissionManager::_dataman_id = DM_KEY_WAYPOINTS_OFFBOARD_0;
@@ -487,7 +490,7 @@ MavlinkMissionManager::send()
 
 			_current_seq = mission_result.seq_current;
 
-			PX4_DEBUG("WPM: got mission result, new current_seq: %ld", _current_seq);
+			PX4_DEBUG("WPM: got mission result, new current_seq: %ld", (long int)_current_seq);
 
 			if (mission_result.seq_total > 0) {
 				if (mission_result.seq_current < mission_result.seq_total) {
@@ -506,7 +509,7 @@ MavlinkMissionManager::send()
 			_last_reached = mission_result.seq_reached;
 			_reached_sent_count = 0;
 
-			PX4_DEBUG("WPM: got mission result, new seq_reached: %ld", _last_reached);
+			PX4_DEBUG("WPM: got mission result, new seq_reached: %ld", (long int)_last_reached);
 
 			if ((mission_result.seq_total > 0) && (_last_reached >= 0)) {
 				send_mission_item_reached((uint16_t)_last_reached);
@@ -569,6 +572,7 @@ MavlinkMissionManager::send()
 void
 MavlinkMissionManager::handle_message(const mavlink_message_t *msg)
 {
+	PX4_INFO("Received msgid=%d", (int)msg->msgid);
 	switch (msg->msgid) {
 	case MAVLINK_MSG_ID_MISSION_ACK:
 		handle_mission_ack(msg);
@@ -1172,6 +1176,7 @@ MavlinkMissionManager::handle_mission_item_both(const mavlink_message_t *msg)
 								sizeof(mission_fence_point_s)) != sizeof(mission_fence_point_s);
 				}
 
+				PX4_INFO("Fence item check_failed=%d write_failed=%d", check_failed, write_failed);
 			}
 			break;
 
@@ -1221,7 +1226,7 @@ MavlinkMissionManager::handle_mission_item_both(const mavlink_message_t *msg)
 		if (_transfer_seq == _transfer_count) {
 			/* got all new mission items successfully */
 			PX4_DEBUG("WPM: MISSION_ITEM got all %u items, current_seq=%ld, changing state to MAVLINK_WPM_STATE_IDLE",
-				  _transfer_count, _transfer_current_seq);
+				  _transfer_count, (long int)_transfer_current_seq);
 
 			ret = 0;
 
@@ -1260,6 +1265,8 @@ MavlinkMissionManager::handle_mission_item_both(const mavlink_message_t *msg)
 			/* request next item */
 			send_mission_request(_transfer_partner_sysid, _transfer_partner_compid, _transfer_seq);
 		}
+	} else {
+		PX4_WARN("CHECK_SYSID_COMPID_MISSION failed");
 	}
 }
 
