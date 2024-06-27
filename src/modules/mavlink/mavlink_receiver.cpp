@@ -3192,6 +3192,9 @@ MavlinkReceiver::run()
 							_mavlink->set_proto_version(2);
 						}
 
+						PX4_INFO("Received msgid=%d seq=%d msg_count=%d (Generic)", (int)msg.msgid, (int)_status.current_rx_seq, (int)_status.msg_received);
+						PX4_INFO("packet_rx_success_count=%d packet_rx_drop_count=%d", (int)_status.packet_rx_success_count, (int)_status.packet_rx_drop_count);
+
 						/* handle generic messages and commands */
 						handle_message(&msg);
 

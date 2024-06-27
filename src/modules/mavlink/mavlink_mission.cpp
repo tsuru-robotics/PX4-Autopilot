@@ -571,7 +571,7 @@ MavlinkMissionManager::send()
 void
 MavlinkMissionManager::handle_message(const mavlink_message_t *msg)
 {
-	PX4_INFO("Received msgid=%d", (int)msg->msgid);
+	PX4_INFO("Received msgid=%d (MissionManager)", (int)msg->msgid);
 	switch (msg->msgid) {
 	case MAVLINK_MSG_ID_MISSION_ACK:
 		handle_mission_ack(msg);
