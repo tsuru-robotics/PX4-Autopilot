@@ -474,8 +474,7 @@ void
 MavlinkMissionManager::send()
 {
 	// do not send anything over high latency communication
-	if (_mavlink->get_mode() == Mavlink::MAVLINK_MODE_IRIDIUM
-	|| _mavlink->get_mode() == Mavlink::MAVLINK_MODE_CUSTOM) {
+	if (_mavlink->get_mode() == Mavlink::MAVLINK_MODE_IRIDIUM) {
 		return;
 	}
 
