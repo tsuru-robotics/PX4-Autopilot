@@ -398,6 +398,26 @@ void LoggedTopics::add_mavlink_tunnel()
 	add_topic("mavlink_tunnel");
 }
 
+void LoggedTopics::add_kaiken_minimal()
+{
+	add_topic("vehicle_control_mode", 1000);
+	add_topic("failsafe_flags", 1000);
+	add_topic("vehicle_gps_position", 1000);
+	add_topic("path_control_result", 1000);
+	add_topic("estimator_gps_status", 1000);
+	add_topic("vehicle_global_position", 1000);
+	add_topic("vehicle_local_position", 1000);
+	add_topic("vehicle_local_position_setpoint", 1000);
+	add_topic("trajectory_setpoint", 1000);
+	add_topic("vehicle_magnetometer", 1000);
+	add_topic("vehicle_acceleration", 500);
+	add_topic("vehicle_attitude", 1000);
+	add_topic("debug_array");
+	add_topic("debug_key_value");
+	add_topic("debug_value");
+	add_topic("debug_vect");
+}
+
 int LoggedTopics::add_topics_from_file(const char *fname)
 {
 	int ntopics = 0;
@@ -463,7 +483,6 @@ void LoggedTopics::initialize_mission_topics(MissionLogType mission_log_type)
 	} else if (mission_log_type == MissionLogType::Geotagging) {
 		add_mission_topic("camera_capture");
 	} else if (mission_log_type == MissionLogType::Offboard) {
-		add_mission_topic("health_report", 1000);
 		add_mission_topic("vehicle_control_mode", 1000);
 		add_mission_topic("failsafe_flags", 1000);
 		add_mission_topic("vehicle_gps_position", 1000);
@@ -620,5 +639,9 @@ void LoggedTopics::initialize_configured_topics(SDLogProfileMask profile)
 
 	if (profile & SDLogProfileMask::MAVLINK_TUNNEL) {
 		add_mavlink_tunnel();
+	}
+
+	if (profile & SDLogProfileMask::KAIKEN_MINIMAL) {
+		add_kaiken_minimal();
 	}
 }

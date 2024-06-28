@@ -54,7 +54,8 @@ enum class SDLogProfileMask : int32_t {
 	VISION_AND_AVOIDANCE =  1 << 7,
 	RAW_IMU_GYRO_FIFO =     1 << 8,
 	RAW_IMU_ACCEL_FIFO =    1 << 9,
-	MAVLINK_TUNNEL =        1 << 10
+	MAVLINK_TUNNEL =        1 << 10,
+	KAIKEN_MINIMAL =        1 << 11
 };
 
 enum class MissionLogType : int32_t {
@@ -176,6 +177,7 @@ private:
 	void add_raw_imu_gyro_fifo();
 	void add_raw_imu_accel_fifo();
 	void add_mavlink_tunnel();
+	void add_kaiken_minimal();
 
 	/**
 	 * add a logged topic (called by add_topic() above).

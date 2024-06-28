@@ -165,8 +165,8 @@ param set-default MPC_LAND_ALT2 1
 # Logging
 param set-default SDLOG_DIRS_MAX 0
 param set-default SDLOG_MISSION 3
-param set-default SDLOG_MODE 0
-param set-default SDLOG_PROFILE 1
+param set-default SDLOG_MODE 1
+param set-default SDLOG_PROFILE 2048
 param set-default SDLOG_UTC_OFFSET 0
 
 # Circuit Breaker
