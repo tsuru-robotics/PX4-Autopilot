@@ -210,6 +210,9 @@ MavlinkMissionManager::update_geofence_count(unsigned count)
 
 	if (res == sizeof(mission_stats_entry_s)) {
 		_count[MAV_MISSION_TYPE_FENCE] = count;
+		if (count > 0) {
+			PX4_INFO("Geofence of %d points saved", count);
+		}
 
 	} else {
 
@@ -1150,6 +1153,8 @@ MavlinkMissionManager::handle_mission_item_both(const mavlink_message_t *msg)
 				mission_fence_point.lon = mission_item.lon;
 				mission_fence_point.alt = mission_item.altitude;
 
+				PX4_INFO("Received geofence point: lat=%.4f, lon=%.4f", mission_fence_point.lat, mission_fence_point.lon);
+
 				if (mission_item.nav_cmd == MAV_CMD_NAV_FENCE_POLYGON_VERTEX_INCLUSION ||
 				    mission_item.nav_cmd == MAV_CMD_NAV_FENCE_POLYGON_VERTEX_EXCLUSION) {
 					mission_fence_point.vertex_count = mission_item.vertex_count;
@@ -1285,6 +1290,7 @@ MavlinkMissionManager::handle_mission_clear_all(const mavlink_message_t *msg)
 				break;
 
 			case MAV_MISSION_TYPE_FENCE:
+				PX4_INFO("Clearing geofence");
 				ret = update_geofence_count(0);
 				break;
 
