@@ -400,6 +400,7 @@ void LoggedTopics::add_mavlink_tunnel()
 
 void LoggedTopics::add_kaiken_minimal()
 {
+	add_topic("vehicle_status", 1000);
 	add_topic("vehicle_control_mode", 1000);
 	add_topic("failsafe_flags", 1000);
 	add_topic("vehicle_gps_position", 1000);

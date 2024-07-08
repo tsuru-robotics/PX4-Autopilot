@@ -109,6 +109,11 @@ void GeofenceChecks::checkAndReport(const Context &context, Report &reporter)
 				mavlink_log_critical(reporter.mavlink_log_pub(), "Path deviation");
 			}
 		}
+	} else {
+		// Drop failsafe flag when drone goes back into the fence
+		// This will work when drone is powered on with an old geofence in the memory
+		// as well during the flight
+		reporter.failsafeFlags().geofence_breached = 0;
 	}
 
 	if (geofence_result.primary_geofence_action == geofence_result_s::GF_ACTION_RTL
