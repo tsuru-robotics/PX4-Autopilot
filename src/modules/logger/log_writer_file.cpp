@@ -37,8 +37,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <errno.h>
-#include <lib/miniz/miniz.h>
-#include <lib/crc/crc.h>
+#include "miniz.h"
 
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/posix.h>
@@ -700,6 +699,41 @@ ssize_t LogWriterFile::LogFileBuffer::write_to_file(const void *buffer, size_t s
 void LogWriterFile::LogFileBuffer::close_file()
 {
 	if (_fd >= 0) {
+		long file_loc;
+
+		 // Determine input file's size.
+		fseek(_fd, 0, SEEK_END);
+		file_loc = ftell(_fd);
+		fseek(_fd, 0, SEEK_SET);
+
+		// Deflate
+		int cmp_status;
+		uint8_t *pCmp, *pUncomp;
+		uLong src_len = 1024;
+		uLong cmp_len = compressBound(src_len);
+		// Allocate buffers to hold compressed and uncompressed data.
+		pCmp = (mz_uint8 *)malloc((size_t)cmp_len);
+		pUncomp = (mz_uint8 *)malloc((size_t)src_len);
+		if ((!pCmp) || (!pUncomp))
+		{
+			PX4_WARN("Out of memory");
+			// return EXIT_FAILURE;
+		}
+
+		// Compress the string.
+		cmp_status = compress(pCmp, &cmp_len, (const unsigned char *)_fd, src_len);
+		if (cmp_status != Z_OK)
+		{
+			printf("compress() failed!");
+			free(pCmp);
+			free(pUncomp);
+			// return EXIT_FAILURE;
+		}
+
+		PX4_INFO("Compressed from %u to %u bytes\n", (mz_uint32)src_len, (mz_uint32)cmp_len);
+
+
+
 		int res = close(_fd);
 
 		if (res) {
@@ -709,10 +743,10 @@ void LogWriterFile::LogFileBuffer::close_file()
 			PX4_INFO("closed logfile, bytes written: %zu", _total_written);
 		}
 	}
-	uint16_t crc=123;
-	uint16_t crc2;
-	crc2=crc16_add(crc, 1);
-	PX4_INFO("crc2=%d", crc2);
+	// uint16_t crc=123;
+	// uint16_t crc2;
+	// crc2=crc16_add(crc, 1);
+	// PX4_INFO("crc2=%d", crc2);
 
 	// The string to compress.
 	static const char *s_pStr = "Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
@@ -722,35 +756,6 @@ void LogWriterFile::LogFileBuffer::close_file()
 	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
 	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
 	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson.";
-
-	// Deflate
-	int cmp_status;
-	uint8_t *pCmp, *pUncomp;
-	uLong src_len = 1024;
-  	uLong cmp_len = compressBound(src_len);
-	// Allocate buffers to hold compressed and uncompressed data.
-	pCmp = (mz_uint8 *)malloc((size_t)cmp_len);
-	pUncomp = (mz_uint8 *)malloc((size_t)src_len);
-	if ((!pCmp) || (!pUncomp))
-	{
-	printf("Out of memory!\n");
-	// return EXIT_FAILURE;
-	}
-
-	// Compress the string.
-	cmp_status = compress(pCmp, &cmp_len, (const unsigned char *)s_pStr, src_len);
-	if (cmp_status != Z_OK)
-	{
-	printf("compress() failed!\n");
-	free(pCmp);
-	free(pUncomp);
-	// return EXIT_FAILURE;
-	}
-
-	printf("Compressed from %u to %u bytes\n", (mz_uint32)src_len, (mz_uint32)cmp_len);
-
-
-
 }
 
 void LogWriterFile::LogFileBuffer::reset()
