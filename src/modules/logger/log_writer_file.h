@@ -175,6 +175,11 @@ private:
 
 		void close_file();
 
+		/**
+		 * Deflate log data and save to new file
+		 */
+		bool deflate_file(const char* log_filename, const char* deflated_filename);
+
 		void reset();
 
 		size_t get_read_ptr(void **ptr, bool *is_part);

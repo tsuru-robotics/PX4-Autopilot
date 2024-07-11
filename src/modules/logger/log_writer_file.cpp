@@ -38,6 +38,7 @@
 #include <string.h>
 #include <errno.h>
 #include "miniz.h"
+#include <stdio.h>
 
 #include <mathlib/mathlib.h>
 #include <px4_platform_common/posix.h>
@@ -46,6 +47,9 @@
 #ifdef __PX4_NUTTX
 #include <systemlib/hardfault_log.h>
 #endif /* __PX4_NUTTX */
+
+#define BUF_SIZE 1024
+#define my_min(a,b) (((a) < (b)) ? (a) : (b))
 
 using namespace time_literals;
 
@@ -698,41 +702,8 @@ ssize_t LogWriterFile::LogFileBuffer::write_to_file(const void *buffer, size_t s
 
 void LogWriterFile::LogFileBuffer::close_file()
 {
+
 	if (_fd >= 0) {
-		long file_loc;
-
-		 // Determine input file's size.
-		fseek(_fd, 0, SEEK_END);
-		file_loc = ftell(_fd);
-		fseek(_fd, 0, SEEK_SET);
-
-		// Deflate
-		int cmp_status;
-		uint8_t *pCmp, *pUncomp;
-		uLong src_len = 1024;
-		uLong cmp_len = compressBound(src_len);
-		// Allocate buffers to hold compressed and uncompressed data.
-		pCmp = (mz_uint8 *)malloc((size_t)cmp_len);
-		pUncomp = (mz_uint8 *)malloc((size_t)src_len);
-		if ((!pCmp) || (!pUncomp))
-		{
-			PX4_WARN("Out of memory");
-			// return EXIT_FAILURE;
-		}
-
-		// Compress the string.
-		cmp_status = compress(pCmp, &cmp_len, (const unsigned char *)_fd, src_len);
-		if (cmp_status != Z_OK)
-		{
-			printf("compress() failed!");
-			free(pCmp);
-			free(pUncomp);
-			// return EXIT_FAILURE;
-		}
-
-		PX4_INFO("Compressed from %u to %u bytes\n", (mz_uint32)src_len, (mz_uint32)cmp_len);
-
-
 
 		int res = close(_fd);
 
@@ -741,21 +712,14 @@ void LogWriterFile::LogFileBuffer::close_file()
 
 		} else {
 			PX4_INFO("closed logfile, bytes written: %zu", _total_written);
+
+			const char * log_file = "input_log.ulg";
+			const char * output_file = "deflated_stream.stream";
+
+			// Deflate log and save it to SD card
+			deflate_file(log_file, output_file);
 		}
 	}
-	// uint16_t crc=123;
-	// uint16_t crc2;
-	// crc2=crc16_add(crc, 1);
-	// PX4_INFO("crc2=%d", crc2);
-
-	// The string to compress.
-	static const char *s_pStr = "Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
-	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
-	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
-	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
-	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
-	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson." \
-	"Good morning Dr. Chandra. This is Hal. I am ready for my first lesson.";
 }
 
 void LogWriterFile::LogFileBuffer::reset()
@@ -763,6 +727,119 @@ void LogWriterFile::LogFileBuffer::reset()
 	_head = 0;
 	_count = 0;
 	_fd = -1;
+}
+
+bool LogWriterFile::LogFileBuffer::deflate_file(const char* log_filename, const char* deflated_filename)
+{
+	// tdefl_compressor contains all the state needed by the low-level compressor so it's a pretty big struct (~300k).
+	// This example makes it a global vs. putting it on the stack, of course in real-world usage you'll probably malloc() or new it.
+	FILE *pInfile, *pOutfile;
+	tdefl_compressor g_deflator;
+	size_t avail_in = 0;
+	size_t avail_out = BUF_SIZE;
+	uint8_t s_inbuf[BUF_SIZE];
+	uint8_t s_outbuf[BUF_SIZE];
+	const void *next_in = s_inbuf;
+	void *next_out = s_outbuf;
+	size_t total_in = 0, total_out = 0;
+	int level = 9;
+
+	// Open input and output file
+	pInfile = fopen(log_filename, "rb");
+	if(pInfile == NULL ) {
+		PX4_ERR("Could not open %s", log_filename);
+		return false;
+	}
+	// Open output file
+	pOutfile = fopen(deflated_filename, "wb");
+	if(pOutfile == NULL) {
+		PX4_ERR("Could not open %s", deflated_filename);
+		return false;
+	}
+
+	// The number of dictionary probes to use at each compression level (0-10). 0=implies fastest/minimal possible probing.
+	static const mz_uint s_tdefl_num_probes[11] = { 0, 1, 6, 32,  16, 32, 128, 256,  512, 768, 1500 };
+
+	tdefl_status status;
+	uint infile_remaining = _total_written;
+
+	// create tdefl() compatible flags (we have to compose the low-level flags ourselves, or use tdefl_create_comp_flags_from_zip_params() but that means MINIZ_NO_ZLIB_APIS can't be defined).
+	mz_uint comp_flags = TDEFL_WRITE_ZLIB_HEADER | s_tdefl_num_probes[MZ_MIN(10, level)] | ((level <= 3) ? TDEFL_GREEDY_PARSING_FLAG : 0);
+	if (!level)
+		comp_flags |= TDEFL_FORCE_ALL_RAW_BLOCKS;
+
+	// Initialize the low-level compressor.
+	status = tdefl_init(&g_deflator, NULL, NULL, comp_flags);
+	if (status != TDEFL_STATUS_OKAY)
+	{
+		PX4_ERR("tdefl_init() failed!");
+		return false;
+	}
+
+	// Compression.
+	for ( ; ; )
+	{
+		size_t in_bytes, out_bytes;
+
+		if (!avail_in)
+		{
+			// Input buffer is empty, so read more bytes from input file.
+			uint n = my_min(BUF_SIZE, infile_remaining);
+
+			if (fread(s_inbuf, 1, n, pInfile) != n)
+			{
+				PX4_ERR("Failed reading from input file!");
+				return false;
+			}
+
+			next_in = s_inbuf;
+			avail_in = n;
+
+			infile_remaining -= n;
+			PX4_INFO("Input bytes remaining: %u\n", infile_remaining);
+		}
+
+		in_bytes = avail_in;
+		out_bytes = avail_out;
+		// Compress as much of the input as possible (or all of it) to the output buffer.
+		status = tdefl_compress(&g_deflator, next_in, &in_bytes, next_out, &out_bytes, infile_remaining ? TDEFL_NO_FLUSH : TDEFL_FINISH);
+
+		next_in = (const char *)next_in + in_bytes;
+		avail_in -= in_bytes;
+		total_in += in_bytes;
+
+		next_out = (char *)next_out + out_bytes;
+		avail_out -= out_bytes;
+		total_out += out_bytes;
+
+		if ((status != TDEFL_STATUS_OKAY) || (!avail_out))
+		{
+			// Output buffer is full, or compression is done or failed, so write buffer to output file.
+			uint n = BUF_SIZE - (uint)avail_out;
+			if (fwrite(s_outbuf, 1, n, pOutfile) != n)
+			{
+				PX4_ERR("Failed writing to output file!");
+				return false;
+			}
+			next_out = s_outbuf;
+			avail_out = BUF_SIZE;
+		}
+
+		if (status == TDEFL_STATUS_DONE)
+		{
+			// Compression completed successfully.
+			break;
+		} else if (status != TDEFL_STATUS_OKAY) {
+			// Compression somehow failed.
+			PX4_ERR("tdefl_compress() failed with status %i!", status);
+			return false;
+		}
+	}
+
+	PX4_INFO("Compression succeded");
+	PX4_INFO("Total input bytes: %u", (mz_uint32)total_in);
+   	PX4_INFO("Total output bytes: %u", (mz_uint32)total_out);
+	return true;
 }
 
 }
