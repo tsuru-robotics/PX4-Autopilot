@@ -413,6 +413,10 @@ void LoggedTopics::add_kaiken_minimal()
 	add_topic("vehicle_magnetometer", 1000);
 	add_topic("vehicle_acceleration", 500);
 	add_topic("vehicle_attitude", 1000);
+	add_topic("battery_status", 1000);
+	add_topic("actuator_outputs", 500);
+	add_topic("vehicle_command");
+	add_topic("vehicle_command_ack");
 	add_topic("debug_array");
 	add_topic("debug_key_value");
 	add_topic("debug_value");
