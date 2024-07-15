@@ -712,8 +712,8 @@ void LogWriterFile::LogFileBuffer::close_file()
 		} else {
 			PX4_INFO("closed logfile, bytes written: %zu", _total_written);
 
-			//const char *log_file = "input_log.ulg";
-			const char *output_file = "compressed_log.comp";
+			char output_file[100];
+			snprintf(output_file, sizeof(output_file), "%s.lzss", _logfilename);
 
 			// Compress log and save it to SD card
 			compress_file(_logfilename, output_file);
