@@ -40,6 +40,7 @@
 #include <drivers/drv_hrt.h>
 #include <perf/perf_counter.h>
 #include <px4_platform_common/crypto.h>
+#include "heatshrink_encoder.h"
 
 namespace px4
 {
@@ -176,9 +177,11 @@ private:
 		void close_file();
 
 		/**
-		 * Deflate log data and save to new file
+		 * Compress file
 		 */
-		bool deflate_file(const char* log_filename, const char* deflated_filename);
+		char _logfilename[100];
+		bool compress_file(const char* inp_filename, const char* out_filename);
+		bool compress_data(heatshrink_encoder *hse, uint8_t *data_in, size_t size_in, uint8_t * data_out, size_t *size_out);
 
 		void reset();
 

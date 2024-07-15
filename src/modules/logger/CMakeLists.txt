@@ -46,8 +46,10 @@ px4_add_module(
 		log_writer_mavlink.cpp
 		util.cpp
 		watchdog.cpp
-		miniz.h
-		miniz.c
+		# heatshrink_common.h
+		# heatshrink_config.h
+		# heatshrink_encoder.h
+		heatshrink_encoder.c
 	DEPENDS
 		version
 		component_general_json # for checksums.h
