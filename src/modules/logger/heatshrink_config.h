@@ -16,8 +16,9 @@
     decoder. This impacts how much work the decoder can do in a single
     step, and a larger buffer will use more memory. An extremely small
     buffer (say, 1 byte) will add overhead due to lots of suspend/resume
-    function calls, but should not change how well data compresses.*/
-    #define HEATSHRINK_STATIC_INPUT_BUFFER_SIZE 1 /* We do not need decoding*/
+    function calls, but should not change how well data compresses.
+    #define HEATSHRINK_STATIC_INPUT_BUFFER_SIZE 1  We do not need decoding*/
+
     /*The window size determines how far back in the input can be searched for
     repeated patterns. A `window_sz2` of 8 will only use 256 bytes (2^8),
     while a `window_sz2` of 10 will use 1024 bytes (2^10). The latter uses

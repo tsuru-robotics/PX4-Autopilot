@@ -446,6 +446,9 @@ void LogWriterFile::run()
 					if (written >= 0) {
 						/* subtract bytes written from number in buffer (count -= written) */
 						buffer.mark_read(written);
+						if (i == 1) {
+							PX4_INFO("Written %d, Total written %zu", written, get_total_written(LogType::Mission));
+						}
 
 						if (!buffer._should_run && written == static_cast<int>(available) && !is_part) {
 							/* Stop only when all data written */
@@ -623,15 +626,30 @@ void LogWriterFile::LogFileBuffer::write_no_check(void *ptr, size_t size)
 
 	if (_ptr_encoder != nullptr) {
 
-		size_t bytes_read;
-		size_t bytes_written;
+		size_t bytes_read = 0;
+		size_t bytes_written = 0;
 
-		int res = compress_data(buffer_c, size,
-					&(_buffer[_head]), n,
-					&bytes_read, &bytes_written);
-		_count += bytes_written;
+		//test
+		static const char * str = "Little brown Fox jumps over the lazy dog";
+		size = (size_t)strlen(str);
+		static bool done = false;
+
+		int res = 0;
+
+		if (!done) {
+			PX4_INFO("Compresson start for %zu bytes", size);
+
+			res = compress_data((uint8_t *)str, size,
+						&(_buffer[_head]), n,
+						&bytes_read, &bytes_written);
+			_count += bytes_written;
+
+			done = true;
+
+		}
 
 		if (res == 2) { // Poll error, including end of _buffer
+			PX4_INFO("Compresson for rest %zu bytes", size - bytes_read);
 			_head = 0;
 			compress_data(&(buffer_c[bytes_read]), size - bytes_read,
 					&(_buffer[_head]), _buffer_size,
@@ -639,7 +657,11 @@ void LogWriterFile::LogFileBuffer::write_no_check(void *ptr, size_t size)
 			_count += bytes_written;
 		}
 		_head = (_head + bytes_written) % _buffer_size;
-		PX4_INFO("bytes_written=%zu, _head=%zu, _buffer_size=%zu", bytes_written, _head, _buffer_size);
+		PX4_INFO("Compression finished: read %zu, pushed=%zu, head=%zu, total_pushed=%zu",
+		bytes_read, bytes_written, _head, _count);
+		if (bytes_read != size) {
+			PX4_ERR("bytes_read=%zu != size=%zu", bytes_read, size);
+		}
 	} else {
 
 		if (size > n) {
@@ -707,6 +729,7 @@ bool LogWriterFile::LogFileBuffer::start_log(const char *filename)
 
 	// init encoder
 	if (_ptr_encoder != nullptr) {
+		PX4_INFO("Init encoder");
 		heatshrink_encoder_reset(_ptr_encoder);
 	}
 
@@ -761,6 +784,7 @@ void LogWriterFile::LogFileBuffer::reset()
 		// if (heatshrink_encoder_finish(_ptr_encoder) == HSER_FINISH_MORE) {
 		// 	printf("!!! HSER_FINISH_MORE !!!\n");
 		// }
+		PX4_INFO("Reset encoder");
 		heatshrink_encoder_reset(_ptr_encoder);
 	}
 
@@ -777,6 +801,8 @@ int LogWriterFile::LogFileBuffer::compress_data(
 	*bytes_sunk = 0;
 	*bytes_polled = 0;
 	size_t count = 0;
+	PX4_INFO("encoder input size %d, current_byte=%d",
+	_ptr_encoder->input_size, _ptr_encoder->current_byte);
 	while (*bytes_sunk < size_in) {
 		// Sink an input buffer into the state machine.
 		// The `input_size` pointer argument will be set to indicate how many bytes
@@ -791,15 +817,15 @@ int LogWriterFile::LogFileBuffer::compress_data(
 			//return 1; // Sink error
 		}
 		*bytes_sunk += count;
-		PX4_INFO("^^ sunk %zd", count);
+		PX4_INFO("^^ sunk %zd, total=%zd/%zd", count, *bytes_sunk, size_in);
 
 		// Poll to move output from the state machine into an output buffer.
 		// The `output_size` pointer argument will be set to indicate how many bytes were output,
 		// and the function return value will indicate whether further output is available.
 		// (The state machine may not output any data until it has received enough input.)
 		HSE_poll_res pres;
+		PX4_INFO("^^ start polling, available=%zu", buffer_out_availbale);
 		do {
-			PX4_INFO("Outbuffer available=%zu, polled=%zu space left=%zu", buffer_out_availbale, *bytes_polled, (buffer_out_availbale - *bytes_polled));
 			pres = heatshrink_encoder_poll(
 				_ptr_encoder,
 				&buffer_out[*bytes_polled],
@@ -810,9 +836,8 @@ int LogWriterFile::LogFileBuffer::compress_data(
 				return 2; // Poll error (including output buffer is out of space)
 			}
 			*bytes_polled += count;
-			PX4_INFO("^^ polled %zd", count);
+			PX4_INFO("^^ polled %zd, total=%zu", count, *bytes_polled);
 		} while (pres == HSER_POLL_MORE);
-
 	}
 
 	return 0; // OK
