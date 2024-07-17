@@ -812,6 +812,7 @@ void Logger::run()
 					strncpy((char *)(_msg_buffer + 12), message, sizeof(ulog_message_logging_s::message));
 
 					write_message(LogType::Full, _msg_buffer, write_msg_size + ULOG_MSG_HEADER_LEN);
+					write_message(LogType::Mission, _msg_buffer, write_msg_size + ULOG_MSG_HEADER_LEN);
 				}
 			}
 
