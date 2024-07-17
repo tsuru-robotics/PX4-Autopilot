@@ -168,6 +168,7 @@ private:
 	class LogFileBuffer
 	{
 	public:
+		LogFileBuffer(size_t log_buffer_size, perf_counter_t perf_write, perf_counter_t perf_fsync, heatshrink_encoder &encoder);
 		LogFileBuffer(size_t log_buffer_size, perf_counter_t perf_write, perf_counter_t perf_fsync);
 
 		~LogFileBuffer();
@@ -179,9 +180,13 @@ private:
 		/**
 		 * Compress file
 		 */
-		char _logfilename[100];
-		bool compress_file(const char* inp_filename, const char* out_filename);
-		bool compress_data(heatshrink_encoder *hse, uint8_t *data_in, size_t size_in, uint8_t * data_out, size_t *size_out);
+		int compress_data(
+			uint8_t *buffer_in,
+			size_t size_in,
+			uint8_t *buffer_out,
+			size_t buffer_out_availbale,
+			size_t *bytes_sunk,
+			size_t *bytes_polled);
 
 		void reset();
 
@@ -216,6 +221,7 @@ private:
 		size_t _total_written = 0;
 		perf_counter_t _perf_write;
 		perf_counter_t _perf_fsync;
+		heatshrink_encoder *_ptr_encoder = nullptr;
 	};
 
 	LogFileBuffer _buffers[(int)LogType::Count];
@@ -235,6 +241,7 @@ private:
 	uint8_t _exchange_key_idx;
 #endif
 
+	heatshrink_encoder _encoder; // Compression encoder
 };
 
 }
