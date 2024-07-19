@@ -21,3 +21,7 @@ param set-default IMU_DGYRO_CUTOFF 30
 param set-default IMU_GYRO_CUTOFF 70
 param set-default MC_ROLLRATE_D 0.001
 param set-default MC_PITCHRATE_D 0.001
+
+param set-default MPC_LAND_SPEED 0.1
+param set-default MPC_LAND_ALT2 1
+param set-default EKF2_BARO_CTRL 0

@@ -1,4 +1,4 @@
-# Reference Kaiken parameters for Release
+# Reference Kaiken (with u-blox gnss receiver) parameters for Release
 
 IMU_DGYRO_CUTOFF: 50
 IMU_GYRO_CUTOFF: 90

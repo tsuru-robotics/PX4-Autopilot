@@ -1,4 +1,4 @@
-# Reference Kaiken parameters for validation in MGMT
+# Reference Kaiken (with dual-band gnss receiver) parameters for field tests
 
 IMU_DGYRO_CUTOFF: 50
 IMU_GYRO_CUTOFF: 90
@@ -141,13 +141,18 @@ MPC_XY_CRUISE: 5
 MPC_XY_P: 0.95
 MPC_XY_VEL_MAX: 10
 MPC_YAWRAUTO_MAX: 45
-MPC_Z_VEL_MAX_DN: 2
 MPC_Z_VEL_MAX_UP: 3
 MPC_OB_SP_DELAY: 350
 NAV_ACC_RAD: 1.2
 NAV_RCL_ACT: 0
 LNDMC_ROT_MAX: 80
 LNDMC_TRIG_TIME: 1
+
+# Landing
+MPC_Z_VEL_MAX_DN: 3
+MPC_LAND_SPEED: 0.3
+MPC_LAND_ALT1: 10
+MPC_LAND_ALT2: 1
 
 # Logging
 SDLOG_DIRS_MAX: 0
