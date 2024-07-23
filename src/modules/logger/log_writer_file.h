@@ -177,6 +177,8 @@ private:
 
 		void close_file();
 
+		bool compress_file(const char* inp_filename, const char* out_filename);
+
 		/**
 		 * Compress file
 		 */
@@ -185,7 +187,11 @@ private:
 			size_t size_in,
 			uint8_t *buffer_out,
 			size_t buffer_out_availbale,
-			size_t *bytes_sunk,
+			size_t *bytes_polled);
+
+		int finalize_compression(
+			uint8_t *buffer_out,
+			size_t buffer_out_availbale,
 			size_t *bytes_polled);
 
 		void reset();
@@ -222,6 +228,7 @@ private:
 		perf_counter_t _perf_write;
 		perf_counter_t _perf_fsync;
 		heatshrink_encoder *_ptr_encoder = nullptr;
+		char _lastlog_filename[100];
 	};
 
 	LogFileBuffer _buffers[(int)LogType::Count];

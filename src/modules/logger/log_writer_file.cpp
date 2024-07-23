@@ -65,7 +65,7 @@ LogWriterFile::LogWriterFile(size_t buffer_size)
 		perf_alloc(PC_ELAPSED, "logger_sd_write"), perf_alloc(PC_ELAPSED, "logger_sd_fsync")}, // compression disabled
 
 	{
-		20000UL + 300, // buffer size for the mission log (can be kept fairly small)
+		1024, // buffer size for the mission log (can be kept fairly small)
 		perf_alloc(PC_ELAPSED, "logger_sd_write_mission"), perf_alloc(PC_ELAPSED, "logger_sd_fsync_mission"),
 		_encoder} // compression enabled
 }
@@ -427,9 +427,6 @@ void LogWriterFile::run()
 					}
 
 #endif
-					if (i == 1) {
-						PX4_INFO("write %zu to mission log", available);
-					}
 
 					int written = buffer.write_to_file(read_ptr, available, call_fsync);
 
@@ -446,9 +443,6 @@ void LogWriterFile::run()
 					if (written >= 0) {
 						/* subtract bytes written from number in buffer (count -= written) */
 						buffer.mark_read(written);
-						if (i == 1) {
-							PX4_INFO("Written %d, Total written %zu", written, get_total_written(LogType::Mission));
-						}
 
 						if (!buffer._should_run && written == static_cast<int>(available) && !is_part) {
 							/* Stop only when all data written */
@@ -624,62 +618,21 @@ void LogWriterFile::LogFileBuffer::write_no_check(void *ptr, size_t size)
 
 	uint8_t *buffer_c = static_cast<uint8_t *>(ptr);
 
-	if (_ptr_encoder != nullptr) {
-
-		size_t bytes_read = 0;
-		size_t bytes_written = 0;
-
-		//test
-		static const char * str = "Little brown Fox jumps over the lazy dog";
-		size = (size_t)strlen(str);
-		static bool done = false;
-
-		int res = 0;
-
-		if (!done) {
-			PX4_INFO("Compresson start for %zu bytes", size);
-
-			res = compress_data((uint8_t *)str, size,
-						&(_buffer[_head]), n,
-						&bytes_read, &bytes_written);
-			_count += bytes_written;
-
-			done = true;
-
-		}
-
-		if (res == 2) { // Poll error, including end of _buffer
-			PX4_INFO("Compresson for rest %zu bytes", size - bytes_read);
-			_head = 0;
-			compress_data(&(buffer_c[bytes_read]), size - bytes_read,
-					&(_buffer[_head]), _buffer_size,
-					&bytes_read, &bytes_written);
-			_count += bytes_written;
-		}
-		_head = (_head + bytes_written) % _buffer_size;
-		PX4_INFO("Compression finished: read %zu, pushed=%zu, head=%zu, total_pushed=%zu",
-		bytes_read, bytes_written, _head, _count);
-		if (bytes_read != size) {
-			PX4_ERR("bytes_read=%zu != size=%zu", bytes_read, size);
-		}
-	} else {
-
-		if (size > n) {
+	if (size > n) {
 		// Message goes over the end of the buffer
 		memcpy(&(_buffer[_head]), buffer_c, n);
 		_head = 0;
 
-		} else {
-			n = 0;
-		}
-
-		// now: n = bytes already written
-		size_t p = size - n;	// number of bytes to write
-
-		memcpy(&(_buffer[_head]), &(buffer_c[n]), p);
-		_head = (_head + p) % _buffer_size;
-		_count += size;
+	} else {
+		n = 0;
 	}
+
+	// now: n = bytes already written
+	size_t p = size - n;	// number of bytes to write
+
+	memcpy(&(_buffer[_head]), &(buffer_c[n]), p);
+	_head = (_head + p) % _buffer_size;
+	_count += size;
 }
 
 size_t LogWriterFile::LogFileBuffer::get_read_ptr(void **ptr, bool *is_part)
@@ -727,11 +680,7 @@ bool LogWriterFile::LogFileBuffer::start_log(const char *filename)
 
 	_should_run = true;
 
-	// init encoder
-	if (_ptr_encoder != nullptr) {
-		PX4_INFO("Init encoder");
-		heatshrink_encoder_reset(_ptr_encoder);
-	}
+	strcpy(_lastlog_filename, filename);
 
 	return true;
 }
@@ -768,6 +717,14 @@ void LogWriterFile::LogFileBuffer::close_file()
 
 		} else {
 			PX4_INFO("closed logfile, bytes written: %zu", _total_written);
+
+			if (_ptr_encoder != nullptr) {
+				char output_file[100];
+				snprintf(output_file, sizeof(output_file), "%s.lzss", _lastlog_filename);
+
+				// Compress log and save it to SD card
+				compress_file(_lastlog_filename, output_file);
+			}
 		}
 	}
 }
@@ -777,17 +734,131 @@ void LogWriterFile::LogFileBuffer::reset()
 	_head = 0;
 	_count = 0;
 	_fd = -1;
+}
 
-	// reset encoder
-	if (_ptr_encoder != nullptr) {
+bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const char* out_filename)
+{
+	FILE *pInfile, *pOutfile;
+	size_t input_file_remaining = _total_written;
+	hrt_abstime time_start = hrt_absolute_time();
 
-		// if (heatshrink_encoder_finish(_ptr_encoder) == HSER_FINISH_MORE) {
-		// 	printf("!!! HSER_FINISH_MORE !!!\n");
-		// }
-		PX4_INFO("Reset encoder");
-		heatshrink_encoder_reset(_ptr_encoder);
+	// Open input and output file
+	pInfile = fopen(inp_filename, "rb");
+	if(pInfile == NULL ) {
+		PX4_ERR("Could not open %s", inp_filename);
+		return false;
+	}
+	// Open output file
+	pOutfile = fopen(out_filename, "wb");
+	if(pOutfile == NULL) {
+		PX4_ERR("Could not open %s", out_filename);
+		return false;
 	}
 
+	// Initialize encoder
+	heatshrink_encoder_reset(_ptr_encoder);
+
+	// devide buffer into 2 parts: input and output
+	size_t output_buffer_size = _buffer_size/2;
+	size_t input_buffer_size = _buffer_size - output_buffer_size;
+	uint8_t *input_buffer = &(_buffer[0]);
+	uint8_t *output_buffer = &(_buffer[input_buffer_size]);
+	// uint8_t *next_in = input_buffer_head;
+	// uint8_t *next_out = output_buffer_head;
+
+	// available bytes in buffers
+	//size_t avail_in = 0;
+	//size_t avail_out = BUF_SIZE;
+	PX4_INFO("Compression %s (%zu) to %s", inp_filename, input_file_remaining, out_filename);
+	PX4_INFO("in buffer=%zu, out buffer=%zu",input_buffer_size, output_buffer_size);
+	// Compression
+	size_t total_in = 0, total_out = 0;
+	int comp_error;
+	for ( ; ; )
+	{
+		size_t in_bytes, out_bytes;
+
+		// if (!avail_in)
+		// {
+			// Input buffer is empty, so read more bytes from input file
+			size_t n = math::min(input_buffer_size, input_file_remaining);
+			if (fread(input_buffer, 1, n, pInfile) != n)
+			{
+				PX4_ERR("Failed reading from input file!");
+				return false;
+			}
+
+			// next_in = buffer_in;
+			// avail_in = n;
+
+			input_file_remaining -= n;
+		// }
+
+		// in_bytes = avail_in;
+		// out_bytes = avail_out;
+
+		in_bytes = n;
+
+		// Compress as much of the input as possible (or all of it) to the output buffer
+		comp_error = compress_data(
+			input_buffer,
+			in_bytes,
+			output_buffer,
+			output_buffer_size,
+			&out_bytes);
+
+		// next_in = next_in + in_bytes;
+		// avail_in -= in_bytes;
+		total_in += in_bytes;
+
+		// next_out = next_out + out_bytes;
+		// avail_out -= out_bytes;
+		total_out += out_bytes;
+
+
+		PX4_INFO("Compressed %zu bytes to %zu", in_bytes, out_bytes);
+		if (!comp_error)
+		{
+			// Output buffer is full, or compression is done or failed, so write buffer to output file.
+			//uint n = BUF_SIZE - (uint)avail_out;
+			if (fwrite(output_buffer, 1, out_bytes, pOutfile) != out_bytes)
+			{
+				PX4_ERR("Failed writing to output file!");
+				return false;
+			}
+			// next_out = s_outbuf;
+			// avail_out = BUF_SIZE;
+		}
+
+		if (!input_file_remaining) {
+			comp_error = finalize_compression(output_buffer, output_buffer_size, &out_bytes);
+			total_out += out_bytes;
+			if (!comp_error) {
+				PX4_DEBUG("Writing %zu bytes from output buffer!", out_bytes);
+				if (fwrite(output_buffer, 1, out_bytes, pOutfile) != out_bytes)
+				{
+					PX4_ERR("Failed writing to output file!");
+					return false;
+				}
+			}
+			PX4_INFO("Finalized %zu bytes to %zu", in_bytes, out_bytes);
+			break;
+		} else {
+			PX4_INFO("Input bytes remaining: %lu", (long unsigned)input_file_remaining);
+		}
+	}
+
+	int res = fclose(pInfile);
+	if (res) {
+		PX4_WARN("closing log file failed (%i)", errno);
+	}
+	res = fclose(pOutfile);
+	if (res) {
+		PX4_WARN("closing zip file failed (%i)", errno);
+	}
+
+	PX4_INFO("Compressed %zu bytes to %zu, time=%lu ms", total_in, total_out, (long unsigned)(hrt_absolute_time()-time_start)/1000);
+	return true;
 }
 
 int LogWriterFile::LogFileBuffer::compress_data(
@@ -795,36 +866,34 @@ int LogWriterFile::LogFileBuffer::compress_data(
 	size_t size_in,
 	uint8_t *buffer_out,
 	size_t buffer_out_availbale,
-	size_t *bytes_sunk,
 	size_t *bytes_polled)
 {
-	*bytes_sunk = 0;
 	*bytes_polled = 0;
+	size_t bytes_sunk = 0;
 	size_t count = 0;
-	PX4_INFO("encoder input size %d, current_byte=%d",
-	_ptr_encoder->input_size, _ptr_encoder->current_byte);
-	while (*bytes_sunk < size_in) {
+	PX4_DEBUG("encoder input size %d, current_byte=%d", _ptr_encoder->input_size, _ptr_encoder->current_byte);
+	while (bytes_sunk < size_in) {
 		// Sink an input buffer into the state machine.
 		// The `input_size` pointer argument will be set to indicate how many bytes
 		// of the input buffer were actually consumed. (If 0 bytes were conusmed, the buffer is full.)
 		HSE_sink_res sres = heatshrink_encoder_sink(
 			_ptr_encoder,
-			&buffer_in[*bytes_sunk],
-			size_in - *bytes_sunk,
+			&buffer_in[bytes_sunk],
+			size_in - bytes_sunk,
 			&count);
 		if (sres < 0) {
 			PX4_WARN("heatshrink_encoder_sink failed with code %d", sres);
 			//return 1; // Sink error
 		}
-		*bytes_sunk += count;
-		PX4_INFO("^^ sunk %zd, total=%zd/%zd", count, *bytes_sunk, size_in);
+		bytes_sunk += count;
+		PX4_DEBUG("^^ sunk %zd, total=%zd/%zd", count, bytes_sunk, size_in);
 
 		// Poll to move output from the state machine into an output buffer.
 		// The `output_size` pointer argument will be set to indicate how many bytes were output,
 		// and the function return value will indicate whether further output is available.
 		// (The state machine may not output any data until it has received enough input.)
 		HSE_poll_res pres;
-		PX4_INFO("^^ start polling, available=%zu", buffer_out_availbale);
+		PX4_DEBUG("^^ start polling, available=%zu", buffer_out_availbale);
 		do {
 			pres = heatshrink_encoder_poll(
 				_ptr_encoder,
@@ -836,7 +905,36 @@ int LogWriterFile::LogFileBuffer::compress_data(
 				return 2; // Poll error (including output buffer is out of space)
 			}
 			*bytes_polled += count;
-			PX4_INFO("^^ polled %zd, total=%zu", count, *bytes_polled);
+			PX4_DEBUG("^^ polled %zd, total=%zu", count, *bytes_polled);
+		} while (pres == HSER_POLL_MORE);
+	}
+
+	return 0; // OK
+}
+
+int LogWriterFile::LogFileBuffer::finalize_compression(
+	uint8_t *buffer_out,
+	size_t buffer_out_availbale,
+	size_t *bytes_polled)
+{
+	*bytes_polled = 0;
+	size_t count = 0;
+
+	PX4_DEBUG("Finalize compression");
+	if (heatshrink_encoder_finish(_ptr_encoder) == HSER_FINISH_MORE) {
+		HSE_poll_res pres;
+		do {
+			pres = heatshrink_encoder_poll(
+				_ptr_encoder,
+				buffer_out,
+				buffer_out_availbale - *bytes_polled,
+				&count);
+			if (pres < 0) {
+				PX4_WARN("heatshrink_encoder_poll failed with code %d", pres);
+				return 2; // Poll error (including output buffer is out of space)
+			}
+			*bytes_polled += count;
+			PX4_DEBUG("^^ polled %zu, total=%zu", count, *bytes_polled);
 		} while (pres == HSER_POLL_MORE);
 	}
 
