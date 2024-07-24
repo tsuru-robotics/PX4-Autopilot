@@ -1148,7 +1148,7 @@ bool Logger::start_stop_logging()
 		} else {
 			// delayed stop: we measure the process loads and then stop
 			initialize_load_output(PrintLoadReason::Postflight);
-			_should_stop_file_log = true;
+			//_should_stop_file_log = true;
 
 			if ((MissionLogType)_param_sdlog_mission.get() != MissionLogType::Disabled) {
 				stop_log_file(LogType::Mission);

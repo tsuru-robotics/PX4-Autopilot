@@ -41,6 +41,7 @@
 #include <perf/perf_counter.h>
 #include <px4_platform_common/crypto.h>
 #include "heatshrink_encoder.h"
+#include "util.h"
 
 namespace px4
 {
@@ -218,6 +219,7 @@ private:
 		size_t count() const { return _count; }
 
 		bool _should_run = false;
+		bool _compression_finished = false;
 	private:
 		const size_t _buffer_size;
 		int	_fd = -1;
@@ -228,7 +230,7 @@ private:
 		perf_counter_t _perf_write;
 		perf_counter_t _perf_fsync;
 		heatshrink_encoder *_ptr_encoder = nullptr;
-		char _lastlog_filename[100];
+		char _lastlog_filename[LOG_DIR_LEN];
 	};
 
 	LogFileBuffer _buffers[(int)LogType::Count];

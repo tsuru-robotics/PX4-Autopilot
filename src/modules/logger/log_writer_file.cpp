@@ -65,7 +65,7 @@ LogWriterFile::LogWriterFile(size_t buffer_size)
 		perf_alloc(PC_ELAPSED, "logger_sd_write"), perf_alloc(PC_ELAPSED, "logger_sd_fsync")}, // compression disabled
 
 	{
-		1024, // buffer size for the mission log (can be kept fairly small)
+		math::max(buffer_size, _min_write_chunk + 300),
 		perf_alloc(PC_ELAPSED, "logger_sd_write_mission"), perf_alloc(PC_ELAPSED, "logger_sd_fsync_mission"),
 		_encoder} // compression enabled
 }
@@ -446,10 +446,16 @@ void LogWriterFile::run()
 
 						if (!buffer._should_run && written == static_cast<int>(available) && !is_part) {
 							/* Stop only when all data written */
-							pthread_mutex_unlock(&_mtx);
-							buffer.close_file();
-							pthread_mutex_lock(&_mtx);
-							buffer.reset();
+							if (i==1) {								pthread_mutex_unlock(&_mtx);
+								buffer.close_file();
+								pthread_mutex_lock(&_mtx);
+								buffer.reset();
+							} else if (_buffers[1]._compression_finished) {
+								pthread_mutex_unlock(&_mtx);
+								buffer.close_file();
+								pthread_mutex_lock(&_mtx);
+								buffer.reset();
+							}
 						}
 
 					} else {
@@ -724,6 +730,7 @@ void LogWriterFile::LogFileBuffer::close_file()
 
 				// Compress log and save it to SD card
 				compress_file(_lastlog_filename, output_file);
+				_compression_finished = true;
 			}
 		}
 	}
@@ -738,22 +745,37 @@ void LogWriterFile::LogFileBuffer::reset()
 
 bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const char* out_filename)
 {
-	FILE *pInfile, *pOutfile;
+	int _fd_in = -1;
+	int _fd_out = -1;
+	// FILE *pInfile, *pOutfile;
 	size_t input_file_remaining = _total_written;
 	hrt_abstime time_start = hrt_absolute_time();
 
 	// Open input and output file
-	pInfile = fopen(inp_filename, "rb");
-	if(pInfile == NULL ) {
-		PX4_ERR("Could not open %s", inp_filename);
+	_fd_in = ::open(inp_filename, O_CREAT | O_WRONLY, PX4_O_MODE_666);
+
+	if (_fd_in < 0) {
+		PX4_ERR("Can't open log file %s, errno: %d", filename, errno);
 		return false;
 	}
+	// pInfile = fopen(inp_filename, "rb");
+	// if(pInfile == NULL ) {
+	// 	PX4_ERR("Could not open %s", inp_filename);
+	// 	return false;
+	// }
 	// Open output file
-	pOutfile = fopen(out_filename, "wb");
-	if(pOutfile == NULL) {
-		PX4_ERR("Could not open %s", out_filename);
+	_fd_out = ::open(out_filename, O_CREAT | O_WRONLY, PX4_O_MODE_666);
+
+	if (_fd_in < 0) {
+		PX4_ERR("Can't open log file %s, errno: %d", filename, errno);
 		return false;
 	}
+
+	// pOutfile = fopen(out_filename, "wb");
+	// if(pOutfile == NULL) {
+	// 	PX4_ERR("Could not open %s", out_filename);
+	// 	return false;
+	// }
 
 	// Initialize encoder
 	heatshrink_encoder_reset(_ptr_encoder);
