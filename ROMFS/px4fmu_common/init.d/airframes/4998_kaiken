@@ -8,8 +8,8 @@
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
 
-. ${R}etc/init.d/airframes/4999_kaiken
+. ${R}etc/init.d/airframes/ff_base2
+. ${R}etc/init.d/airframes/ff_kaiken
 
-# Override 4999_kaiken parameters
-param set-default GPS_1_PROTOCOL 6
-param set-default SER_GPS1_BAUD 460800
+param set GPS_1_PROTOCOL 6 # NMEA
+param set SER_GPS1_BAUD 460800
