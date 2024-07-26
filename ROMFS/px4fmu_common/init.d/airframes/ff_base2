@@ -120,7 +120,7 @@ param set MPC_OB_SP_DELAY 350
 param set MPC_Z_VEL_MAX_DN 3.0
 param set MPC_LAND_SPEED 0.1
 param set MPC_LAND_ALT1 10
-param set MPC_LAND_ALT2 1
+param set MPC_LAND_ALT2 0.5
 
 param set NAV_ACC_RAD 1.2
 param set NAV_RCL_ACT 0
