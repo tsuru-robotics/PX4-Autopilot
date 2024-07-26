@@ -27,6 +27,7 @@ param set EKF2_GPS_P_GATE 5.0
 param set EKF2_GPS_P_NOISE 0.3
 param set EKF2_GPS_V_GATE 5.0
 param set EKF2_GPS_V_NOISE 0.3
+param set EKF2_HGT_REF 1
 param set EKF2_REQ_HDRIFT 0.05
 param set EKF2_REQ_VDRIFT 0.05
 param set EKF2_MAG_MIN_ALT -1.0 # takeoff without mag disabled

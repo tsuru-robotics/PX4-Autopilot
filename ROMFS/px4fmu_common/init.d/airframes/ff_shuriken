@@ -34,6 +34,9 @@ param set CA_ROTOR3_KM -0.05
 param set IMU_DGYRO_CUTOFF 30
 param set IMU_GYRO_CUTOFF 70
 
+# EKF
+param set EKF2_BARO_CTRL 0
+
 # Sensors & Calibration
 param set CAL_MAG_COMP_TYP 1
 param set CAL_MAG_SIDES 63
