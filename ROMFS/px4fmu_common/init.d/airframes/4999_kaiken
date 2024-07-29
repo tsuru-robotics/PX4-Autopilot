@@ -11,5 +11,6 @@
 . ${R}etc/init.d/airframes/ff_base2
 . ${R}etc/init.d/airframes/ff_kaiken
 
-param set GPS_1_PROTOCOL 1 # u-blox
+# u-blox
+param set GPS_1_PROTOCOL 1
 param set GPS_UBX_DYNMODEL 7

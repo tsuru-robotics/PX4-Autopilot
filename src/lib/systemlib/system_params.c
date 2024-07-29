@@ -278,3 +278,18 @@ PARAM_DEFINE_INT32(SYS_BL_UPDATE, 0);
  * @group System
  */
 PARAM_DEFINE_INT32(SYS_FAILURE_EN, 0);
+
+/**
+ * Enable production configuration included in airframe
+ *
+ * While enabled the system will load the airframe with failsafe actions for production animation.
+ * When disabled the same vehicle will use "soft" failsafe actions from the airframe.
+ *
+ *
+ * @value 0 production configuration disabled
+ * @value 1 production configuration enabled
+ * @reboot_required true
+ *
+ * @group System
+ */
+PARAM_DEFINE_INT32(SYS_PROD_CONF, 0);

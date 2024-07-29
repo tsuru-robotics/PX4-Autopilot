@@ -75,8 +75,14 @@ param set RC_MAP_YAW 4
 param set GF_ALTMODE 0
 param set GF_COUNT -1
 param set GF_SOURCE 1
-param set GF_ACTION 1 # Warning
-param set GF2_ACTION 5 # Land mode
+if param compare SYS_PROD_CONF 1
+then
+	param set GF_ACTION 5 # Land mode on softfence breach
+	param set GF2_ACTION 4 # Terminate on hardfence breach
+else
+	param set GF_ACTION 1 # Warning on softfence breach
+	param set GF2_ACTION 5 # Land mode on hardfence breach
+fi
 
 # Pathcontrol
 param set PC_ACTION 0 # Disabled
@@ -137,7 +143,13 @@ param set SDLOG_UTC_OFFSET 0
 # Circuit Breaker
 param set CBRK_IO_SAFETY 22027
 param set CBRK_SUPPLY_CHK 894281
-param set CBRK_FLIGHTTERM 121212 # Termination disabled
+if param compare SYS_PROD_CONF 1
+then
+	param set CBRK_FLIGHTTERM 0 # Termination enabled
+else
+	param set CBRK_FLIGHTTERM 121212 # Termination disabled
+fi
+
 
 # Commander
 param set COM_ARM_WO_GPS 0

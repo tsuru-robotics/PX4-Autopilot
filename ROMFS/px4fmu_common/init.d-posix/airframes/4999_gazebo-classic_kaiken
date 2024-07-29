@@ -8,14 +8,14 @@
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
 
+# Enable production config before applying ff_base
+param set SYS_PROD_CONF 1
+
 . ${R}etc/init.d/airframes/ff_base2
 
 # Override base parameters
 param set BAT1_V_EMPTY 3.5
 param set BAT1_SOURCE 0
-param set GF_ACTION 5 # Land mode
-param set GF2_ACTION 4 # Terminate
-param set CBRK_FLIGHTTERM 0 # Termination enabled
 param set SDLOG_MODE 1
 
 # Iris motors
