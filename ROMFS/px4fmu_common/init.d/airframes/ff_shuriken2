@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @name Kaiken unique parameters
+# @name Shuriken unique parameters
 #
 # @type Quadrotor x
 # @class Copter
@@ -31,21 +31,26 @@ param set CA_ROTOR3_PY 0.15
 param set CA_ROTOR3_KM -0.05
 
 # IMU
-param set IMU_DGYRO_CUTOFF 50
-param set IMU_GYRO_CUTOFF 90
+param set IMU_DGYRO_CUTOFF 30
+param set IMU_GYRO_CUTOFF 70
 
 # EKF
-param set EKF2_BARO_CTRL 1 # baro fusion enabled
+param set EKF2_BARO_CTRL 0 # baro fusion disabled
 
 # Sensors & Calibration
 param set SENS_MAG_AUTOROT 0
 param set CAL_MAG_SIDES 63
 param set CAL_MAG0_ID 527625
 param set CAL_MAG0_PRIO 100
-param set CAL_MAG0_ROT 12
+param set CAL_MAG0_ROT 40
 param set CAL_MAG1_ID 0
+param set CAL_MAG1_ROT 40
 param set CAL_MAG1_PRIO 0
-param set CAL_MAG1_ROT 12
+
+param set CAL_MAG_COMP_TYP 1
+param set CAL_MAG0_XCOMP -0.226
+param set CAL_MAG0_YCOMP 0.253
+param set CAL_MAG0_ZCOMP -0.031
 
 param set SENS_BOARD_ROT 6
 param set SENS_BOARD_X_OFF 0.001

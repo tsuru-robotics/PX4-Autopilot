@@ -75,7 +75,8 @@ px4_add_romfs_files(
 	ff_base1
 	ff_base2
 	ff_kaiken
-	ff_shuriken
+	ff_shuriken1
+	ff_shuriken2
 	4999_kaiken
 	4998_kaiken
 	4997_shuriken
