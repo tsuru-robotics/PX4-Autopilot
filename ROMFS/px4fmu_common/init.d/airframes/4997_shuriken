@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @name Shuriken
+# @name Shuriken with base2 parameters
 #
 # @type Quadrotor x
 # @class Copter
@@ -8,20 +8,8 @@
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
 
-. ${R}etc/init.d/airframes/4998_kaiken
+. ${R}etc/init.d/airframes/ff_base2
+. ${R}etc/init.d/airframes/ff_shuriken2
 
-# Override 4998_kaiken parameters
-param set-default CAL_MAG_COMP_TYP 1
-
-param set-default CAL_MAG0_XCOMP -0.226
-param set-default CAL_MAG0_YCOMP 0.253
-param set-default CAL_MAG0_ZCOMP -0.031
-
-param set-default IMU_DGYRO_CUTOFF 30
-param set-default IMU_GYRO_CUTOFF 70
-param set-default MC_ROLLRATE_D 0.001
-param set-default MC_PITCHRATE_D 0.001
-
-param set-default MPC_LAND_SPEED 0.1
-param set-default MPC_LAND_ALT2 1
-param set-default EKF2_BARO_CTRL 0
+param set GPS_1_PROTOCOL 6 # NMEA
+param set SER_GPS1_BAUD 460800

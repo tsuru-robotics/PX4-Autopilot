@@ -8,50 +8,52 @@
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
 
-. ${R}etc/init.d/airframes/4999_kaiken
+. ${R}etc/init.d/airframes/ff_base2
 
 PX4_SIMULATOR=${PX4_SIMULATOR:=gz}
 param set SYS_HITL 1
 
-param set-default HIL_ACT_FUNC1 101
-param set-default HIL_ACT_FUNC2 102
-param set-default HIL_ACT_FUNC3 103
-param set-default HIL_ACT_FUNC4 104
+# Override base parameters
+param set BAT1_V_EMPTY 3.5
+param set BAT1_SOURCE 0
+param set GF_ACTION 5 # Land mode
+param set GF2_ACTION 4 # Terminate
+param set CBRK_FLIGHTTERM 0 # Termination enabled
+param set SDLOG_MODE 1
 
-# Override 4999_kaiken geometry by Iris values
-param set-default CA_ROTOR_COUNT 4
-param set-default CA_ROTOR0_PX 0.1515
-param set-default CA_ROTOR0_PY 0.245
-param set-default CA_ROTOR0_KM 0.05
-param set-default CA_ROTOR1_PX -0.1515
-param set-default CA_ROTOR1_PY -0.1875
-param set-default CA_ROTOR1_KM 0.05
-param set-default CA_ROTOR2_PX 0.1515
-param set-default CA_ROTOR2_PY -0.245
-param set-default CA_ROTOR2_KM -0.05
-param set-default CA_ROTOR3_PX -0.1515
-param set-default CA_ROTOR3_PY 0.1875
-param set-default CA_ROTOR3_KM -0.05
+# Iris motors
+param set CA_ROTOR_COUNT 4
+param set CA_ROTOR0_PX 0.1515
+param set CA_ROTOR0_PY 0.245
+param set CA_ROTOR0_KM 0.05
+param set CA_ROTOR1_PX -0.1515
+param set CA_ROTOR1_PY -0.1875
+param set CA_ROTOR1_KM 0.05
+param set CA_ROTOR2_PX 0.1515
+param set CA_ROTOR2_PY -0.245
+param set CA_ROTOR2_KM -0.05
+param set CA_ROTOR3_PX -0.1515
+param set CA_ROTOR3_PY 0.1875
+param set CA_ROTOR3_KM -0.05
 
-# Override 4999_kaiken PID by Iris values
-param set-default MC_PITCHRATE_D 0.003
-param set-default MC_PITCHRATE_I 0.2
-param set-default MC_PITCHRATE_K 1
-param set-default MC_PITCHRATE_MAX 220
-param set-default MC_PITCHRATE_P 0.15
-param set-default MC_PITCH_P 6.5
-param set-default MC_ROLLRATE_D 0.003
-param set-default MC_ROLLRATE_K 1
-param set-default MC_ROLLRATE_MAX 220
-param set-default MC_ROLLRATE_P 0.15
-param set-default MC_ROLL_P 6.5
-param set-default MC_YAWRATE_MAX 200.0
-param set-default MC_YAWRATE_P 0.2
-param set-default MC_YAW_P 2.8
-param set-default THR_MDL_FAC 0.0
+param set HIL_ACT_FUNC1 101
+param set HIL_ACT_FUNC2 102
+param set HIL_ACT_FUNC3 103
+param set HIL_ACT_FUNC4 104
 
-# Override other 4999_kaiken parameters
-param set-default CAL_MAG0_ROT 0
-param set-default SENS_BOARD_ROT 0
-param set-default BAT1_SOURCE 0
-param set-default SDLOG_MODE 1
+# Iris PID
+param set MC_PITCHRATE_D 0.003
+param set MC_PITCHRATE_I 0.2
+param set MC_PITCHRATE_K 1
+param set MC_PITCHRATE_MAX 220
+param set MC_PITCHRATE_P 0.15
+param set MC_PITCH_P 6.5
+param set MC_ROLLRATE_D 0.003
+param set MC_ROLLRATE_K 1
+param set MC_ROLLRATE_MAX 220
+param set MC_ROLLRATE_P 0.15
+param set MC_ROLL_P 6.5
+param set MC_YAWRATE_MAX 200.0
+param set MC_YAWRATE_P 0.2
+param set MC_YAW_P 2.8
+param set THR_MDL_FAC 0.0
