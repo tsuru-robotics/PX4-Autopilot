@@ -9,7 +9,7 @@
 #
 
 . ${R}etc/init.d/airframes/ff_base2
-. ${R}etc/init.d/airframes/ff_shuriken2
+. ${R}etc/init.d/airframes/ff_shuriken1
 
 param set GPS_1_PROTOCOL 6 # NMEA
 param set SER_GPS1_BAUD 460800
