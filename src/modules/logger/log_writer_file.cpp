@@ -446,11 +446,14 @@ void LogWriterFile::run()
 
 						if (!buffer._should_run && written == static_cast<int>(available) && !is_part) {
 							/* Stop only when all data written */
-							if (i==1) {								pthread_mutex_unlock(&_mtx);
+							if (i==1) {
+								/* Mission log stops immediately*/
+								pthread_mutex_unlock(&_mtx);
 								buffer.close_file();
 								pthread_mutex_lock(&_mtx);
 								buffer.reset();
 							} else if (_buffers[1]._compression_finished) {
+								/* Full log stops only after mission log compression is finished*/
 								pthread_mutex_unlock(&_mtx);
 								buffer.close_file();
 								pthread_mutex_lock(&_mtx);
@@ -478,6 +481,10 @@ void LogWriterFile::run()
 					pthread_mutex_lock(&_mtx);
 					buffer.reset();
 				}
+
+				// if (buffer._should_compress && !buffer._compression_finished) {
+
+				// }
 
 				/* if split into 2 parts, write the second part immediately as well */
 				if (!is_part) {
@@ -747,35 +754,24 @@ bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const
 {
 	int _fd_in = -1;
 	int _fd_out = -1;
-	// FILE *pInfile, *pOutfile;
 	size_t input_file_remaining = _total_written;
 	hrt_abstime time_start = hrt_absolute_time();
 
-	// Open input and output file
-	_fd_in = ::open(inp_filename, O_CREAT | O_WRONLY, PX4_O_MODE_666);
+	// Open input file
+	_fd_in = ::open(inp_filename, O_RDONLY, PX4_O_MODE_666);
 
 	if (_fd_in < 0) {
-		PX4_ERR("Can't open log file %s, errno: %d", filename, errno);
+		PX4_ERR("Can't open log file %s, errno: %d", inp_filename, errno);
 		return false;
 	}
-	// pInfile = fopen(inp_filename, "rb");
-	// if(pInfile == NULL ) {
-	// 	PX4_ERR("Could not open %s", inp_filename);
-	// 	return false;
-	// }
+
 	// Open output file
 	_fd_out = ::open(out_filename, O_CREAT | O_WRONLY, PX4_O_MODE_666);
 
-	if (_fd_in < 0) {
-		PX4_ERR("Can't open log file %s, errno: %d", filename, errno);
+	if (_fd_out < 0) {
+		PX4_ERR("Can't open file %s, errno: %d", out_filename, errno);
 		return false;
 	}
-
-	// pOutfile = fopen(out_filename, "wb");
-	// if(pOutfile == NULL) {
-	// 	PX4_ERR("Could not open %s", out_filename);
-	// 	return false;
-	// }
 
 	// Initialize encoder
 	heatshrink_encoder_reset(_ptr_encoder);
@@ -804,7 +800,8 @@ bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const
 		// {
 			// Input buffer is empty, so read more bytes from input file
 			size_t n = math::min(input_buffer_size, input_file_remaining);
-			if (fread(input_buffer, 1, n, pInfile) != n)
+
+			if (::read(_fd_in, input_buffer, n) != (ssize_t)n)
 			{
 				PX4_ERR("Failed reading from input file!");
 				return false;
@@ -843,7 +840,7 @@ bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const
 		{
 			// Output buffer is full, or compression is done or failed, so write buffer to output file.
 			//uint n = BUF_SIZE - (uint)avail_out;
-			if (fwrite(output_buffer, 1, out_bytes, pOutfile) != out_bytes)
+			if (::write(_fd_out, output_buffer, out_bytes) != (ssize_t)out_bytes)
 			{
 				PX4_ERR("Failed writing to output file!");
 				return false;
@@ -857,7 +854,7 @@ bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const
 			total_out += out_bytes;
 			if (!comp_error) {
 				PX4_DEBUG("Writing %zu bytes from output buffer!", out_bytes);
-				if (fwrite(output_buffer, 1, out_bytes, pOutfile) != out_bytes)
+				if (::write(_fd_out, output_buffer, out_bytes) != (ssize_t)out_bytes)
 				{
 					PX4_ERR("Failed writing to output file!");
 					return false;
@@ -868,13 +865,15 @@ bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const
 		} else {
 			PX4_INFO("Input bytes remaining: %lu", (long unsigned)input_file_remaining);
 		}
+
+		px4_usleep(100000); // 100 milliseconds
 	}
 
-	int res = fclose(pInfile);
+	int res = close(_fd_in);
 	if (res) {
 		PX4_WARN("closing log file failed (%i)", errno);
 	}
-	res = fclose(pOutfile);
+	res = close(_fd_out);
 	if (res) {
 		PX4_WARN("closing zip file failed (%i)", errno);
 	}

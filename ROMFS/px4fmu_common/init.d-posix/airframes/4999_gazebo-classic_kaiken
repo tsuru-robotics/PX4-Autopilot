@@ -13,6 +13,9 @@ param set SYS_PROD_CONF 1
 
 . ${R}etc/init.d/airframes/ff_base2
 
+param set SDLOG_MODE 1
+param set SDLOG_PROFILE 2048
+
 # Override base parameters
 param set BAT1_V_EMPTY 3.5
 param set BAT1_SOURCE 0

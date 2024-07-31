@@ -19,7 +19,6 @@ param set SYS_HITL 1
 # Override base parameters
 param set BAT1_V_EMPTY 3.5
 param set BAT1_SOURCE 0
-param set SDLOG_MODE 1
 
 # Iris motors
 param set CA_ROTOR_COUNT 4

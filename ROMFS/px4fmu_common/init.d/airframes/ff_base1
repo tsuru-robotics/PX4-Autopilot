@@ -136,8 +136,6 @@ param set LNDMC_TRIG_TIME 1
 # Logging
 param set SDLOG_DIRS_MAX 0
 param set SDLOG_MISSION 3
-param set SDLOG_MODE 1
-param set SDLOG_PROFILE 2048
 param set SDLOG_UTC_OFFSET 0
 
 # Circuit Breaker
