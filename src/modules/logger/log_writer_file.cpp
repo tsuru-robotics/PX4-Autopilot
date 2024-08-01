@@ -254,6 +254,8 @@ void LogWriterFile::start_log(LogType type, const char *filename)
 		PX4_INFO("Opened %s log file: %s", log_type_str(type), filename);
 		notify();
 	}
+
+	// *** init input buffer and encoder for compression
 }
 
 int LogWriterFile::hardfault_store_filename(const char *log_file)
@@ -306,7 +308,7 @@ int LogWriterFile::thread_start()
 	param.sched_priority = SCHED_PRIORITY_DEFAULT - 40;
 	(void)pthread_attr_setschedparam(&thr_attr, &param);
 
-	pthread_attr_setstacksize(&thr_attr, PX4_STACK_ADJUSTED(1170));
+	pthread_attr_setstacksize(&thr_attr, PX4_STACK_ADJUSTED(1300));
 
 	int ret = pthread_create(&_thread, &thr_attr, &LogWriterFile::run_helper, this);
 	pthread_attr_destroy(&thr_attr);
@@ -866,7 +868,7 @@ bool LogWriterFile::LogFileBuffer::compress_file(const char* inp_filename, const
 			PX4_INFO("Input bytes remaining: %lu", (long unsigned)input_file_remaining);
 		}
 
-		px4_usleep(100000); // 100 milliseconds
+		px4_usleep(50000); // 50 milliseconds
 	}
 
 	int res = close(_fd_in);
@@ -928,6 +930,8 @@ int LogWriterFile::LogFileBuffer::compress_data(
 			*bytes_polled += count;
 			PX4_DEBUG("^^ polled %zd, total=%zu", count, *bytes_polled);
 		} while (pres == HSER_POLL_MORE);
+
+		px4_usleep(20000); // 20 milliseconds
 	}
 
 	return 0; // OK
