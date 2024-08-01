@@ -81,6 +81,7 @@ px4_add_romfs_files(
 	4998_kaiken
 	4997_shuriken
 	4996_shuriken
+	4995_shuriken
 
 	# [5000, 5999] Quadrotor +"
 	5001_quad_+
