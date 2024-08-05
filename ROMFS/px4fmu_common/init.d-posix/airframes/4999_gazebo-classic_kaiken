@@ -14,6 +14,9 @@ param set SYS_PROD_CONF 1
 . ${R}etc/init.d/airframes/ff_base2
 
 # Override base parameters
+param set MPC_XY_VEL_D_ACC 0.2
+param set MPC_XY_VEL_I_ACC 0.4
+param set MPC_XY_VEL_P_ACC 1.8
 param set BAT1_V_EMPTY 3.5
 param set BAT1_SOURCE 0
 param set SDLOG_MODE 1
@@ -37,20 +40,3 @@ param set-default PWM_MAIN_FUNC1 101
 param set-default PWM_MAIN_FUNC2 102
 param set-default PWM_MAIN_FUNC3 103
 param set-default PWM_MAIN_FUNC4 104
-
-# Iris PID
-param set-default MC_PITCHRATE_D 0.003
-param set-default MC_PITCHRATE_I 0.2
-param set-default MC_PITCHRATE_K 1
-param set-default MC_PITCHRATE_MAX 220
-param set-default MC_PITCHRATE_P 0.15
-param set-default MC_PITCH_P 6.5
-param set-default MC_ROLLRATE_D 0.003
-param set-default MC_ROLLRATE_K 1
-param set-default MC_ROLLRATE_MAX 220
-param set-default MC_ROLLRATE_P 0.15
-param set-default MC_ROLL_P 6.5
-param set-default MC_YAWRATE_MAX 200.0
-param set-default MC_YAWRATE_P 0.2
-param set-default MC_YAW_P 2.8
-param set-default THR_MDL_FAC 0.0
