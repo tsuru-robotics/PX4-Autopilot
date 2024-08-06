@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# @name Shuriken with base1 parameters
+# @name Shuriken backup frame with shuriken1 and base2 parameters
 #
 # @type Quadrotor x
 # @class Copter
@@ -8,7 +8,7 @@
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
 
-. ${R}etc/init.d/airframes/ff_base1
+. ${R}etc/init.d/airframes/ff_base2
 . ${R}etc/init.d/airframes/ff_shuriken1
 
 param set GPS_1_PROTOCOL 6 # NMEA
