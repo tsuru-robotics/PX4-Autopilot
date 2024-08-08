@@ -17,42 +17,28 @@ PX4_SIMULATOR=${PX4_SIMULATOR:=gz}
 param set SYS_HITL 1
 
 # Override base parameters
+param set MPC_XY_VEL_D_ACC 0.2
+param set MPC_XY_VEL_I_ACC 0.4
+param set MPC_XY_VEL_P_ACC 1.8
 param set BAT1_V_EMPTY 3.5
 param set BAT1_SOURCE 0
 
 # Iris motors
-param set CA_ROTOR_COUNT 4
-param set CA_ROTOR0_PX 0.1515
-param set CA_ROTOR0_PY 0.245
-param set CA_ROTOR0_KM 0.05
-param set CA_ROTOR1_PX -0.1515
-param set CA_ROTOR1_PY -0.1875
-param set CA_ROTOR1_KM 0.05
-param set CA_ROTOR2_PX 0.1515
-param set CA_ROTOR2_PY -0.245
-param set CA_ROTOR2_KM -0.05
-param set CA_ROTOR3_PX -0.1515
-param set CA_ROTOR3_PY 0.1875
-param set CA_ROTOR3_KM -0.05
+param set-default CA_ROTOR_COUNT 4
+param set-default CA_ROTOR0_PX 0.1515
+param set-default CA_ROTOR0_PY 0.245
+param set-default CA_ROTOR0_KM 0.05
+param set-default CA_ROTOR1_PX -0.1515
+param set-default CA_ROTOR1_PY -0.1875
+param set-default CA_ROTOR1_KM 0.05
+param set-default CA_ROTOR2_PX 0.1515
+param set-default CA_ROTOR2_PY -0.245
+param set-default CA_ROTOR2_KM -0.05
+param set-default CA_ROTOR3_PX -0.1515
+param set-default CA_ROTOR3_PY 0.1875
+param set-default CA_ROTOR3_KM -0.05
 
-param set HIL_ACT_FUNC1 101
-param set HIL_ACT_FUNC2 102
-param set HIL_ACT_FUNC3 103
-param set HIL_ACT_FUNC4 104
-
-# Iris PID
-param set MC_PITCHRATE_D 0.003
-param set MC_PITCHRATE_I 0.2
-param set MC_PITCHRATE_K 1
-param set MC_PITCHRATE_MAX 220
-param set MC_PITCHRATE_P 0.15
-param set MC_PITCH_P 6.5
-param set MC_ROLLRATE_D 0.003
-param set MC_ROLLRATE_K 1
-param set MC_ROLLRATE_MAX 220
-param set MC_ROLLRATE_P 0.15
-param set MC_ROLL_P 6.5
-param set MC_YAWRATE_MAX 200.0
-param set MC_YAWRATE_P 0.2
-param set MC_YAW_P 2.8
-param set THR_MDL_FAC 0.0
+param set-default PWM_MAIN_FUNC1 101
+param set-default PWM_MAIN_FUNC2 102
+param set-default PWM_MAIN_FUNC3 103
+param set-default PWM_MAIN_FUNC4 104

@@ -19,16 +19,25 @@ param set THR_MDL_FAC 0.3
 
 # Rotors
 param set CA_ROTOR_COUNT 4
-param set CA_ROTOR0_PX 0.15
-param set CA_ROTOR0_PY 0.15
-param set CA_ROTOR1_PX -0.15
-param set CA_ROTOR1_PY -0.15
-param set CA_ROTOR2_PX 0.15
-param set CA_ROTOR2_PY -0.15
-param set CA_ROTOR2_KM -0.05
-param set CA_ROTOR3_PX -0.15
-param set CA_ROTOR3_PY 0.15
-param set CA_ROTOR3_KM -0.05
+param set CA_ROTOR0_PX 0.0553
+param set CA_ROTOR0_PY 0.0566
+param set CA_ROTOR0_PZ 0.0177
+param set CA_ROTOR0_KM 0.016
+
+param set CA_ROTOR1_PX -0.0567
+param set CA_ROTOR1_PY -0.0566
+param set CA_ROTOR1_PZ 0.0177
+param set CA_ROTOR1_KM 0.016
+
+param set CA_ROTOR2_PX 0.0553
+param set CA_ROTOR2_PY -0.0566
+param set CA_ROTOR2_PZ 0.0177
+param set CA_ROTOR2_KM -0.016
+
+param set CA_ROTOR3_PX -0.0567
+param set CA_ROTOR3_PY 0.0566
+param set CA_ROTOR3_PZ 0.0177
+param set CA_ROTOR3_KM -0.016
 
 # IMU
 param set IMU_DGYRO_CUTOFF 30
@@ -36,6 +45,14 @@ param set IMU_GYRO_CUTOFF 70
 
 # EKF
 param set EKF2_BARO_CTRL 0 # baro fusion disabled
+
+param set EKF2_IMU_POS_X 0.0066
+param set EKF2_IMU_POS_Y -0.0119
+param set EKF2_IMU_POS_Z 0.02
+
+param set EKF2_IMU_POS_X 0.0
+param set EKF2_IMU_POS_Y 0.0
+param set EKF2_IMU_POS_Z -0.0273
 
 # Sensors & Calibration
 param set SENS_MAG_AUTOROT 0
@@ -61,19 +78,19 @@ param set MC_PITCHRATE_P 0.1
 param set MC_PITCHRATE_I 0.2
 param set MC_PR_INT_LIM 0.3
 param set MC_PITCHRATE_D 0.001
-param set MC_PITCHRATE_K 2.0
+param set MC_PITCHRATE_K 1
 param set MC_PITCHRATE_FF: 0.0
 param set MC_PITCHRATE_MAX 220
-param set MC_PITCH_P 8.0
+param set MC_PITCH_P 6.5
 
 param set MC_ROLLRATE_P 0.1
 param set MC_ROLLRATE_I 0.2
 param set MC_RR_INT_LIM 0.3
 param set MC_ROLLRATE_D 0.001
-param set MC_ROLLRATE_K 2.0
+param set MC_ROLLRATE_K 1
 param set MC_ROLLRATE_FF 0.0
 param set MC_ROLLRATE_MAX 220
-param set MC_ROLL_P 8.0
+param set MC_ROLL_P 6.5
 
 param set MC_YAWRATE_MAX 60
 param set MC_YAWRATE_P 0.2
