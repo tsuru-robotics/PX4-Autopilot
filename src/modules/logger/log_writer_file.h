@@ -166,34 +166,24 @@ private:
 	/* 512 didn't seem to work properly, 4096 should match the FAT cluster size */
 	static constexpr size_t	_min_write_chunk = 4096;
 
+	bool start_missionlog_compression();
+
+	int compress_missionlog_chunk();
+
+	int finalize_missionlog_compression();
+
 	class LogFileBuffer
 	{
 	public:
-		LogFileBuffer(size_t log_buffer_size, perf_counter_t perf_write, perf_counter_t perf_fsync, heatshrink_encoder &encoder);
 		LogFileBuffer(size_t log_buffer_size, perf_counter_t perf_write, perf_counter_t perf_fsync);
 
 		~LogFileBuffer();
 
 		bool start_log(const char *filename);
 
+		bool init_for_compression(const char *filename);
+
 		void close_file();
-
-		bool compress_file(const char* inp_filename, const char* out_filename);
-
-		/**
-		 * Compress file
-		 */
-		int compress_data(
-			uint8_t *buffer_in,
-			size_t size_in,
-			uint8_t *buffer_out,
-			size_t buffer_out_availbale,
-			size_t *bytes_polled);
-
-		int finalize_compression(
-			uint8_t *buffer_out,
-			size_t buffer_out_availbale,
-			size_t *bytes_polled);
 
 		void reset();
 
@@ -219,7 +209,9 @@ private:
 		size_t count() const { return _count; }
 
 		bool _should_run = false;
-		bool _compression_finished = false;
+		bool _file_closed = false;
+		// bool _should_compress = false;
+		// bool _compression_finished = false;
 	private:
 		const size_t _buffer_size;
 		int	_fd = -1;
@@ -229,8 +221,7 @@ private:
 		size_t _total_written = 0;
 		perf_counter_t _perf_write;
 		perf_counter_t _perf_fsync;
-		heatshrink_encoder *_ptr_encoder = nullptr;
-		char _lastlog_filename[LOG_DIR_LEN];
+		// heatshrink_encoder *_ptr_encoder = nullptr;
 	};
 
 	LogFileBuffer _buffers[(int)LogType::Count];
@@ -249,8 +240,19 @@ private:
 	uint8_t _key_idx;
 	uint8_t _exchange_key_idx;
 #endif
-
-	heatshrink_encoder _encoder; // Compression encoder
+	char _missionlog_filename[LOG_DIR_LEN];
+	int  _missionlog_fd = -1;
+	bool _missionlog_compression_started = false;
+	bool _missionlog_compression_finished = false;
+	heatshrink_encoder _missionlog_encoder; // Compression encoder
+	const size_t _missionlog_input_buffer_size = 256;
+	const size_t _missionlog_output_buffer_size = 256;
+	uint8_t *_missionlog_input_buffer = nullptr;
+	uint8_t *_missionlog_output_buffer = nullptr;
+	size_t _missionlog_size = 0;
+	size_t _missionlog_compressed_size = 0;
+	size_t _missionlog_remaining = 0;
+	hrt_abstime _missionlog_compression_start_time = 0;
 };
 
 }
