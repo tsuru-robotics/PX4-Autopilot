@@ -52,6 +52,7 @@ px4_add_module(
 		devices/src/unicore.cpp
 		devices/src/crc.cpp
 		devices/src/sbf.cpp
+		devices/src/quectel.cpp
 	MODULE_CONFIG
 		module.yaml
 	DEPENDS
