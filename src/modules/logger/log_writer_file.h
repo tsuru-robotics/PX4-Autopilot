@@ -85,7 +85,14 @@ public:
 
 	void stop_log(LogType type);
 
-	bool is_started(LogType type) const { return _buffers[(int)type]._should_run; }
+	bool is_started(LogType type) const
+	{
+		if (type == LogType::Mission) {
+			return _buffers[(int)type]._should_run && !(_missionlog_compression_started && !_missionlog_compression_finished);
+		} else {
+			return _buffers[(int)type]._should_run;
+		}
+	}
 
 	/** @see LogWriter::write_message() */
 	int write_message(LogType type, void *ptr, size_t size, uint64_t dropout_start = 0);

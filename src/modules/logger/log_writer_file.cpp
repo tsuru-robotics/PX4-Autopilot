@@ -500,12 +500,12 @@ void LogWriterFile::run()
 						buffer.reset();
 					}
 
-				} else if (call_fsync && buffer._should_run) {
+				} else if (call_fsync && (buffer._should_run || (_missionlog_compression_started && !_missionlog_compression_finished))) {
 					pthread_mutex_unlock(&_mtx);
 					buffer.fsync();
 					pthread_mutex_lock(&_mtx);
 
-				} else if (available == 0 && !buffer._should_run) {
+				} else if (available == 0 && !buffer._should_run && (_missionlog_compression_started && _missionlog_compression_finished)) {
 					pthread_mutex_unlock(&_mtx);
 					buffer.close_file();
 					pthread_mutex_lock(&_mtx);
@@ -662,7 +662,7 @@ bool LogWriterFile::start_missionlog_compression()
 	// init writer
 	if (strlen(_missionlog_filename) + 6 <= LOG_DIR_LEN) {
 		strcat(_missionlog_filename, ".lzss");
-		if (!_buffers[(int)LogType::Mission].init_for_compression(_missionlog_filename)) {
+		if (!_buffers[(int)LogType::Mission].start_log(_missionlog_filename)) {
 			return false;
 		}
 	} else {
