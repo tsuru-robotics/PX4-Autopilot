@@ -406,6 +406,7 @@ void LogWriterFile::run()
 
 			// After mission log is closed start compression using the same output buffer
 			if (_buffers[(int)LogType::Mission]._file_closed && !_missionlog_compression_started) {
+				PX4_WARN("LOG 0");
 				start_missionlog_compression();
 			}
 			if (_missionlog_compression_started && !_missionlog_compression_finished) {
@@ -500,16 +501,17 @@ void LogWriterFile::run()
 						buffer.reset();
 					}
 
-				} else if (call_fsync && (buffer._should_run || (_missionlog_compression_started && !_missionlog_compression_finished))) {
+				} else if (call_fsync && buffer._should_run) {
 					pthread_mutex_unlock(&_mtx);
 					buffer.fsync();
 					pthread_mutex_lock(&_mtx);
 
-				} else if (available == 0 && !buffer._should_run && (_missionlog_compression_started && _missionlog_compression_finished)) {
+				} else if (available == 0 && !buffer._should_run && _missionlog_compression_finished) {
 					pthread_mutex_unlock(&_mtx);
 					buffer.close_file();
 					pthread_mutex_lock(&_mtx);
 					buffer.reset();
+					PX4_WARN("LOG 2");
 				}
 
 				/* if split into 2 parts, write the second part immediately as well */
@@ -519,13 +521,14 @@ void LogWriterFile::run()
 			}
 
 
-			if (_buffers[0].fd() < 0 && _buffers[1].fd() < 0) {
+			if (_buffers[0].fd() < 0 && _buffers[1].fd() < 0 && _missionlog_compression_finished) {
 				// stop when both files are closed
 #if defined(PX4_CRYPTO)
 				/* close the crypto session */
 
 				_crypto.close();
 #endif
+				PX4_WARN("LOG 3");
 
 				break;
 			}
@@ -587,6 +590,10 @@ int LogWriterFile::write_message(LogType type, void *ptr, size_t size, uint64_t 
 int LogWriterFile::write(LogType type, void *ptr, size_t size, uint64_t dropout_start)
 {
 	if (!is_started(type)) {
+		return 0;
+	}
+
+	if (type == LogType::Mission && _missionlog_compression_started && !_missionlog_compression_finished) {
 		return 0;
 	}
 
