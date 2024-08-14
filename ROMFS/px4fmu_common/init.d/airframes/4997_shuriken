@@ -7,8 +7,9 @@
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
 
+. ${R}etc/init.d/rc.mc_defaults
 . ${R}etc/init.d/airframes/ff_base2
 . ${R}etc/init.d/airframes/ff_shuriken2
 
-param set GPS_1_PROTOCOL 6 # NMEA
-param set SER_GPS1_BAUD 460800
+param set-default GPS_1_PROTOCOL 6 # NMEA
+param set-default SER_GPS1_BAUD 460800
