@@ -55,6 +55,9 @@ float32 heading_accuracy	# heading accuracy (rad, [0, 2PI])
 float32 rtcm_injection_rate	# RTCM message injection rate Hz
 float32 rtcm_rate_lora	        # RTCM message rate in LoRa channel Hz
 float32 rtcm_rate_wifi	        # RTCM message rate in WiFi channel Hz
+int8 rtcm_sequence_id
+int8 rtcm_fragment_id
+uint8 rtcm_injection_count
 uint8 selected_rtcm_instance	# uorb instance that is being used for RTCM corrections
 
 # TOPICS sensor_gps vehicle_gps_position

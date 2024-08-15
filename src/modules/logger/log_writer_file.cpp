@@ -68,7 +68,7 @@ LogWriterFile::LogWriterFile(size_t buffer_size)
 		perf_alloc(PC_ELAPSED, "logger_sd_write"), perf_alloc(PC_ELAPSED, "logger_sd_fsync")},
 
 	{
-		math::max(buffer_size, _min_write_chunk + 300),
+		math::max((size_t)50000, _min_write_chunk + 300),
 		perf_alloc(PC_ELAPSED, "logger_sd_write_mission"), perf_alloc(PC_ELAPSED, "logger_sd_fsync_mission")
 	}
 }
@@ -406,7 +406,6 @@ void LogWriterFile::run()
 
 			// After mission log is closed start compression using the same output buffer
 			if (_buffers[(int)LogType::Mission]._file_closed && !_missionlog_compression_started) {
-				PX4_WARN("LOG 0");
 				start_missionlog_compression();
 			}
 			if (_missionlog_compression_started && !_missionlog_compression_finished) {
@@ -479,12 +478,14 @@ void LogWriterFile::run()
 							/* Stop only when all data written */
 							if (i==1) {
 								/* Mission log stops immediately*/
+								PX4_DEBUG("All data written, stop mission log buffer");
 								pthread_mutex_unlock(&_mtx);
 								buffer.close_file();
 								pthread_mutex_lock(&_mtx);
 								buffer.reset();
 							} else if (_missionlog_compression_finished) {
 								/* Full log stops only after mission log compression is finished*/
+								PX4_DEBUG("All data written, stop full log buffer");
 								pthread_mutex_unlock(&_mtx);
 								buffer.close_file();
 								pthread_mutex_lock(&_mtx);
@@ -506,12 +507,12 @@ void LogWriterFile::run()
 					buffer.fsync();
 					pthread_mutex_lock(&_mtx);
 
-				} else if (available == 0 && !buffer._should_run && _missionlog_compression_finished) {
+				} else if (available == 0 && !buffer._should_run) {
+					// PX4_DEBUG("No data to write, stop %d buffer", i);
 					pthread_mutex_unlock(&_mtx);
 					buffer.close_file();
 					pthread_mutex_lock(&_mtx);
 					buffer.reset();
-					PX4_WARN("LOG 2");
 				}
 
 				/* if split into 2 parts, write the second part immediately as well */
@@ -521,7 +522,7 @@ void LogWriterFile::run()
 			}
 
 
-			if (_buffers[0].fd() < 0 && _buffers[1].fd() < 0 && _missionlog_compression_finished) {
+			if (_buffers[0].fd() < 0 && _buffers[1].fd() < 0) {
 				// stop when both files are closed
 #if defined(PX4_CRYPTO)
 				/* close the crypto session */
@@ -594,6 +595,7 @@ int LogWriterFile::write(LogType type, void *ptr, size_t size, uint64_t dropout_
 	}
 
 	if (type == LogType::Mission && _missionlog_compression_started && !_missionlog_compression_finished) {
+		//PX4_DEBUG("Mission log comporession. Ignore message write.");
 		return 0;
 	}
 
@@ -701,7 +703,6 @@ int LogWriterFile::compress_missionlog_chunk()
 	_missionlog_remaining -= input_size;
 
 	// Compress as much of the input as possible (or all of it) to the output buffer
-	size_t bytes_polled = 0;
 	size_t bytes_sunk = 0;
 	size_t count = 0;
 	while (bytes_sunk < input_size) {
@@ -718,7 +719,7 @@ int LogWriterFile::compress_missionlog_chunk()
 			return 1; // Sink error
 		}
 		bytes_sunk += count;
-		PX4_DEBUG("^^ sunk %zd, total=%zd/%zd", count, bytes_sunk, input_size);
+		PX4_DEBUG("^^ sunk %zd, total=%zd/%zd", count, bytes_sunk, _missionlog_size);
 
 		// Poll to move output from the state machine into an output buffer.
 		// The `output_size` pointer argument will be set to indicate how many bytes were output,
@@ -729,63 +730,63 @@ int LogWriterFile::compress_missionlog_chunk()
 		do {
 			pres = heatshrink_encoder_poll(
 				&_missionlog_encoder,
-				&_missionlog_output_buffer[bytes_polled],
-				_missionlog_output_buffer_size - bytes_polled,
+				_missionlog_output_buffer,
+				_missionlog_output_buffer_size,
 				&count);
 			if (pres < 0) {
-				PX4_WARN("heatshrink_encoder_poll failed with code %d", pres);
+				PX4_ERR("heatshrink_encoder_poll failed with code %d", pres);
 				return 2; // Poll error (including output buffer is out of space)
 			}
-			bytes_polled += count;
-			PX4_DEBUG("^^ polled %zd, total=%zu", count, bytes_polled);
-
+			_buffers[(int)LogType::Mission].write_no_check(_missionlog_output_buffer, count);
+			_missionlog_compressed_size += count;
+			PX4_DEBUG("^^^^ polled %zd, total=%zu", count, _missionlog_compressed_size);
 			px4_usleep(10000);
 		} while (pres == HSER_POLL_MORE);
 
 		px4_usleep(10000);
 	}
 
-	_buffers[(int)LogType::Mission].write_no_check(_missionlog_output_buffer, bytes_polled);
-	_missionlog_compressed_size += bytes_polled;
+	PX4_DEBUG("Remaining %zd/%zd", _missionlog_remaining, _missionlog_size);
 
 	return 0; // OK
 }
 
 int LogWriterFile::finalize_missionlog_compression()
 {
-	size_t bytes_polled = 0;
 	size_t count = 0;
 
 	PX4_DEBUG("Finalize compression");
-	if (heatshrink_encoder_finish(&_missionlog_encoder) == HSER_FINISH_MORE) {
-		HSE_poll_res pres;
-		do {
-			pres = heatshrink_encoder_poll(
-				&_missionlog_encoder,
-				&_missionlog_output_buffer[bytes_polled],
-				_missionlog_output_buffer_size - bytes_polled,
-				&count);
-			if (pres < 0) {
-				PX4_WARN("heatshrink_encoder_poll failed with code %d", pres);
-				return 2; // Poll error (including output buffer is out of space)
-			}
-			bytes_polled += count;
-			PX4_DEBUG("^^ polled %zu, total=%zu", count, bytes_polled);
-			px4_usleep(10000);
-		} while (pres == HSER_POLL_MORE);
-	}
-
-	_buffers[(int)LogType::Mission].write_no_check(_missionlog_output_buffer, bytes_polled);
+	HSE_finish_res fres;
+	do {
+		fres = heatshrink_encoder_finish(&_missionlog_encoder);
+		if (fres == HSER_FINISH_MORE) {
+			PX4_DEBUG("HSER_FINISH_MORE");
+			HSE_poll_res pres;
+			do {
+				pres = heatshrink_encoder_poll(
+					&_missionlog_encoder,
+					_missionlog_output_buffer,
+					_missionlog_output_buffer_size,
+					&count);
+				if (pres < 0) {
+					PX4_ERR("heatshrink_encoder_poll failed with code %d", pres);
+					return 2; // Poll error (including output buffer is out of space)
+				}
+				_buffers[(int)LogType::Mission].write_no_check(_missionlog_output_buffer, count);
+				_missionlog_compressed_size += count;
+				PX4_DEBUG("Compressed %zd, total=%zu", count, _missionlog_compressed_size);
+				px4_usleep(10000);
+			} while (pres == HSER_POLL_MORE);
+		}
+	} while (fres == HSER_FINISH_MORE);
 
 	if (_missionlog_fd >= 0) {
 
 		int res = close(_missionlog_fd);
 
 		if (res) {
-			PX4_WARN("closing mission_log file failed (%i)", errno);
+			PX4_WARN("closing input mission_log file failed (%i)", errno);
 
-		} else {
-			PX4_INFO("closed mission_log");
 		}
 	}
 
@@ -793,6 +794,8 @@ int LogWriterFile::finalize_missionlog_compression()
 
 	PX4_INFO("Compressed %zu bytes to %zu, time=%lu ms",
 	_missionlog_size, _missionlog_compressed_size, (long unsigned)(hrt_absolute_time()-_missionlog_compression_start_time)/1000);
+
+	_buffers[(int)LogType::Mission]._should_run = false;
 
 	return 0; // OK
 }
@@ -826,7 +829,7 @@ void LogWriterFile::LogFileBuffer::write_no_check(void *ptr, size_t size)
 		// Message goes over the end of the buffer
 		memcpy(&(_buffer[_head]), buffer_c, n);
 		_head = 0;
-
+		PX4_DEBUG("Message goes over the end of the buffer");
 	} else {
 		n = 0;
 	}
@@ -941,9 +944,7 @@ ssize_t LogWriterFile::LogFileBuffer::write_to_file(const void *buffer, size_t s
 
 void LogWriterFile::LogFileBuffer::close_file()
 {
-
 	if (_fd >= 0) {
-
 		int res = close(_fd);
 
 		if (res) {
@@ -963,7 +964,6 @@ void LogWriterFile::LogFileBuffer::reset()
 	_count = 0;
 	_fd = -1;
 }
-
 
 }
 }

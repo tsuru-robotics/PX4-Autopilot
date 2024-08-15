@@ -245,8 +245,8 @@ private:
 	bool _missionlog_compression_started = false;
 	bool _missionlog_compression_finished = false;
 	heatshrink_encoder _missionlog_encoder; // Compression encoder
-	const size_t _missionlog_input_buffer_size = 256;
-	const size_t _missionlog_output_buffer_size = 256;
+	const size_t _missionlog_input_buffer_size = 1024;
+	const size_t _missionlog_output_buffer_size = 1024;
 	uint8_t *_missionlog_input_buffer = nullptr;
 	uint8_t *_missionlog_output_buffer = nullptr;
 	size_t _missionlog_size = 0;

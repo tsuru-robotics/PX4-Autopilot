@@ -224,8 +224,8 @@ private:
 	float _rate_rtcm_wifi{0.0f};        ///< RTCM message rate from WiFi channel
 	uORB::PublicationMulti<rtcm_channel_s> _rtcm_channel_pub[2] {ORB_ID(rtcm_channel), ORB_ID(rtcm_channel)};
 	// Last consistent rtcm flags
- 	int8_t _prev_consistent_rtcm_sequence_id{-1};
-	int8_t _prev_consistent_rtcm_fragment_id{0};
+ 	int8_t _last_consistent_rtcm_sequence_id{-1};
+	int8_t _last_consistent_rtcm_fragment_id{0};
 
 	static px4::atomic_bool _is_gps_main_advertised; ///< for the second gps we want to make sure that it gets instance 1
 	/// and thus we wait until the first one publishes at least one message.
@@ -666,22 +666,22 @@ bool GPS::rtcmInjectionDemux(const gps_inject_data_s *msg)
 	// demux (check sequence_id consistency)
 	bool is_consistent = false;
 	// PX4_INFO("msg->device_id %lu, seq=%d, last_seq=%d, frag=%d, last_frag=%d",
-	// msg->device_id, sequence_id, _prev_consistent_rtcm_sequence_id, fragment_id, _prev_consistent_rtcm_fragment_id);
+	// msg->device_id, sequence_id, _last_consistent_rtcm_sequence_id, fragment_id, _last_consistent_rtcm_fragment_id);
 
-	if ((sequence_id > _prev_consistent_rtcm_sequence_id) || (sequence_id_reset && sequence_id < _prev_consistent_rtcm_sequence_id)) {
+	if ((sequence_id > _last_consistent_rtcm_sequence_id) || (sequence_id_reset && sequence_id < _last_consistent_rtcm_sequence_id)) {
 		// consistent sequence
 		is_consistent = true;
 		// update consistent sequence
-		_prev_consistent_rtcm_sequence_id = sequence_id;
+		_last_consistent_rtcm_sequence_id = sequence_id;
 		// init fragment id
-		_prev_consistent_rtcm_fragment_id = 0;
-	} else if (sequence_id == _prev_consistent_rtcm_sequence_id && is_fragmented) {
+		_last_consistent_rtcm_fragment_id = 0;
+	} else if (sequence_id == _last_consistent_rtcm_sequence_id && is_fragmented) {
 		// sequence is the same and is fragmented
-		if (fragment_id > _prev_consistent_rtcm_fragment_id) {
+		if (fragment_id > _last_consistent_rtcm_fragment_id) {
 			// consistent fragment
 			is_consistent = true;
 			// save consistent fragment number
-			_prev_consistent_rtcm_fragment_id = fragment_id;
+			_last_consistent_rtcm_fragment_id = fragment_id;
 		}
 	}
 	//PX4_INFO("msg->device_id %lu, is_consistent=%d ",msg->device_id, is_consistent);
@@ -1341,8 +1341,9 @@ GPS::publish()
 		_report_gps_pos.selected_rtcm_instance = _selected_rtcm_instance;
 		_report_gps_pos.rtcm_injection_rate = _rate_rtcm_injection;
 		_report_gps_pos.rtcm_rate_lora = _rate_rtcm_lora;
-		_report_gps_pos.rtcm_rate_wifi = _rate_rtcm_wifi;
-
+		_report_gps_pos.rtcm_sequence_id = _last_consistent_rtcm_sequence_id;
+		_report_gps_pos.rtcm_fragment_id = _last_consistent_rtcm_fragment_id;
+		_report_gps_pos.rtcm_injection_count = _last_rate_rtcm_injection_count;
 		_report_gps_pos_pub.publish(_report_gps_pos);
 		// Heading/yaw data can be updated at a lower rate than the other navigation data.
 		// The uORB message definition requires this data to be set to a NAN if no new valid data is available.
