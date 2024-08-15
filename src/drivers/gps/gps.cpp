@@ -1350,6 +1350,7 @@ GPS::publish()
 		_report_gps_pos.selected_rtcm_instance = _selected_rtcm_instance;
 		_report_gps_pos.rtcm_injection_rate = _rate_rtcm_injection;
 		_report_gps_pos.rtcm_rate_lora = _rate_rtcm_lora;
+		_report_gps_pos.rtcm_rate_wifi = _rate_rtcm_wifi;
 		_report_gps_pos.rtcm_sequence_id = _last_consistent_rtcm_sequence_id;
 		_report_gps_pos.rtcm_fragment_id = _last_consistent_rtcm_fragment_id;
 		_report_gps_pos.rtcm_injection_count = _last_rate_rtcm_injection_count;
