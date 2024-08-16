@@ -1030,8 +1030,10 @@ GPS::run()
 			break;
 
 		case gps_driver_mode_t::QL:
+			PX4_WARN("set device DRV_GPS_DEVTYPE_QL");
 			_helper = new GPSDriverQL(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
-			set_device_type(DRV_GPS_DEVTYPE_NMEA);
+			PX4_WARN("_helper ptr not null %d", (_helper != nullptr));
+			set_device_type(DRV_GPS_DEVTYPE_QL);
 			break;
 #endif // CONSTRAINED_FLASH
 
@@ -1060,6 +1062,8 @@ GPS::run()
 		gpsConfig.interface_protocols = static_cast<GPSHelper::InterfaceProtocolsMask>(gps_ubx_cfg_intf);
 
 		if (_helper && _helper->configure(_baudrate, gpsConfig) == 0) {
+
+			PX4_WARN("_helper->configure done");
 
 			/* reset report */
 			memset(&_report_gps_pos, 0, sizeof(_report_gps_pos));
@@ -1115,6 +1119,8 @@ GPS::run()
 
 			while ((helper_ret = _helper->receive(receive_timeout)) > 0 && !should_exit()) {
 
+				PX4_WARN("_helper->receive done");
+
 				if (helper_ret & 1) {
 					publish();
 
@@ -1147,30 +1153,38 @@ GPS::run()
 
 				if (!_healthy) {
 					// Helpful for debugging, but too verbose for normal ops
-//						const char *mode_str = "unknown";
-//
-//						switch (_mode) {
-//						case gps_driver_mode_t::UBX:
-//							mode_str = "UBX";
-//							break;
-//
-//						case gps_driver_mode_t::MTK:
-//							mode_str = "MTK";
-//							break;
-//
-//						case gps_driver_mode_t::ASHTECH:
-//							mode_str = "ASHTECH";
-//							break;
-//
-//						case gps_driver_mode_t::EMLIDREACH:
-//							mode_str = "EMLID REACH";
-//							break;
-//
-//						default:
-//							break;
-//						}
-//
-//						PX4_WARN("module found: %s", mode_str);
+						const char *mode_str = "unknown";
+
+						switch (_mode) {
+						case gps_driver_mode_t::UBX:
+							mode_str = "UBX";
+							break;
+
+						case gps_driver_mode_t::MTK:
+							mode_str = "MTK";
+							break;
+
+						case gps_driver_mode_t::ASHTECH:
+							mode_str = "ASHTECH";
+							break;
+
+						case gps_driver_mode_t::EMLIDREACH:
+							mode_str = "EMLID REACH";
+							break;
+
+						case gps_driver_mode_t::NMEA:
+							mode_str = "NMEA";
+							break;
+
+						case gps_driver_mode_t::QL:
+							mode_str = "QL";
+							break;
+
+						default:
+							break;
+						}
+
+						PX4_WARN("module found: %s", mode_str);
 					_healthy = true;
 				}
 			}
