@@ -291,3 +291,8 @@ CONFIG:
       buildType: MinSizeRel
       settings:
         CONFIG: px4_fmu-v4_kaiken
+    px4_fmu-v6c_kaiken:
+      short: px4_fmu-v6c_kaiken
+      buildType: MinSizeRel
+      settings:
+        CONFIG: px4_fmu-v6c_kaiken
