@@ -631,7 +631,7 @@ bool GPS::rtcmInjectionDemux(const gps_inject_data_s *msg)
 	} else if (msg->device_id == (uint8_t)(_rtcm_wifi_compid)) {
 		ch = 1;
 	} else {
-		PX4_WARN("Unknown RTCM source %lu", (unsigned long)msg->device_id);
+		GPS_WARN("Unknown RTCM source %lu", (unsigned long)msg->device_id);
 		return false;
 	}
 
@@ -1030,9 +1030,7 @@ GPS::run()
 			break;
 
 		case gps_driver_mode_t::QL:
-			PX4_WARN("set device DRV_GPS_DEVTYPE_QL");
 			_helper = new GPSDriverQL(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
-			PX4_WARN("_helper ptr not null %d", (_helper != nullptr));
 			set_device_type(DRV_GPS_DEVTYPE_QL);
 			break;
 #endif // CONSTRAINED_FLASH
@@ -1062,8 +1060,6 @@ GPS::run()
 		gpsConfig.interface_protocols = static_cast<GPSHelper::InterfaceProtocolsMask>(gps_ubx_cfg_intf);
 
 		if (_helper && _helper->configure(_baudrate, gpsConfig) == 0) {
-
-			PX4_WARN("_helper->configure done");
 
 			/* reset report */
 			memset(&_report_gps_pos, 0, sizeof(_report_gps_pos));
@@ -1118,8 +1114,6 @@ GPS::run()
 			}
 
 			while ((helper_ret = _helper->receive(receive_timeout)) > 0 && !should_exit()) {
-
-				PX4_WARN("_helper->receive done");
 
 				if (helper_ret & 1) {
 					publish();
@@ -1291,6 +1285,12 @@ GPS::print_status()
 
 	case gps_driver_mode_t::SBF:
 		PX4_INFO("protocol: SBF");
+		break;
+
+	case gps_driver_mode_t::QL:
+		PX4_INFO("protocol: QL");
+		break;
+
 #endif // CONSTRAINED_FLASH
 
 	default:
