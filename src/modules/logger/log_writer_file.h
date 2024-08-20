@@ -36,6 +36,7 @@
 #include <px4_platform_common/defines.h>
 #include <px4_platform_common/atomic.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <pthread.h>
 #include <drivers/drv_hrt.h>
 #include <perf/perf_counter.h>
@@ -168,9 +169,9 @@ private:
 
 	bool start_missionlog_compression();
 
-	int compress_missionlog_chunk();
+	int compress_missionlog_chunk(bool call_fsync);
 
-	int finalize_missionlog_compression();
+	int finalize_missionlog_compression(bool call_fsync);
 
 	class LogFileBuffer
 	{
@@ -242,10 +243,11 @@ private:
 #endif
 	char _missionlog_filename[LOG_DIR_LEN];
 	int  _missionlog_fd = -1;
+	FAR FILE *pOutfile;
 	bool _missionlog_compression_started = false;
 	bool _missionlog_compression_finished = false;
 	heatshrink_encoder _missionlog_encoder; // Compression encoder
-	const size_t _missionlog_input_buffer_size = 1024;
+	const size_t _missionlog_input_buffer_size = 512;
 	const size_t _missionlog_output_buffer_size = 1024;
 	uint8_t *_missionlog_input_buffer = nullptr;
 	uint8_t *_missionlog_output_buffer = nullptr;
