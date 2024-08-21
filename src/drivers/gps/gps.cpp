@@ -112,7 +112,7 @@ struct GPS_Sat_Info {
 	satellite_info_s _data;
 };
 
-static constexpr int TASK_STACK_SIZE = PX4_STACK_ADJUSTED(2040);
+static constexpr int TASK_STACK_SIZE = PX4_STACK_ADJUSTED(4096);
 
 
 class GPS : public ModuleBase<GPS>, public device::Device
@@ -1112,6 +1112,8 @@ GPS::run()
 				 * possibly lowering the navigation rate all the way to 1 Hz while doing so. */
 				receive_timeout = TIMEOUT_1HZ;
 			}
+
+			PX4_DEBUG("GPS configured");
 
 			while ((helper_ret = _helper->receive(receive_timeout)) > 0 && !should_exit()) {
 
