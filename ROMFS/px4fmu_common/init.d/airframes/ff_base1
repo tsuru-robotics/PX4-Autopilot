@@ -142,13 +142,7 @@ param set-default SDLOG_UTC_OFFSET 0
 # Circuit Breaker
 param set-default CBRK_IO_SAFETY 22027
 param set-default CBRK_SUPPLY_CHK 894281
-if param compare SYS_PROD_CONF 1
-then
-	param set-default CBRK_FLIGHTTERM 0 # Termination enabled
-else
-	param set-default CBRK_FLIGHTTERM 121212 # Termination disabled
-fi
-
+param set-default CBRK_FLIGHTTERM 0 # Termination enabled
 
 # Commander
 param set-default COM_ARM_WO_GPS 0
