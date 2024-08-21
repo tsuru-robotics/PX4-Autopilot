@@ -8,9 +8,10 @@
 # @maintainer Nikita Rodichenko <nsr@flyfire.io>
 #
 
+. ${R}etc/init.d/rc.mc_defaults
 . ${R}etc/init.d/airframes/ff_base2
 . ${R}etc/init.d/airframes/ff_kaiken
 
 # u-blox
-param set GPS_1_PROTOCOL 1
-param set GPS_UBX_DYNMODEL 7
+param set-default GPS_1_PROTOCOL 1
+param set-default GPS_UBX_DYNMODEL 7

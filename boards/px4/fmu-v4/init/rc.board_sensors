@@ -30,12 +30,9 @@ fi
 if param compare SYS_AUTOSTART 4250
 then
 	mpu6500 -s -R 0 start
-# For Kaiken airframe
-elif param compare SYS_AUTOSTART 4999
-then
-	# mpu9250 internal SPI bus mpu9250 without internal mag
-	mpu9250 -s -R 8 start
-else
-	# mpu9250 internal SPI bus mpu9250
-	mpu9250 -s -R 8 -M start
-fi
+
+# mpu9250 internal SPI bus mpu9250 without internal mag
+mpu9250 -s -R 8 start
+# mpu9250 internal SPI bus mpu9250
+# mpu9250 -s -R 8 -M start
+
