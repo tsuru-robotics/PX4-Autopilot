@@ -416,6 +416,8 @@ void LoggedTopics::add_kaiken_minimal()
 	add_topic("battery_status", 1000);
 	add_topic("actuator_outputs", 500);
 	add_topic_multi("rtcm_channel", 1000, 2);
+	add_topic("vehicle_air_data", 1000);
+	add_topic("vehicle_land_detected");
 	add_topic("vehicle_command");
 	add_topic("vehicle_command_ack");
 	add_topic("debug_array");
