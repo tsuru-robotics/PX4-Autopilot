@@ -173,6 +173,20 @@ private:
 
 	int finalize_missionlog_compression(bool call_fsync);
 
+	bool compress_file(const char* inp_filename, size_t filesize);
+
+	int compress_data(
+	uint8_t *buffer_in,
+	size_t size_in,
+	uint8_t *buffer_out,
+	size_t buffer_out_availbale,
+	size_t *bytes_polled);
+
+	int finalize_compression(
+	uint8_t *buffer_out,
+	size_t buffer_out_availbale,
+	size_t *bytes_polled);
+
 	class LogFileBuffer
 	{
 	public:
@@ -189,6 +203,8 @@ private:
 		void reset();
 
 		size_t get_read_ptr(void **ptr, bool *is_part);
+
+		void _head_ptr(uint8_t **ptr, size_t offset) {*ptr = &_buffer[offset];};
 
 		/**
 		 * Write to the buffer but assuming there is enough space
@@ -211,6 +227,7 @@ private:
 
 		bool _should_run = false;
 		bool _file_closed = false;
+		size_t _file_size = 0;
 		// bool _should_compress = false;
 		// bool _compression_finished = false;
 	private:
@@ -241,20 +258,20 @@ private:
 	uint8_t _key_idx;
 	uint8_t _exchange_key_idx;
 #endif
-	char _missionlog_filename[LOG_DIR_LEN];
-	int  _missionlog_fd = -1;
-	FAR FILE *pOutfile;
+	char _missionlog_filename[LOG_DIR_LEN];// = "./mission_log/2024-08-22/12_01_08.ulg";
+	// int  _missionlog_fd = -1;
+	// // FAR FILE *pOutfile;
 	bool _missionlog_compression_started = false;
 	bool _missionlog_compression_finished = false;
-	heatshrink_encoder _missionlog_encoder; // Compression encoder
-	const size_t _missionlog_input_buffer_size = 512;
-	const size_t _missionlog_output_buffer_size = 1024;
-	uint8_t *_missionlog_input_buffer = nullptr;
-	uint8_t *_missionlog_output_buffer = nullptr;
+	heatshrink_encoder _missionlog_encoder {}; // Compression encoder
+	// const size_t _missionlog_input_buffer_size = 512;
+	// const size_t _missionlog_output_buffer_size = 512;
+	// uint8_t *_missionlog_input_buffer = nullptr;
+	// uint8_t *_missionlog_output_buffer = nullptr;
 	size_t _missionlog_size = 0;
-	size_t _missionlog_compressed_size = 0;
-	size_t _missionlog_remaining = 0;
-	hrt_abstime _missionlog_compression_start_time = 0;
+	// size_t _missionlog_compressed_size = 0;
+	// size_t _missionlog_remaining = 0;
+	// hrt_abstime _missionlog_compression_start_time = 0;
 };
 
 }

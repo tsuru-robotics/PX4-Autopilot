@@ -24,7 +24,7 @@
     while a `window_sz2` of 10 will use 1024 bytes (2^10). The latter uses
     more memory, but may also compress more effectively by detecting more
     repetition. WINDOW_BITS currently must be between 4 and 15.*/
-    #define HEATSHRINK_STATIC_WINDOW_BITS 10
+    #define HEATSHRINK_STATIC_WINDOW_BITS 8
     /*The lookahead size determines the max length for repeated patterns that
     are found. If the `lookahead_sz2` is 4, a 50-byte run of 'a' characters
     will be represented as several repeated 16-byte patterns (2^4 is 16),
