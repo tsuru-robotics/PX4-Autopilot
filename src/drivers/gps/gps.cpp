@@ -74,7 +74,6 @@
 # include "devices/src/femtomes.h"
 # include "devices/src/nmea.h"
 # include "devices/src/sbf.h"
-# include "devices/src/quectel.h"
 
 #endif // CONSTRAINED_FLASH
 #include "devices/src/ubx.h"
@@ -97,8 +96,7 @@ enum class gps_driver_mode_t {
 	EMLIDREACH,
 	FEMTOMES,
 	NMEA,
-	SBF,
-	QL
+	SBF
 };
 
 enum class gps_dump_comm_mode_t : int32_t {
@@ -112,7 +110,7 @@ struct GPS_Sat_Info {
 	satellite_info_s _data;
 };
 
-static constexpr int TASK_STACK_SIZE = PX4_STACK_ADJUSTED(4096);
+static constexpr int TASK_STACK_SIZE = PX4_STACK_ADJUSTED(2040);
 
 
 class GPS : public ModuleBase<GPS>, public device::Device
@@ -380,8 +378,6 @@ GPS::GPS(const char *path, gps_driver_mode_t mode, GPSHelper::Interface interfac
 		case 6: _mode = gps_driver_mode_t::NMEA; break;
 
 		case 7: _mode = gps_driver_mode_t::SBF; break;
-
-		case 8: _mode = gps_driver_mode_t::QL; break;
 #endif // CONSTRAINED_FLASH
 		}
 	}
@@ -1028,11 +1024,6 @@ GPS::run()
 			_helper = new GPSDriverSBF(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info, heading_offset, pitch_offset);
 			set_device_type(DRV_GPS_DEVTYPE_SBF);
 			break;
-
-		case gps_driver_mode_t::QL:
-			_helper = new GPSDriverQL(&GPS::callback, this, &_report_gps_pos, _p_report_sat_info);
-			set_device_type(DRV_GPS_DEVTYPE_QL);
-			break;
 #endif // CONSTRAINED_FLASH
 
 		default:
@@ -1172,10 +1163,6 @@ GPS::run()
 							mode_str = "NMEA";
 							break;
 
-						case gps_driver_mode_t::QL:
-							mode_str = "QL";
-							break;
-
 						default:
 							break;
 						}
@@ -1287,12 +1274,6 @@ GPS::print_status()
 
 	case gps_driver_mode_t::SBF:
 		PX4_INFO("protocol: SBF");
-		break;
-
-	case gps_driver_mode_t::QL:
-		PX4_INFO("protocol: QL");
-		break;
-
 #endif // CONSTRAINED_FLASH
 
 	default:
