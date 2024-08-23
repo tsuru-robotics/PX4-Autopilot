@@ -36,6 +36,7 @@ param set-default IMU_GYRO_CUTOFF 90
 
 # EKF
 param set-default EKF2_BARO_CTRL 1 # baro fusion enabled
+param set-default EKF2_GND_EFF_DZ 2.0
 
 # Sensors & Calibration
 param set-default SENS_MAG_AUTOROT 0
