@@ -44,7 +44,8 @@ param set-default IMU_DGYRO_CUTOFF 30
 param set-default IMU_GYRO_CUTOFF 70
 
 # EKF
-param set-default EKF2_BARO_CTRL 0 # baro fusion disabled
+param set-default EKF2_BARO_CTRL 1 # baro fusion enabled
+param set-default EKF2_GND_EFF_DZ 0.5
 
 param set-default EKF2_IMU_POS_X 0.0066
 param set-default EKF2_IMU_POS_Y -0.0119
