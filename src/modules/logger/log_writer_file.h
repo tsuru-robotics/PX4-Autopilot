@@ -180,7 +180,8 @@ private:
 	size_t size_in,
 	uint8_t *buffer_out,
 	size_t buffer_out_availbale,
-	size_t *bytes_polled);
+	size_t *bytes_polled,
+	bool finalize);
 
 	int finalize_compression(
 	uint8_t *buffer_out,
@@ -265,10 +266,10 @@ private:
 	bool _missionlog_compression_finished = false;
 	heatshrink_encoder _missionlog_encoder {}; // Compression encoder
 	// const size_t _missionlog_input_buffer_size = 512;
-	// const size_t _missionlog_output_buffer_size = 512;
+	// const size_t _missionlog_output_buffer_size = 1024;
 	// uint8_t *_missionlog_input_buffer = nullptr;
 	// uint8_t *_missionlog_output_buffer = nullptr;
-	size_t _missionlog_size = 0;
+	// size_t _missionlog_size = 0;
 	// size_t _missionlog_compressed_size = 0;
 	// size_t _missionlog_remaining = 0;
 	// hrt_abstime _missionlog_compression_start_time = 0;
