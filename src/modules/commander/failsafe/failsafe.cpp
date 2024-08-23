@@ -396,10 +396,11 @@ void Failsafe::checkStateAndMode(const hrt_abstime &time_us, const State &state,
 		       ActionOptions(Action::RTL).clearOn(ClearCondition::OnModeChangeOrDisarm).cannotBeDeferred());
 	CHECK_FAILSAFE(status_flags, flight_time_limit_exceeded, ActionOptions(Action::RTL).cannotBeDeferred());
 
-	// trigger RTL if low position accurancy is detected
+	// trigger LAND if low position accurancy is detected
 	if (state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION ||
-	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER) {
-		CHECK_FAILSAFE(status_flags, local_position_accuracy_low, ActionOptions(Action::RTL));
+	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER ||
+	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
+		CHECK_FAILSAFE(status_flags, local_position_accuracy_low, ActionOptions(Action::Land));
 	}
 
 	// Geofence action only if armed
