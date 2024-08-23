@@ -738,6 +738,7 @@ void Logger::run()
 					parameter_update_sub.copy(&pupdate);
 
 					write_changed_parameters(LogType::Full);
+					write_changed_parameters(LogType::Mission);
 				}
 			}
 
@@ -1395,7 +1396,12 @@ void Logger::start_log_file(LogType type)
 		initialize_load_output(PrintLoadReason::Preflight);
 	}
 
-	PX4_INFO("Start file log (type: %s)", log_type_str(type));
+	if (type == LogType::Mission) {
+		// Full log starts first
+		PX4_INFO("Start mission log. Full log is %s/%s", _file_name[(int)LogType::Full].log_dir, _file_name[(int)LogType::Full].log_file_name);
+	} else {
+		PX4_INFO("Start file log (type: %s)", log_type_str(type));
+	}
 
 	char file_name[LOG_DIR_LEN] = "";
 
@@ -1422,8 +1428,6 @@ void Logger::start_log_file(LogType type)
 	write_parameter_defaults(type);
 
 	if (type == LogType::Full) {
-		// write_parameters(type);
-		// write_parameter_defaults(type);
 		write_perf_data(PrintLoadReason::Preflight);
 		write_console_output();
 		write_events_file(LogType::Full);
