@@ -1138,30 +1138,34 @@ GPS::run()
 
 				if (!_healthy) {
 					// Helpful for debugging, but too verbose for normal ops
-//						const char *mode_str = "unknown";
-//
-//						switch (_mode) {
-//						case gps_driver_mode_t::UBX:
-//							mode_str = "UBX";
-//							break;
-//
-//						case gps_driver_mode_t::MTK:
-//							mode_str = "MTK";
-//							break;
-//
-//						case gps_driver_mode_t::ASHTECH:
-//							mode_str = "ASHTECH";
-//							break;
-//
-//						case gps_driver_mode_t::EMLIDREACH:
-//							mode_str = "EMLID REACH";
-//							break;
-//
-//						default:
-//							break;
-//						}
-//
-//						PX4_WARN("module found: %s", mode_str);
+						// const char *mode_str = "unknown";
+
+						// switch (_mode) {
+						// case gps_driver_mode_t::UBX:
+						// 	mode_str = "UBX";
+						// 	break;
+
+						// case gps_driver_mode_t::MTK:
+						// 	mode_str = "MTK";
+						// 	break;
+
+						// case gps_driver_mode_t::ASHTECH:
+						// 	mode_str = "ASHTECH";
+						// 	break;
+
+						// case gps_driver_mode_t::EMLIDREACH:
+						// 	mode_str = "EMLID REACH";
+						// 	break;
+
+						// case gps_driver_mode_t::NMEA:
+						// 	mode_str = "NMEA";
+						// 	break;
+
+						// default:
+						// 	break;
+						// }
+
+						// PX4_WARN("module found: %s", mode_str);
 					_healthy = true;
 				}
 			}
