@@ -171,6 +171,8 @@ private:
 
 	int compress_missionlog_chunk(bool call_fsync);
 
+	void stop_missionlog_compression();
+
 	int finalize_missionlog_compression(bool call_fsync);
 
 	bool compress_file(const char* inp_filename, size_t filesize);
@@ -260,19 +262,20 @@ private:
 	uint8_t _exchange_key_idx;
 #endif
 	char _missionlog_filename[LOG_DIR_LEN];// = "./mission_log/2024-08-22/12_01_08.ulg";
-	// int  _missionlog_fd = -1;
+	int  _missionlog_fd = -1;
+	int  _missionlog_compressed_fd = -1;
 	// // FAR FILE *pOutfile;
 	bool _missionlog_compression_started = false;
 	bool _missionlog_compression_finished = false;
 	heatshrink_encoder _missionlog_encoder {}; // Compression encoder
-	// const size_t _missionlog_input_buffer_size = 512;
-	// const size_t _missionlog_output_buffer_size = 1024;
-	// uint8_t *_missionlog_input_buffer = nullptr;
-	// uint8_t *_missionlog_output_buffer = nullptr;
-	// size_t _missionlog_size = 0;
-	// size_t _missionlog_compressed_size = 0;
-	// size_t _missionlog_remaining = 0;
-	// hrt_abstime _missionlog_compression_start_time = 0;
+	const size_t _missionlog_input_buffer_size = 512;
+	const size_t _missionlog_output_buffer_size = 1024;
+	uint8_t *_missionlog_input_buffer = nullptr;
+	uint8_t *_missionlog_output_buffer = nullptr;
+	size_t _missionlog_size = 0;
+	size_t _missionlog_compressed_size = 0;
+	size_t _missionlog_remaining = 0;
+	hrt_abstime _missionlog_compression_start_time = 0;
 };
 
 }
