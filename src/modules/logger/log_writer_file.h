@@ -261,7 +261,7 @@ private:
 	uint8_t _key_idx;
 	uint8_t _exchange_key_idx;
 #endif
-	char _missionlog_filename[LOG_DIR_LEN];// = "./mission_log/2024-08-22/12_01_08.ulg";
+	char _missionlog_filename[LOG_DIR_LEN];
 	int  _missionlog_fd = -1;
 	int  _missionlog_compressed_fd = -1;
 	// // FAR FILE *pOutfile;
