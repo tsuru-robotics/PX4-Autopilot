@@ -29,6 +29,8 @@ uint8 JAMMING_STATE_WARNING  = 2
 uint8 JAMMING_STATE_CRITICAL = 3
 uint8 jamming_state		# indicates whether jamming has been detected or suspected by the receivers. O: Unknown, 1: OK, 2: Warning, 3: Critical
 int32 jamming_indicator		# indicates jamming is occurring
+uint8 jamming_l1_state
+uint8 jamming_l5_state
 
 uint8 SPOOFING_STATE_UNKNOWN   = 0
 uint8 SPOOFING_STATE_NONE      = 1
@@ -57,7 +59,7 @@ float32 rtcm_rate_lora	        # RTCM message rate in LoRa channel Hz
 float32 rtcm_rate_wifi	        # RTCM message rate in WiFi channel Hz
 int8 rtcm_sequence_id
 int8 rtcm_fragment_id
-uint8 rtcm_injection_count
+uint32 rtcm_injection_count
 uint8 selected_rtcm_instance	# uorb instance that is being used for RTCM corrections
 
 # TOPICS sensor_gps vehicle_gps_position

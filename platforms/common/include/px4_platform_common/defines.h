@@ -101,7 +101,11 @@ __END_DECLS
 
 // Qurt doesn't have an SD card for storage
 #ifndef __PX4_QURT
+#ifndef __SIL_SDFS
 #define PX4_STORAGEDIR PX4_ROOTFSDIR
+#else
+#define PX4_STORAGEDIR PX4_ROOTFSDIR "/fs/microsd"
+#endif
 #endif
 
 /****************************************************************************

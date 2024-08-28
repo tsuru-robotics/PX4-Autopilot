@@ -1138,30 +1138,34 @@ GPS::run()
 
 				if (!_healthy) {
 					// Helpful for debugging, but too verbose for normal ops
-//						const char *mode_str = "unknown";
-//
-//						switch (_mode) {
-//						case gps_driver_mode_t::UBX:
-//							mode_str = "UBX";
-//							break;
-//
-//						case gps_driver_mode_t::MTK:
-//							mode_str = "MTK";
-//							break;
-//
-//						case gps_driver_mode_t::ASHTECH:
-//							mode_str = "ASHTECH";
-//							break;
-//
-//						case gps_driver_mode_t::EMLIDREACH:
-//							mode_str = "EMLID REACH";
-//							break;
-//
-//						default:
-//							break;
-//						}
-//
-//						PX4_WARN("module found: %s", mode_str);
+						// const char *mode_str = "unknown";
+
+						// switch (_mode) {
+						// case gps_driver_mode_t::UBX:
+						// 	mode_str = "UBX";
+						// 	break;
+
+						// case gps_driver_mode_t::MTK:
+						// 	mode_str = "MTK";
+						// 	break;
+
+						// case gps_driver_mode_t::ASHTECH:
+						// 	mode_str = "ASHTECH";
+						// 	break;
+
+						// case gps_driver_mode_t::EMLIDREACH:
+						// 	mode_str = "EMLID REACH";
+						// 	break;
+
+						// case gps_driver_mode_t::NMEA:
+						// 	mode_str = "NMEA";
+						// 	break;
+
+						// default:
+						// 	break;
+						// }
+
+						// PX4_WARN("module found: %s", mode_str);
 					_healthy = true;
 				}
 			}
@@ -1341,6 +1345,7 @@ GPS::publish()
 		_report_gps_pos.selected_rtcm_instance = _selected_rtcm_instance;
 		_report_gps_pos.rtcm_injection_rate = _rate_rtcm_injection;
 		_report_gps_pos.rtcm_rate_lora = _rate_rtcm_lora;
+		_report_gps_pos.rtcm_rate_wifi = _rate_rtcm_wifi;
 		_report_gps_pos.rtcm_sequence_id = _last_consistent_rtcm_sequence_id;
 		_report_gps_pos.rtcm_fragment_id = _last_consistent_rtcm_fragment_id;
 		_report_gps_pos.rtcm_injection_count = _last_rate_rtcm_injection_count;

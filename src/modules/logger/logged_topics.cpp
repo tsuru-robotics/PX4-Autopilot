@@ -416,6 +416,9 @@ void LoggedTopics::add_kaiken_minimal()
 	add_topic("battery_status", 1000);
 	add_topic("actuator_outputs", 500);
 	add_topic_multi("rtcm_channel", 1000, 2);
+	add_topic("vehicle_air_data", 1000);
+	add_topic("satellite_info", 1000);
+	add_topic("vehicle_land_detected");
 	add_topic("vehicle_command");
 	add_topic("vehicle_command_ack");
 	add_topic("debug_array");
@@ -497,6 +500,7 @@ void LoggedTopics::initialize_mission_topics(MissionLogType mission_log_type)
 		add_mission_topic("estimator_gps_status", 1000);
 		add_mission_topic("vehicle_local_position", 1000);
 		add_mission_topic("vehicle_local_position_setpoint", 1000);
+		add_mission_topic("battery_status", 1000);
 		add_mission_topic("vehicle_command");
 		add_mission_topic("vehicle_command_ack");
 		add_mission_topic("debug_array");

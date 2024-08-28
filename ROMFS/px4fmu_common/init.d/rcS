@@ -172,8 +172,8 @@ else
 	#
 	if param greater SYS_AUTOCONFIG 0
 	then
-		# Reset params except Airframe, RC calibration, sensor calibration, flight modes, total flight time, and next flight UUID.
-		param reset_all SYS_AUTOSTART RC* CAL_* COM_FLTMODE* LND_FLIGHT* TC_* COM_FLIGHT*
+		# Reset params except Airframe, RC calibration, sensor calibration, flight modes, total flight time, next flight UUID and MAV_ID
+		param reset_all SYS_AUTOSTART RC* CAL_* COM_FLTMODE* LND_FLIGHT* TC_* COM_FLIGHT* MAV_SYS_ID
 	fi
 
 	#
