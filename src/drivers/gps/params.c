@@ -316,3 +316,15 @@ PARAM_DEFINE_INT32(GPS_RTCM_LORA_ID, 25);
  * @group GPS
  */
 PARAM_DEFINE_INT32(GPS_RTCM_WIFI_ID, 26);
+
+/**
+ * Altitude delta in millimeters added to raw altitude received from MAIN gps module (GPS_1)
+ *
+ * Is used for altitude correction in gps_sensor uORB topic.
+ *
+ * @unit mm
+ *
+ * @reboot_required true
+ * @group GPS
+ */
+PARAM_DEFINE_INT32(GPS_ALT_CORR, 0);

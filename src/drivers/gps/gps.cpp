@@ -227,6 +227,10 @@ private:
  	int8_t _last_consistent_rtcm_sequence_id{-1};
 	int8_t _last_consistent_rtcm_fragment_id{0};
 
+	// Altitude delta in millimetres imported from GPS_ALT_CORR
+	// Is added to raw altitude received from MAIN gps module
+	int32_t _alt_delta_for_correction{0};
+
 	static px4::atomic_bool _is_gps_main_advertised; ///< for the second gps we want to make sure that it gets instance 1
 	/// and thus we wait until the first one publishes at least one message.
 
@@ -388,6 +392,8 @@ GPS::GPS(const char *path, gps_driver_mode_t mode, GPSHelper::Interface interfac
 	param_get(param_find("GPS_RTCM_WIFI_ID"), &_rtcm_wifi_compid);
 	_rtcm_channel_pub[0].advertise();
 	_rtcm_channel_pub[1].advertise();
+
+	param_get(param_find("GPS_ALT_CORR"), &_alt_delta_for_correction);
 }
 
 GPS::~GPS()
@@ -1349,6 +1355,11 @@ GPS::publish()
 		_report_gps_pos.rtcm_sequence_id = _last_consistent_rtcm_sequence_id;
 		_report_gps_pos.rtcm_fragment_id = _last_consistent_rtcm_fragment_id;
 		_report_gps_pos.rtcm_injection_count = _last_rate_rtcm_injection_count;
+
+		if (_instance == Instance::Main && (!_alt_delta_for_correction == 0)) {
+			_report_gps_pos.alt += _alt_delta_for_correction;
+		}
+
 		_report_gps_pos_pub.publish(_report_gps_pos);
 		// Heading/yaw data can be updated at a lower rate than the other navigation data.
 		// The uORB message definition requires this data to be set to a NAN if no new valid data is available.
