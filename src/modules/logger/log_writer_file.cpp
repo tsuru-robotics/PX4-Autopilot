@@ -271,7 +271,7 @@ void LogWriterFile::start_log(LogType type, const char *filename)
 			// Save mission log filename
 			strcpy(_mlog_filename, filename);
 			// Init compression triggers
-			_mlog_compression_state = COMP_STATE_WAITING;
+			_mlog_compression_state = COMP_STATE_NONE;
 		}
 	}
 }
@@ -408,7 +408,7 @@ void LogWriterFile::run()
 			int i = (int)LogType::Count - 1;
 
 			// After mission log is closed start compression
-			if (_buffers[(int)LogType::Mission]._file_closed) {
+			if (_buffers[(int)LogType::Mission]._file_size > 0) {
 				compress_missionlog();
 			}
 
@@ -588,7 +588,7 @@ int LogWriterFile::write(LogType type, void *ptr, size_t size, uint64_t dropout_
 	}
 
 	// dont write any messages to mission log while mission log compression is active
-	if (type == LogType::Mission && (_mlog_compression_state > COMP_STATE_WAITING) && (_mlog_compression_state < COMP_STATE_FINISHED)) {
+	if (type == LogType::Mission && (_mlog_compression_state > COMP_STATE_NONE) && (_mlog_compression_state < COMP_STATE_FINISHED)) {
 		return 0;
 	}
 
@@ -632,11 +632,6 @@ const char *log_type_str(LogType type)
 bool LogWriterFile::start_missionlog_compression()
 {
 	_mlog_size = _buffers[(int)LogType::Mission]._file_size;
-	if (_mlog_size == 0) {
-		PX4_ERR("Mission log size is 0. Nothing to compress");
-		return false;
-	}
-
 	_mlog_remaining = _mlog_size;
 	_mlog_compressed_size = 0;
 
@@ -697,7 +692,7 @@ void LogWriterFile::compress_missionlog()
 
 	switch (_mlog_compression_state) {
 
-		case COMP_STATE_WAITING: {
+		case COMP_STATE_NONE: {
 
 			if (start_missionlog_compression()) {
 				_mlog_compression_state = COMP_STATE_READ_NEW_CHUNK;
@@ -962,7 +957,7 @@ bool LogWriterFile::LogFileBuffer::start_log(const char *filename)
 	_total_written = 0;
 
 	_should_run = true;
-	_file_closed = false;
+
 	_file_size = 0;
 
 	return true;
@@ -1000,7 +995,6 @@ void LogWriterFile::LogFileBuffer::close_file()
 		} else {
 			PX4_INFO("closed logfile, bytes written: %zu", _total_written);
 
-			_file_closed = true;
 			_file_size = _total_written;
 		}
 	}

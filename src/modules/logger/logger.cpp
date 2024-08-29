@@ -847,6 +847,9 @@ void Logger::run()
 
 			publish_logger_status();
 
+			// publish mission log compression status
+			publish_mission_log_compression_status();
+
 			/* release the log buffer */
 			_writer.unlock();
 
@@ -1057,6 +1060,18 @@ void Logger::publish_logger_status()
 		}
 
 		_logger_status_last = hrt_absolute_time();
+	}
+}
+
+void Logger::publish_mission_log_compression_status()
+{
+	uint8_t state = _writer.mission_log_compression_state();
+	if (state > 0) {
+		mission_log_compression_status_s status;
+		status.state = state;
+		status.prcnt = _writer.mission_log_compression_prcnt();
+		status.timestamp = hrt_absolute_time();
+		_mission_log_compression_status_pub.publish(status);
 	}
 }
 

@@ -125,6 +125,7 @@ set(msg_files
 	MavlinkLog.msg
 	MavlinkTunnel.msg
 	Mission.msg
+	MissionLogCompressionStatus.msg
 	MissionResult.msg
 	MountOrientation.msg
 	ModeCompleted.msg

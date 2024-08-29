@@ -56,6 +56,7 @@
 #include <uORB/topics/vehicle_command.h>
 #include <uORB/topics/vehicle_status.h>
 #include <uORB/topics/parameter_update.h>
+#include <uORB/topics/mission_log_compression_status.h>
 
 extern "C" __EXPORT int logger_main(int argc, char *argv[]);
 
@@ -334,6 +335,8 @@ private:
 
 	void publish_logger_status();
 
+	void publish_mission_log_compression_status();
+
 	/**
 	 * Check for events and log them
 	 */
@@ -380,6 +383,7 @@ private:
 	PrintLoadReason					_print_load_reason {PrintLoadReason::Preflight};
 
 	uORB::PublicationMulti<logger_status_s>		_logger_status_pub[(int)LogType::Count] { ORB_ID(logger_status), ORB_ID(logger_status) };
+	uORB::Publication<mission_log_compression_status_s> _mission_log_compression_status_pub { ORB_ID(mission_log_compression_status)};
 
 	hrt_abstime					_logger_status_last {0};
 	int						_lockstep_component{-1};

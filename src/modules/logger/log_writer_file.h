@@ -65,7 +65,6 @@ enum class LogType {
 
 typedef enum {
 	COMP_STATE_NONE = 0,
-	COMP_STATE_WAITING,
 	COMP_STATE_READ_NEW_CHUNK,
 	COMP_STATE_SINK,
 	COMP_STATE_POLL,
@@ -151,6 +150,10 @@ public:
 
 	pthread_t thread_id() const { return _thread; }
 
+	uint8_t mission_log_compression_state() {return (uint8_t)_mlog_compression_state;}
+
+	uint8_t mission_log_compression_prcnt() {return (_mlog_size > 0) ? (uint8_t)((float)(_mlog_size - _mlog_remaining)*100/(float)_mlog_size) : 0;}
+
 #if defined(PX4_CRYPTO)
 	void set_encryption_parameters(px4_crypto_algorithm_t algorithm, uint8_t key_idx,  uint8_t exchange_key_idx)
 	{
@@ -224,7 +227,6 @@ private:
 		size_t count() const { return _count; }
 
 		bool _should_run = false;
-		bool _file_closed = false;
 		size_t _file_size = 0;
 
 	private:

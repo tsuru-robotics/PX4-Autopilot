@@ -166,6 +166,22 @@ public:
 		return false;
 	}
 
+	uint8_t mission_log_compression_state() const
+	{
+		if (_log_writer_file) { return _log_writer_file->mission_log_compression_state(); }
+
+		return 0;
+	}
+
+	uint8_t mission_log_compression_prcnt() const
+	{
+		if (_log_writer_file) { return _log_writer_file->mission_log_compression_prcnt(); }
+
+		return 0;
+	}
+
+
+
 #if defined(PX4_CRYPTO)
 	void set_encryption_parameters(px4_crypto_algorithm_t algorithm, uint8_t key_idx,  uint8_t exchange_key_idx)
 	{
