@@ -44,6 +44,9 @@
 #include "heatshrink_encoder.h"
 #include "util.h"
 
+#define MLOG_COMPRESSION_IN_BUFFER_SIZE 512
+#define MLOG_COMPRESSION_OUT_BUFFER_SIZE 1024
+
 namespace px4
 {
 namespace logger
@@ -59,6 +62,17 @@ enum class LogType {
 
 	Count
 };
+
+typedef enum {
+	COMP_STATE_NONE = 0,
+	COMP_STATE_WAITING,
+	COMP_STATE_READ_NEW_CHUNK,
+	COMP_STATE_SINK,
+	COMP_STATE_POLL,
+	COMP_STATE_WRITE_TO_FILE,
+	COMP_STATE_FINISHED,
+	COMP_STATE_FAIL
+} CompressionState;
 
 const char *log_type_str(LogType type);
 
@@ -169,26 +183,9 @@ private:
 
 	bool start_missionlog_compression();
 
-	int compress_missionlog_chunk(bool call_fsync);
+	void compress_missionlog();
 
-	void stop_missionlog_compression();
-
-	int finalize_missionlog_compression(bool call_fsync);
-
-	bool compress_file(const char* inp_filename, size_t filesize);
-
-	int compress_data(
-	uint8_t *buffer_in,
-	size_t size_in,
-	uint8_t *buffer_out,
-	size_t buffer_out_availbale,
-	size_t *bytes_polled,
-	bool finalize);
-
-	int finalize_compression(
-	uint8_t *buffer_out,
-	size_t buffer_out_availbale,
-	size_t *bytes_polled);
+	void finish_missionlog_compression();
 
 	class LogFileBuffer
 	{
@@ -198,8 +195,6 @@ private:
 		~LogFileBuffer();
 
 		bool start_log(const char *filename);
-
-		bool init_for_compression(const char *filename);
 
 		void close_file();
 
@@ -231,8 +226,7 @@ private:
 		bool _should_run = false;
 		bool _file_closed = false;
 		size_t _file_size = 0;
-		// bool _should_compress = false;
-		// bool _compression_finished = false;
+
 	private:
 		const size_t _buffer_size;
 		int	_fd = -1;
@@ -242,7 +236,6 @@ private:
 		size_t _total_written = 0;
 		perf_counter_t _perf_write;
 		perf_counter_t _perf_fsync;
-		// heatshrink_encoder *_ptr_encoder = nullptr;
 	};
 
 	LogFileBuffer _buffers[(int)LogType::Count];
@@ -261,21 +254,22 @@ private:
 	uint8_t _key_idx;
 	uint8_t _exchange_key_idx;
 #endif
-	char _missionlog_filename[LOG_DIR_LEN];
-	int  _missionlog_fd = -1;
-	int  _missionlog_compressed_fd = -1;
-	// // FAR FILE *pOutfile;
-	bool _missionlog_compression_started = false;
-	bool _missionlog_compression_finished = false;
-	heatshrink_encoder _missionlog_encoder {}; // Compression encoder
-	const size_t _missionlog_input_buffer_size = 512;
-	const size_t _missionlog_output_buffer_size = 1024;
-	uint8_t *_missionlog_input_buffer = nullptr;
-	uint8_t *_missionlog_output_buffer = nullptr;
-	size_t _missionlog_size = 0;
-	size_t _missionlog_compressed_size = 0;
-	size_t _missionlog_remaining = 0;
-	hrt_abstime _missionlog_compression_start_time = 0;
+	char _mlog_filename[LOG_DIR_LEN];
+	int  _mlog_fd = -1;
+	int  _mlog_compressed_fd = -1;
+	heatshrink_encoder _mlog_encoder {}; // Compression encoder
+	uint8_t *_mlog_input_buffer = nullptr;
+	uint8_t *_mlog_output_buffer = nullptr;
+	size_t _mlog_size = 0;
+	size_t _mlog_compressed_size = 0;
+	size_t _mlog_remaining = 0;
+	hrt_abstime _mlog_compression_start_time = 0;
+	CompressionState _mlog_compression_state = COMP_STATE_NONE;
+	bool _mlog_sunk_all = false;
+	bool _mlog_finishing = false;
+	size_t _mlog_chunk_size = 0;
+	size_t _mlog_chunk_bytes_sunk = 0;
+	size_t _mlog_bytes_polled = 0;
 };
 
 }
