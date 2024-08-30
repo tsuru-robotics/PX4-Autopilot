@@ -422,6 +422,7 @@ void LoggedTopics::add_kaiken_minimal()
 	add_topic("vehicle_command");
 	add_topic("vehicle_command_ack");
 	add_topic("mission_log_compression_status");
+	add_topic("cpuload");
 	add_topic("debug_array");
 	add_topic("debug_key_value");
 	add_topic("debug_value");

@@ -46,8 +46,8 @@
 #include <systemlib/hardfault_log.h>
 #endif /* __PX4_NUTTX */
 
-#undef PX4_DEBUG
-#define PX4_DEBUG PX4_INFO
+// #undef PX4_DEBUG
+// #define PX4_DEBUG PX4_INFO
 
 
 using namespace time_literals;
