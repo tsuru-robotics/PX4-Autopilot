@@ -418,11 +418,11 @@ void LoggedTopics::add_kaiken_minimal()
 	add_topic_multi("rtcm_channel", 1000, 2);
 	add_topic("vehicle_air_data", 1000);
 	add_topic("satellite_info", 1000);
-	add_topic("vehicle_land_detected");
+	add_topic("vehicle_land_detected", 1000);
+	add_topic("mission_log_compression_status", 1000);
+	add_topic("cpuload", 1000);
 	add_topic("vehicle_command");
 	add_topic("vehicle_command_ack");
-	add_topic("mission_log_compression_status");
-	add_topic("cpuload");
 	add_topic("debug_array");
 	add_topic("debug_key_value");
 	add_topic("debug_value");

@@ -43,6 +43,7 @@
 #include <px4_platform_common/crypto.h>
 #include "heatshrink_encoder.h"
 #include "util.h"
+#include <uORB/topics/mission_log_compression_status.h>
 
 #define MLOG_COMPRESSION_IN_BUFFER_SIZE 1024
 #define MLOG_COMPRESSION_OUT_BUFFER_SIZE (MLOG_COMPRESSION_IN_BUFFER_SIZE + (MLOG_COMPRESSION_IN_BUFFER_SIZE/2) + 4)
@@ -150,9 +151,23 @@ public:
 
 	pthread_t thread_id() const { return _thread; }
 
-	uint8_t mission_log_compression_state() {return (uint8_t)_mlog_compression_state;}
+	uint8_t mission_log_compression_state() const
+	{
+		if ((_mlog_compression_state > COMP_STATE_NONE) && (_mlog_compression_state < COMP_STATE_FINISHED)) {
+			return mission_log_compression_status_s::STATE_IN_PROGRESS;
+		} else if (_mlog_compression_state == COMP_STATE_FINISHED) {
+			return mission_log_compression_status_s::STATE_FINISHED;
+		} else if (_mlog_compression_state == COMP_STATE_FAIL) {
+			return mission_log_compression_status_s::STATE_FAIL;
+		} else {
+			return 0;
+		}
+	}
 
-	uint8_t mission_log_compression_prcnt() {return (_mlog_size > 0) ? (uint8_t)((float)(_mlog_size - _mlog_remaining)*100/(float)_mlog_size) : 0;}
+	uint8_t mission_log_compression_prcnt() const
+	{
+		return (_mlog_size > 0) ? (uint8_t)((float)(_mlog_size - _mlog_remaining)*100/(float)_mlog_size) : 0;
+	}
 
 #if defined(PX4_CRYPTO)
 	void set_encryption_parameters(px4_crypto_algorithm_t algorithm, uint8_t key_idx,  uint8_t exchange_key_idx)

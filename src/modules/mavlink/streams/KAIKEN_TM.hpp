@@ -45,6 +45,7 @@
 #include <uORB/topics/health_report.h>
 #include <uORB/topics/battery_status.h>
 #include <uORB/topics/failsafe_flags.h>
+#include <uORB/topics/mission_log_compression_status.h>
 #include "commander/failsafe/framework.h"
 
 class MavlinkStreamKaikenTm : public MavlinkStream
@@ -77,6 +78,7 @@ private:
 	uORB::Subscription _battery_status_sub{ORB_ID(battery_status)};
 	uORB::Subscription _failsafe_flags_sub{ORB_ID(failsafe_flags)};
 	uORB::Subscription _vehicle_control_mode_sub{ORB_ID(vehicle_control_mode)};
+	uORB::Subscription _mission_log_compression_status_sub{ORB_ID(mission_log_compression_status)};
 
 	using health_component_t = events::px4::enums::health_component_t;
 
@@ -244,6 +246,18 @@ private:
 				msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_PATH;
 				break;
 		}
+
+		// Mission log compression status
+		mission_log_compression_status_s compression_status{};
+
+		if (_mission_log_compression_status_sub.copy(&compression_status)) {
+
+			if (compression_status.state == mission_log_compression_status_s::STATE_FINISHED) {
+				msg.flags |= FMU_TM_FLAGS_MISSION_LOG_COMPRESSED;
+			} else if (compression_status.state == mission_log_compression_status_s::STATE_FAIL) {
+				msg.flags |= FMU_TM_FLAGS_MISSION_LOG_COMPRESSION_FAIL;
+			}
+		};
 
 		mavlink_msg_fmu_tm_send_struct(_mavlink->get_channel(), &msg);
 
