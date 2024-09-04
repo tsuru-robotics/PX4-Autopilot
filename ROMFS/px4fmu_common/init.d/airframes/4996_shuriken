@@ -9,7 +9,7 @@
 #
 
 . ${R}etc/init.d/rc.mc_defaults
-. ${R}etc/init.d/airframes/ff_base2
+. ${R}etc/init.d/airframes/ff_base
 . ${R}etc/init.d/airframes/ff_shuriken1
 
 param set-default GPS_1_PROTOCOL 6 # NMEA

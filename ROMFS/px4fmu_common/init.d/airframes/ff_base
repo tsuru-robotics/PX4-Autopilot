@@ -1,12 +1,13 @@
 #!/bin/sh
 #
-# @name Base frame #1 for FlyFire drones
+# @name Base parameters for FlyFire drones
 #
 # @type Quadrotor x
 # @class Copter
 #
 # @maintainer Vladimir Savelyev <vms@flyfire.io>
 #
+
 
 # Smart battery
 param set-default BAT1_N_CELLS 2
@@ -25,13 +26,14 @@ param set-default GPS_RTCM_WIFI_ID 26
 param set-default EKF2_ABL_LIM 0.4
 param set-default EKF2_GPS_POS_Z 0.0
 param set-default EKF2_GPS_P_GATE 5.0
-param set-default EKF2_GPS_P_NOISE 0.3
+param set-default EKF2_GPS_P_NOISE 0.2
 param set-default EKF2_GPS_V_GATE 5.0
-param set-default EKF2_GPS_V_NOISE 0.3
+param set-default EKF2_GPS_V_NOISE 0.15
 param set-default EKF2_HGT_REF 1 # GPS is reference source of height data
 param set-default EKF2_REQ_HDRIFT 0.05
 param set-default EKF2_REQ_VDRIFT 0.05
 param set-default EKF2_MAG_MIN_ALT -1.0 # takeoff without mag disabled
+param set-default EKF2_BARO_CTRL 1 # baro fusion enabled
 
 # RC
 param set-default COM_FLTMODE1 8
@@ -104,30 +106,29 @@ param set-default MPC_MANTHR_MIN 0.08
 param set-default MPC_MAN_TILT_MAX 35
 param set-default MPC_POS_MODE 0
 param set-default MPC_THR_HOVER 0.50
-param set-default MPC_TILTMAX_AIR 45
+param set-default MPC_TILTMAX_AIR 50
 param set-default MPC_TILTMAX_LND 12.0
-param set-default MPC_TKO_RAMP_T 3.0
-param set-default MPC_TKO_SPEED 1.5
+param set-default MPC_TKO_RAMP_T 1.0
+param set-default MPC_TKO_SPEED 2.0
 param set-default MPC_VELD_LP 5.0
 param set-default MPC_XY_CRUISE 5.0
 param set-default MPC_XY_ERR_MAX 2.0
 param set-default MPC_XY_MAN_EXPO 0.6
-param set-default MPC_XY_P 0.95
+param set-default MPC_XY_P 1.2
 param set-default MPC_XY_TRAJ_P 0.5
 param set-default MPC_XY_VEL_ALL -10.0
-param set-default MPC_XY_VEL_D_ACC 0.2
-param set-default MPC_XY_VEL_I_ACC 0.4
-param set-default MPC_XY_VEL_P_ACC 1.8
+param set-default MPC_XY_VEL_D_ACC 0.4
+param set-default MPC_XY_VEL_I_ACC 2.0
+param set-default MPC_XY_VEL_P_ACC 5.0
 param set-default MPC_XY_VEL_MAX 10
-param set-default MPC_Z_V_AUTO_DN 1.5
-param set-default MPC_Z_V_AUTO_UP 3.0
+param set-default MPC_Z_V_AUTO_DN 3.0
+param set-default MPC_Z_V_AUTO_UP 4.0
 param set-default MPC_YAWRAUTO_MAX 45
-param set-default MPC_Z_VEL_MAX_UP 3.0
+param set-default MPC_Z_VEL_MAX_UP 4.0
 param set-default MPC_OB_SP_DELAY 350
 param set-default MPC_Z_VEL_MAX_DN 3.0
-param set-default MPC_LAND_SPEED 0.1
 param set-default MPC_LAND_ALT1 10
-param set-default MPC_LAND_ALT2 1.0
+param set-default MPC_LAND_ALT2 0.5
 
 param set-default NAV_ACC_RAD 1.2
 param set-default NAV_RCL_ACT 0

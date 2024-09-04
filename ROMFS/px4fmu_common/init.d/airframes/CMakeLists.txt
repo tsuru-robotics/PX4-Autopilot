@@ -72,8 +72,7 @@ px4_add_romfs_files(
 	4901_crazyflie21
 
 	# FlyFire airframes
-	ff_base1
-	ff_base2
+	ff_base
 	ff_kaiken
 	ff_shuriken1
 	ff_shuriken2
@@ -81,7 +80,6 @@ px4_add_romfs_files(
 	4998_kaiken
 	4997_shuriken
 	4996_shuriken
-	4995_shuriken
 
 	# [5000, 5999] Quadrotor +"
 	5001_quad_+

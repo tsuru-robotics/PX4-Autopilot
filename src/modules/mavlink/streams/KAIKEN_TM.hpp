@@ -229,6 +229,9 @@ private:
 		if (failsafe_flags.global_position_invalid) {
 			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_POSITION_LOSS;
 		}
+		if (failsafe_flags.local_position_accuracy_low) {
+			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_LOW_POS_ACCURACY;
+		}
 		if (failsafe_flags.offboard_failsafe) {
 			msg.failsafe_flags |= FMU_FAILSAFE_FLAGS_OFFBOARD_LOSS;
 		}

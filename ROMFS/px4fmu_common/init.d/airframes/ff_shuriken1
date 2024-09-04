@@ -35,7 +35,6 @@ param set-default IMU_DGYRO_CUTOFF 30
 param set-default IMU_GYRO_CUTOFF 70
 
 # EKF
-param set-default EKF2_BARO_CTRL 1 # baro fusion enabled
 param set-default EKF2_GND_EFF_DZ 0.5
 
 # Sensors & Calibration
@@ -57,7 +56,7 @@ param set-default SENS_BOARD_ROT 6
 param set-default SENS_BOARD_X_OFF 0.001
 param set-default SENS_BOARD_Y_OFF 0.001
 
-# PID Tuning
+# MC
 param set-default MC_PITCHRATE_P 0.1
 param set-default MC_PITCHRATE_I 0.2
 param set-default MC_PR_INT_LIM 0.3
@@ -79,6 +78,13 @@ param set-default MC_ROLL_P 6.5
 param set-default MC_YAWRATE_MAX 60
 param set-default MC_YAWRATE_P 0.2
 param set-default MC_YAW_P 2.5
+
+# MPC
+param set-default MPC_LAND_SPEED 0.1
+
+# COM
+param set-default COM_POS_LOW_EPH 1
+param set-default COM_POS_FS_EPH 30
 
 # LOG
 param set-default SDLOG_MODE 0
