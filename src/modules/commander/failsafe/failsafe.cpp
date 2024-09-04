@@ -400,7 +400,7 @@ void Failsafe::checkStateAndMode(const hrt_abstime &time_us, const State &state,
 	if (state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_MISSION ||
 	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_AUTO_LOITER ||
 	    state.user_intended_mode == vehicle_status_s::NAVIGATION_STATE_OFFBOARD) {
-		CHECK_FAILSAFE(status_flags, local_position_accuracy_low, ActionOptions(Action::Land));
+		CHECK_FAILSAFE(status_flags, local_position_accuracy_low, ActionOptions(Action::Land).cannotBeDeferred());
 	}
 
 	// Geofence action only if armed
