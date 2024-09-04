@@ -58,7 +58,7 @@ private:
 
 	DEFINE_PARAMETERS_CUSTOM_PARENT(FlightTask,
 					(ParamInt<px4::params::MPC_LAND_RC_HELP>) _param_mpc_land_rc_help,
-					(ParamFloat<px4::params::MPC_LAND_SPEED>) _param_mpc_land_speed, ///< velocity for controlled descend
+					(ParamFloat<px4::params::MPC_DESC_SPEED>) _param_mpc_descend_speed, ///< velocity for uncontrolled descend
 					(ParamFloat<px4::params::MPC_THR_HOVER>) _param_mpc_thr_hover ///< thrust at hover equilibrium
 				       )
 };
