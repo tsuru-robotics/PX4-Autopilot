@@ -101,7 +101,7 @@ param set-default RTL_TYPE 0
 param set-default RTL_TIME_MARGIN -1
 param set-default RTL_TIME_FACTOR 0
 
-# Navigation Tuning & Speeds
+# MPC
 param set-default MPC_MANTHR_MIN 0.08
 param set-default MPC_MAN_TILT_MAX 35
 param set-default MPC_POS_MODE 0
@@ -129,9 +129,13 @@ param set-default MPC_OB_SP_DELAY 350
 param set-default MPC_Z_VEL_MAX_DN 3.0
 param set-default MPC_LAND_ALT1 10
 param set-default MPC_LAND_ALT2 0.5
+param set-default MPC_DESC_SPEED 3.0
 
+# NAV
 param set-default NAV_ACC_RAD 1.2
 param set-default NAV_RCL_ACT 0
+
+# LNDMC
 param set-default LNDMC_ROT_MAX 80
 param set-default LNDMC_TRIG_TIME 1
 
